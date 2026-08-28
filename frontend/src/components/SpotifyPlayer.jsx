@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
 export default function SpotifyPlayer() {
-  // สร้าง State สำหรับเก็บค่าว่า เปิด หรือ ซ่อน เครื่องเล่นอยู่ (ตั้งค่าเริ่มต้นเป็นเปิด)
-  const [isOpen, setIsOpen] = useState(true);
+  // เปลี่ยนค่าเริ่มต้นเป็น false เพื่อให้ซ่อนเครื่องเล่นไว้ตั้งแต่แรก
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="fixed bottom-4 left-4 z-50 flex flex-col items-start gap-2">
@@ -29,9 +29,9 @@ export default function SpotifyPlayer() {
       {/* ปุ่มกด ซ่อน / แสดง */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-navy text-beige px-4 py-2 rounded-full text-sm font-body shadow-lg hover:bg-skyblue hover:text-navy transition duration-300 flex items-center gap-2"
+        className="bg-navy text-beige px-4 py-2 rounded-full text-sm font-bold font-body shadow-xl border border-navy/20 hover:bg-skyblue hover:text-navy hover:scale-105 transition-all duration-300 flex items-center gap-2"
       >
-        {isOpen ? '⬇ ซ่อนเพลย์ลิสต์' : '🎵 ฟังเพลงน้องฮง'}
+        {isOpen ? '⬇ ซ่อนเพลย์ลิสต์' : '🎵 ฟังเพลงฮงชิ'}
       </button>
 
     </div>
