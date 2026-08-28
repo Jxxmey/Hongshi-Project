@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* ตั้งค่า ธีมสีและฟอนต์ สำหรับ Tailwind v4 */
+@theme {
+  --color-navy: #2F4156;
+  --color-skyblue: #C8D9E6;
+  --color-beige: #F5EFEB;
+  --color-azalea: #F7C9D4;
+  --color-palepink: #FFE1E6;
+
+  --font-heading: "K2D", sans-serif;
+  --font-body: "IBM Plex Sans Thai", sans-serif;
+}
+
+/* ตั้งค่าพื้นฐานไม่ให้คลุมดำข้อความได้ทั้งเว็บ */
+body {
+  @apply select-none bg-beige text-navy font-body;
+}

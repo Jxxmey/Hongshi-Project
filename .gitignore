@@ -1,0 +1,46 @@
+# =========================
+# Environment Variables (ไฟล์ความลับ 🌟 สำคัญมากห้ามเอาขึ้น Git)
+# =========================
+.env
+.env.local
+.env.*.local
+
+# =========================
+# Frontend (Node.js / React / Vite)
+# =========================
+node_modules/
+dist/
+dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Backend (Python / FastAPI)
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env_python/
+pip-log.txt
+
+# =========================
+# Docker & Database
+# =========================
+mongo_data/
+.docker/
+
+# =========================
+# OS & Editor Files (ไฟล์ขยะจากเครื่อง Mac และโปรแกรมเขียนโค้ด)
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+.vscode/
+.idea/
+*.swp
+*.swo

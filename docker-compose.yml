@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # 1. ฐานข้อมูล MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  # 2. ระบบหลังบ้าน FastAPI (พอร์ต 8000)
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app  # ผูกโฟลเดอร์ให้แก้โค้ดแล้วอัปเดตทันที
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017  # เชื่อมกับ service mongodb อัตโนมัติ
+    depends_on:
+      - mongodb
+
+  # 3. ระบบหน้าบ้าน React Vite (พอร์ต 5173)
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # ป้องกันโฟลเดอร์ node_modules ในเครื่องตีกับใน Docker
+    depends_on:
+      - backend
+
+volumes:
+  mongodb_data:
