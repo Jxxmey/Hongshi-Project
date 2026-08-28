@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import ScrollReveal from '../components/ScrollReveal'; // นำเข้า ScrollReveal
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -51,7 +52,6 @@ export default function Guestbook() {
 
       setActiveBubbles(prev => {
         const next = [...prev, newBubble];
-        // +++ เพิ่มจำนวนข้อความบนจอเป็น 8 อัน +++
         if (next.length > 8) return next.slice(1);
         return next;
       });
@@ -61,7 +61,6 @@ export default function Guestbook() {
       }, 8000);
     };
 
-    // +++ ลดเวลาดีเลย์ลงเหลือ 2 วิ เพื่อให้โผล่มาถี่ขึ้น +++
     const interval = setInterval(spawnBubble, 2000);
     return () => clearInterval(interval);
   }, []);
@@ -111,13 +110,11 @@ export default function Guestbook() {
     }
   };
 
-  // +++ ฟังก์ชันแจ้ง Report ข้อความ +++
   const handleReport = async (wishId, bubbleId) => {
     if(!window.confirm("คุณต้องการรายงานว่าข้อความนี้ไม่เหมาะสมใช่หรือไม่?")) return;
     
     try {
       await fetch(`${API_URL}/wishes/${wishId}/report`, { method: 'POST' });
-      // ลบออกจาก State ทันทีเพื่อให้ข้อความหายไปจากหน้าจอ
       setWishes(prev => prev.filter(w => w.id !== wishId));
       setActiveBubbles(prev => prev.filter(b => b.bubbleId !== bubbleId));
       alert("รายงานสำเร็จ แอดมินจะทำการตรวจสอบให้เร็วที่สุดครับ");
@@ -129,15 +126,19 @@ export default function Guestbook() {
   return (
     <div className="relative min-h-[85vh] w-full overflow-hidden bg-beige selection:bg-azalea selection:text-white pb-20">
       
-      <div className="text-center pt-10 px-4 relative z-10 pointer-events-none">
-        <h2 className="text-4xl md:text-5xl font-heading font-bold text-navy">
-          Birthday Wishes Board
-        </h2>
-        <p className="text-lg font-body text-navy/80 mt-2">
-          คำอวยพรจาก LYKYOU จะลอยมาส่งถึงฮงชิเรื่อยๆ 💌
-        </p>
-      </div>
+      {/* 1. ใส่เอฟเฟกต์ให้ Header ค่อยๆ ลอยขึ้นมา */}
+      <ScrollReveal>
+        <div className="text-center pt-10 px-4 relative z-10 pointer-events-none">
+          <h2 className="text-4xl md:text-5xl font-heading font-bold text-navy">
+            Birthday Wishes Board
+          </h2>
+          <p className="text-lg font-body text-navy/80 mt-2">
+            คำอวยพรจาก LYKYOU จะลอยมาส่งถึงฮงชิเรื่อยๆ 💌
+          </p>
+        </div>
+      </ScrollReveal>
 
+      {/* บับเบิ้ลข้อความที่ลอยไปมา ไม่ต้องใส่ ScrollReveal เพราะมี Animation CSS ในตัวอยู่แล้ว */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         {wishes.length === 0 && !isSubmitting && (
           <div className="absolute inset-0 flex items-center justify-center opacity-50">
@@ -152,8 +153,6 @@ export default function Guestbook() {
             style={{ top: wish.top, left: wish.left }}
           >
             <div className={`p-[2px] rounded-2xl bg-gradient-to-br ${wish.theme} shadow-lg max-w-[280px] md:max-w-[350px] relative group`}>
-              
-              {/* ปุ่ม Report ที่จะแสดงชัดขึ้นเมื่อเอาเมาส์ชี้การ์ด */}
               <button 
                 onClick={() => handleReport(wish.id, wish.bubbleId)}
                 className="absolute -top-3 -right-3 bg-white text-gray-400 hover:text-red-500 hover:bg-red-50 w-8 h-8 rounded-full shadow-md flex items-center justify-center text-sm transition-all opacity-0 group-hover:opacity-100 border border-gray-200 z-10"
@@ -161,7 +160,6 @@ export default function Guestbook() {
               >
                 🚨
               </button>
-
               <div className="bg-white/90 backdrop-blur-md px-5 py-4 rounded-[14px] flex flex-col gap-2">
                 <p className="text-navy font-body text-sm md:text-base leading-relaxed break-words">
                   "{wish.message}"
@@ -177,18 +175,21 @@ export default function Guestbook() {
         ))}
       </div>
 
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-40 bg-skyblue text-navy w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-3xl hover:bg-azalea hover:scale-110 hover:rotate-12 transition-all duration-300 border-2 border-white pointer-events-auto"
-        title="ส่งคำอวยพร"
-      >
-        💌
-      </button>
+      {/* 2. ใส่เอฟเฟกต์หน่วงเวลาให้ปุ่มส่งข้อความ ค่อยๆ โผล่ตามมา */}
+      <ScrollReveal delay={300}>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-40 bg-skyblue text-navy w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-3xl hover:bg-azalea hover:scale-110 hover:rotate-12 transition-all duration-300 border-2 border-white pointer-events-auto"
+          title="ส่งคำอวยพร"
+        >
+          💌
+        </button>
+      </ScrollReveal>
 
-      {/* โมดอลส่งข้อความ (ใช้ของเดิมได้เลย) */}
+      {/* โมดอลส่งข้อความ */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/40 backdrop-blur-sm animate-fade-in pointer-events-auto">
-          <div className="bg-white p-8 md:p-10 rounded-[30px] w-full max-w-lg shadow-2xl relative">
+          <div className="bg-white p-6 md:p-10 rounded-[30px] w-[95%] md:w-full max-w-lg shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button 
               onClick={() => setIsModalOpen(false)}
               className="absolute top-4 right-6 text-navy/50 hover:text-azalea text-2xl font-bold transition"

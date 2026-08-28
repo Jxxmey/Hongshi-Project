@@ -24,6 +24,8 @@ MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client.hongshi_project
 wishes_collection = db.wishes
+# +++ เพิ่ม Collection สำหรับเก็บสถิติ +++
+stats_collection = db.stats 
 
 class WishModel(BaseModel):
     name: str
@@ -56,10 +58,27 @@ def contains_profanity(text: str) -> bool:
                 return True
     return False
 
+# ==========================================
+# ระบบหน้าแรกแก้บัค 404 (Render)
+# ==========================================
+@app.get("/")
+async def root():
+    return {"message": "Welcome to Hongshi Birthday API! 🩵"}
 
 # ==========================================
 # ฝั่งผู้ใช้งานทั่วไป (Public API)
 # ==========================================
+
+# +++ API ใหม่: บันทึกว่ามีคนเข้าดูเว็บ 1 ครั้ง +++
+@app.post("/visit")
+async def record_visit():
+    # อัปเดตให้บวกยอดวิว +1 (ถ้ายังไม่มีเอกสาร 'site_stats' ให้สร้างใหม่แล้วตั้งค่าเริ่มต้น)
+    await stats_collection.update_one(
+        {"_id": "site_stats"},
+        {"$inc": {"views": 1}},
+        upsert=True
+    )
+    return {"message": "Visit recorded"}
 
 @app.get("/wishes")
 async def get_wishes():
@@ -112,6 +131,14 @@ async def report_wish(wish_id: str):
 # ==========================================
 # ฝั่งผู้ดูแลระบบ (Admin API)
 # ==========================================
+
+# +++ API ใหม่: ดึงยอดวิวไปโชว์ที่ Dashboard +++
+@app.get("/admin/stats")
+async def get_stats():
+    stats = await stats_collection.find_one({"_id": "site_stats"})
+    if stats:
+        return {"views": stats.get("views", 0)}
+    return {"views": 0}
 
 @app.get("/admin/reports")
 async def get_reported_wishes():
