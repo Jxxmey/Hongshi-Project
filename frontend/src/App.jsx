@@ -12,6 +12,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import SpotifyPlayer from './components/SpotifyPlayer';
 import TermsModal from './components/TermsModal';
 import AdminStats from './pages/AdminStats';
+import FAQ from './pages/FAQ';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -31,6 +33,7 @@ function App() {
   }, []);
 
   return (
+    <LanguageProvider>
     <BrowserRouter>
       <div className="flex flex-col min-h-screen">
         <Navbar />  
@@ -45,6 +48,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/stats" element={<AdminStats />} />
+            <Route path="/faq" element={<FAQ />} />
           </Routes>
         </main>
 
@@ -53,6 +57,7 @@ function App() {
         <TermsModal />
       </div>
     </BrowserRouter>
+    </LanguageProvider>
   );
 }
 
