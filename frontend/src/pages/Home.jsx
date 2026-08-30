@@ -1,20 +1,32 @@
-import ProtectedImage from '../components/ProtectedImage';
 import Countdown from '../components/Countdown';
 import ScrollReveal from '../components/ScrollReveal';
+import { useLanguage } from '../contexts/LanguageContext'; // +++ ดึง Hook ของภาษามาใช้
 
 export default function Home() {
+  const { t } = useLanguage(); // +++ เรียกใช้ตัวแปรคำแปล
+
   return (
-    <div className="min-h-screen flex flex-col items-center py-10 px-4 space-y-8">
+    <div className="min-h-screen flex flex-col items-center py-10 px-4 space-y-8 selection:bg-azalea selection:text-white pb-20">
       
       <header className="text-center flex flex-col items-center w-full">
         {/* ส่วนที่ 1: หัวข้อและวันที่ (ลอยขึ้นมาทันที) */}
         <ScrollReveal>
-          <div className="mb-6">
-            <h1 className="text-4xl md:text-5xl font-heading font-bold mb-2 text-navy">
-              Happy Hongshihoshi Day
+          <div className="mb-6 space-y-3">
+            {/* ข้อความต้อนรับเล็กๆ ด้านบน */}
+            <span className="text-sm md:text-base font-bold text-navy/60 uppercase tracking-widest block">
+              {t.home.welcome}
+            </span>
+            
+            <h1 className="text-4xl md:text-5xl font-heading font-bold mb-2 text-navy drop-shadow-sm">
+              {t.home.title}
             </h1>
-            <p className="text-lg font-bold text-navy bg-palepink inline-block px-6 py-2 rounded-full shadow-sm">
-              16 October 2026
+            
+            <p className="text-sm md:text-base font-body text-navy/80 max-w-2xl mx-auto px-4 pb-2">
+              {t.home.subtitle}
+            </p>
+
+            <p className="text-lg font-bold text-navy bg-palepink inline-block px-8 py-2 rounded-full shadow-sm border-2 border-white">
+              {t.home.date}
             </p>
           </div>
         </ScrollReveal>
@@ -26,25 +38,31 @@ export default function Home() {
       </header>
 
       <main className="w-full max-w-4xl">
-        {/* ส่วนที่ 3: แบนเนอร์ (ลอยขึ้นมาอันสุดท้าย หน่วงเวลา 400ms) */}
+        {/* ส่วนที่ 3: วิดีโอแบนเนอร์ (ลอยขึ้นมาอันสุดท้าย หน่วงเวลา 400ms) */}
         <ScrollReveal delay={400}>
-          <div className="rounded-3xl overflow-hidden shadow-lg border-4 border-white transition-transform hover:scale-[1.02] duration-500">
+          <div 
+            className="relative rounded-3xl overflow-hidden shadow-lg border-4 border-white transition-transform hover:scale-[1.02] duration-500 bg-beige"
+            onContextMenu={(e) => e.preventDefault()} // 🔒 ป้องกันคลิกขวา
+            onDragStart={(e) => e.preventDefault()} // 🔒 ป้องกันการคลิกลาก
+          >
             
-            {/* รูปสำหรับมือถือ (แสดงเฉพาะหน้าจอเล็กกว่า md) */}
-            <div className="block md:hidden">
-              <ProtectedImage 
-                apiEndpoint="/assets/banner2.jpg" 
-                altText="Hongshi Hero Banner Mobile" 
-              />
-            </div>
+            {/* 🔒 แผ่นใสบังวิดีโอ (Overlay) ป้องกันคนกดโดนวิดีโอโดยตรง */}
+            <div className="absolute inset-0 z-10 w-full h-full bg-transparent"></div>
 
-            {/* รูปสำหรับคอม/แท็บเล็ต (แสดงเฉพาะหน้าจอ md ขึ้นไป) */}
-            <div className="hidden md:block">
-              <ProtectedImage 
-                apiEndpoint="/assets/banner.jpg" 
-                altText="Hongshi Hero Banner Desktop" 
-              />
-            </div>
+            {/* แท็ก Video พร้อม Attributes ป้องกันการดาวน์โหลด */}
+            <video 
+              className="w-full h-auto object-cover pointer-events-none select-none" 
+              autoPlay 
+              loop 
+              muted 
+              playsInline
+              disablePictureInPicture // 🔒 ป้องกันโหมดจอเล็กซ้อนจอ
+              controlsList="nodownload nofullscreen noremoteplayback" // 🔒 ซ่อนปุ่มดาวน์โหลดเสริมของเบราว์เซอร์
+            >
+              {/* อ้างอิงโฟลเดอร์ public/assets/banner.mp4 */}
+              <source src="/assets/banner.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
 
           </div>
         </ScrollReveal>

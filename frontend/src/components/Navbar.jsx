@@ -9,17 +9,50 @@ export default function Navbar() {
   // 1. ดึงภาษาปัจจุบัน, ฟังก์ชันสลับภาษา, และคำแปล (t) มาใช้งาน
   const { language, toggleLanguage, t } = useLanguage();
 
-  // === 🚀 ระบบ Easter Egg (ความลับ) ===
+  // === 🚀 ระบบ Easter Egg (สุ่มรูปและข้อความ) ===
   const [clickCount, setClickCount] = useState(0);
   const [showEasterEgg, setShowEasterEgg] = useState(false);
+  const [randomImage, setRandomImage] = useState('');
+  const [randomMessage, setRandomMessage] = useState('');
+
+  // คลังข้อความสุ่ม (แยก 2 ภาษา)
+  const surpriseMessages = {
+    th: [
+      "แอบมากดอะไรตรงนี้เนี่ย! ความลับแตกหมดแล้ววว 🤫",
+      "ขอบคุณที่แวะมานะ! รับหัวใจไปเลยดวงโตๆ 🩵",
+      "เก่งมาก! คุณคือสุดยอดนักสืบประจำด้อมเรา 🕵️‍♀️",
+      "เจอความลับแล้ว ห้ามเอาไปบอกใครนะ! จุ๊ๆ 🤐",
+      "อุตส่าห์ซ่อนไว้ตั้งลึก ยังหาเจออีก เก่งจัง! ✨",
+      "คุณได้รับสิทธิ์ในการโดนตกอีก 100 ครั้ง! 💘"
+    ],
+    en: [
+      "What are you clicking? The secret is out! 🤫",
+      "Thanks for dropping by! Have a big heart 🩵",
+      "Great job! You're the best detective in the fandom 🕵️‍♀️",
+      "You found the secret! Don't tell anyone! 🤐",
+      "Hidden so deep, but you still found it. Amazing! ✨",
+      "You have received the right to fall in love 100 more times! 💘"
+    ]
+  };
 
   // ฟังก์ชันนับการกดโลโก้
   const handleLogoClick = (e) => {
     setClickCount((prev) => prev + 1);
     
     // ถ้ากดรัวๆ ครบ 5 ครั้ง
-    if (clickCount + 1 === 5) {
+    if (clickCount + 1 === 3) {
       e.preventDefault(); // ป้องกันไม่ให้โหลดหน้าใหม่
+      
+      // 1. สุ่มตัวเลข 1 ถึง 10 แล้วทำให้เป็น format "01", "02", ..., "10"
+      const randomNum = Math.floor(Math.random() * 10) + 1;
+      const formattedNum = randomNum.toString().padStart(2, '0');
+      setRandomImage(`/assets/secret/${formattedNum}.png`);
+
+      // 2. สุ่มข้อความตามภาษาปัจจุบัน
+      const messages = surpriseMessages[language] || surpriseMessages.th;
+      const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+      setRandomMessage(randomMsg);
+
       setShowEasterEgg(true);
       setClickCount(0); // รีเซ็ตการนับ
     }
@@ -95,11 +128,14 @@ export default function Navbar() {
                 className="text-navy hover:text-azalea focus:outline-none transition-colors p-2"
                 aria-label="Toggle Menu"
               >
+                {/* ใช้ SVG ไอคอนเพื่อให้ดูคมชัดและสวยงามบนมือถือ */}
                 {isOpen ? (
+                  // ไอคอน กากบาท (✕) ตอนเปิดเมนู
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
+                  // ไอคอน 3 ขีด (Hamburger) ตอนปิดเมนู
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
@@ -134,7 +170,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* === โมดอล Easter Egg === */}
+      {/* === โมดอล Easter Egg (สุ่มภาพและข้อความ) === */}
       {showEasterEgg && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/60 backdrop-blur-md transition-opacity">
           <div className="bg-white p-8 md:p-10 rounded-[35px] w-[95%] md:w-full max-w-sm shadow-2xl relative border-4 border-skyblue text-center animate-bounce-short">
@@ -144,14 +180,14 @@ export default function Navbar() {
               🎁
             </div>
 
-            {/* ส่วนรูปภาพลับ (อย่าลืมเตรียมรูปชื่อ secret-photo.jpg ไว้ในแฟ้ม public/assets) */}
+            {/* ส่วนรูปภาพลับที่ถูกสุ่มมา */}
             <div className="w-full aspect-square bg-beige rounded-2xl overflow-hidden mb-6 mt-4 shadow-inner border-2 border-palepink">
               <img 
-                src="/assets/secret-photo.jpg" 
-                alt="Secret Hongshi" 
+                src={randomImage} 
+                alt="Secret Surprise" 
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  // Fallback กรณีหาภาพไม่เจอ
+                  // Fallback กรณีที่หาภาพไม่เจอ (เช่นลืมอัปโหลดภาพเบอร์นั้นๆ)
                   e.target.onerror = null; 
                   e.target.src = "https://via.placeholder.com/400x400/FFE4E1/2D3748?text=Secret+Photo";
                 }}
@@ -159,17 +195,19 @@ export default function Navbar() {
             </div>
 
             <h3 className="text-xl md:text-2xl font-heading font-bold text-navy mb-2">
-              {t.easterEgg?.title || '🎉 เซอร์ไพรส์!'}
+              {language === 'th' ? '🎉 เซอร์ไพรส์!' : '🎉 Surprise!'}
             </h3>
-            <p className="font-body text-navy/80 text-sm leading-relaxed mb-6">
-              {t.easterEgg?.desc || 'ขอบคุณที่แวะมาฉลองวันเกิดด้วยกันนะครับ รักทุกคนเลยยย 🩵 - ฮงชิ'}
+            
+            {/* ข้อความสุ่ม */}
+            <p className="font-body text-navy/80 text-sm md:text-base leading-relaxed mb-6 font-medium">
+              {randomMessage}
             </p>
 
             <button 
               onClick={() => setShowEasterEgg(false)}
               className="w-full bg-skyblue text-navy font-bold py-3 rounded-2xl hover:bg-azalea hover:text-white transition-colors shadow-sm"
             >
-              {t.easterEgg?.closeBtn || 'ปิดหน้าต่าง'}
+              {language === 'th' ? 'ปิดหน้าต่าง' : 'Close'}
             </button>
 
           </div>
