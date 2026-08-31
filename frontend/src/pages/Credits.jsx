@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 export default function Credits() {
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
-  const hashtags = "#HappyHongshihoshiDay2026 #Hongshihoshi #LYKN";
+  const hashtags = "#ONEMORESTEPwithHONGSHI #Hongshihoshi #LYKN";
 
   const handleCopyHashtags = () => {
     navigator.clipboard.writeText(hashtags);
