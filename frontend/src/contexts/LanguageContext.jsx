@@ -13,7 +13,7 @@ export const translations = {
     },
     home: {
       welcome: 'ยินดีต้อนรับสู่โปรเจกต์วันเกิด',
-      title: 'HAPPY HONGSHI DAY 2026',
+      title: 'ONE MORE STEP with HONGSHI',
       subtitle: 'มาร่วมส่งความรักและฉลองวันเกิดครบรอบ 23 ปี ให้กับ "ฮงชิ" ไปด้วยกันนะครับ 🩵',
       enterBtn: 'เข้าสู่เว็บไซต์',
       date: '16 ตุลาคม 2026'
@@ -97,7 +97,9 @@ export const translations = {
       teamTitle: '✨ Team & Special Thanks',
       memberRole: 'Team Member',
       thanksTitle: 'ขอบคุณ ไลค์ยู (LYKYOU)',
-      thanksDesc: 'ขอขอบคุณแฟนคลับชาวไลล์ทุกคนที่ร่วมโดเนทและสนับสนุนโปรเจกต์นี้ให้สำเร็จลุล่วงไปได้ด้วยดี ความรักและพลังซัพพอร์ตของทุกคนจะส่งถึงฮงชิอย่างแน่นอนครับ!'
+      thanksDesc: 'ขอขอบคุณแฟนคลับชาวไลล์ทุกคนที่ร่วมโดเนทและสนับสนุนโปรเจกต์นี้ให้สำเร็จลุล่วงไปได้ด้วยดี ความรักและพลังซัพพอร์ตของทุกคนจะส่งถึงฮงชิอย่างแน่นอนครับ!',
+      disclaimerTitle: '📸 หมายเหตุเกี่ยวกับสื่อ (Media Disclaimer)',
+      disclaimerDesc: 'ภาพและวิดีโอทั้งหมดที่ปรากฏบนเว็บไซต์นี้ ได้รับการขออนุญาตจากเจ้าของผลงานเพื่อนำมาใช้ในโปรเจกต์นี้เรียบร้อยแล้ว ขอขอบคุณสำหรับภาพและคลิปสวยๆ ของฮงชิที่นำมาแบ่งปันกันนะครับ'
     },
     faq: {
       title: 'คำถามที่พบบ่อย (FAQ & Rules)',
@@ -135,6 +137,19 @@ export const translations = {
       title: '🎉 เซอร์ไพรส์! คุณค้นพบความลับ!',
       desc: 'ขอบคุณที่แวะมาฉลองวันเกิดด้วยกันนะครับ รักทุกคนเลยยย 🩵 - ฮงชิ',
       closeBtn: 'ปิดหน้าต่าง'
+    },
+    termsModal: {
+      title: 'ยินดีต้อนรับสู่ Hongshi Day!',
+      subtitle: 'โปรเจกต์นี้จัดทำขึ้นโดยแฟนคลับ (LYKYOU) เพื่อฉลองวันเกิดฮงชิ 🩵',
+      intro: 'เพื่อให้พื้นที่นี้เต็มไปด้วยพลังบวก ขอความร่วมมืออ่านข้อตกลงก่อนใช้งานนะครับ:',
+      rules: [
+        { icon: '📌', title: 'โปรเจกต์แฟนเมด', desc: 'เว็บไซต์นี้จัดทำขึ้นโดยแฟนคลับ ไม่มีส่วนเกี่ยวข้องกับค่ายต้นสังกัด (GMMTV / RISER MUSIC)' },
+        { icon: '📸', title: 'ลิขสิทธิ์สื่อ (Media Rights)', desc: 'ภาพและวิดีโอทั้งหมดที่ปรากฏบนเว็บไซต์นี้ ได้รับการขออนุญาตจากเจ้าของผลงานเพื่อนำมาใช้ในโปรเจกต์นี้เรียบร้อยแล้ว' },
+        { icon: '💬', title: 'ถ้อยคำสุภาพ', desc: 'ขอความร่วมมือใช้คำสุภาพ ให้เกียรติศิลปินและผู้อื่น ห้ามสแปม หรือใช้คำหยาบ (ระบบมี AI กรองคำอัตโนมัติ)' },
+        { icon: '🔒', title: 'ความเป็นส่วนตัว', desc: 'ชื่อและคำอวยพรของคุณจะแสดงเป็นสาธารณะหน้าเว็บ โปรดหลีกเลี่ยงการใส่ข้อมูลส่วนตัวที่สำคัญ' },
+        { icon: '🚨', title: 'การรายงาน', desc: 'หากพบเห็นข้อความไม่เหมาะสม สามารถกดไอคอนไซเรน 🚨 บนกล่องข้อความเพื่อรีพอร์ตได้ทันที' }
+      ],
+      acceptBtn: '✅ รับทราบและเข้าสู่เว็บไซต์'
     }
   },
   en: {
@@ -148,7 +163,7 @@ export const translations = {
     },
     home: {
       welcome: 'Welcome to the Birthday Project',
-      title: 'HAPPY HONGSHI DAY 2026',
+      title: 'ONE MORE STEP with HONGSHI',
       subtitle: 'Join us in sending love and celebrating HONGSHI\'s 23rd birthday together 🩵',
       enterBtn: 'Enter Site',
       date: 'October 16, 2026'
@@ -232,7 +247,9 @@ export const translations = {
       teamTitle: '✨ Team & Special Thanks',
       memberRole: 'Team Member',
       thanksTitle: 'Thank You, LYKYOU',
-      thanksDesc: 'A huge thank you to all LYKYOU who donated and supported this project. Your love and support will definitely reach Hongshi!'
+      thanksDesc: 'A huge thank you to all LYKYOU who donated and supported this project. Your love and support will definitely reach Hongshi!',
+      disclaimerTitle: '📸 Media Disclaimer',
+      disclaimerDesc: 'All photos and videos featured on this website have been used with permission from their respective owners. Thank you for sharing such beautiful media of Hongshi with us.'
     },
     faq: {
       title: 'FAQ & Rules',
@@ -270,6 +287,19 @@ export const translations = {
       title: '🎉 Surprise! You found a secret!',
       desc: 'Thank you for coming to celebrate my birthday. Love you all! 🩵 - Hongshi',
       closeBtn: 'Close'
+    },
+    termsModal: {
+      title: 'Welcome to Hongshi Day!',
+      subtitle: 'This project is created by fans (LYKYOU) to celebrate Hongshi\'s birthday 🩵',
+      intro: 'To keep this space full of positive energy, please read our guidelines:',
+      rules: [
+        { icon: '📌', title: 'Fan-Made Project', desc: 'This website is an unofficial fan project and is not affiliated with GMMTV or RISER MUSIC.' },
+        { icon: '📸', title: 'Media Copyright', desc: 'All photos and videos featured on this website have been used with explicit permission from their respective owners.' },
+        { icon: '💬', title: 'Be Respectful', desc: 'Please use polite language. No spamming, profanity, or hateful content (AI filters are active).' },
+        { icon: '🔒', title: 'Privacy Warning', desc: 'Your submitted name and wishes will be displayed publicly. Please avoid sharing sensitive personal information.' },
+        { icon: '🚨', title: 'Reporting', desc: 'If you spot any inappropriate content, click the siren icon 🚨 to report it for admin review.' }
+      ],
+      acceptBtn: '✅ I Understand & Enter Site'
     }
   },
 };

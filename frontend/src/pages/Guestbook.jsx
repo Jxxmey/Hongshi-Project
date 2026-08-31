@@ -154,7 +154,7 @@ export default function Guestbook() {
   };
 
   return (
-    <div className="relative min-h-[85vh] w-full overflow-hidden bg-gradient-to-b from-beige via-white to-palepink/30 selection:bg-azalea selection:text-white pb-20">
+    <div className="relative min-h-[85vh] w-full overflow-hidden selection:bg-azalea selection:text-white pb-20">
       
       <ScrollReveal>
         <div className="text-center pt-10 px-4 relative z-10 pointer-events-none">

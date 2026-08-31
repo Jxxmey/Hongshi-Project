@@ -39,7 +39,7 @@ export default function Navbar() {
   const handleLogoClick = (e) => {
     setClickCount((prev) => prev + 1);
     
-    // ถ้ากดรัวๆ ครบ 5 ครั้ง
+    // ถ้ากดรัวๆ ครบ 3 ครั้ง
     if (clickCount + 1 === 3) {
       e.preventDefault(); // ป้องกันไม่ให้โหลดหน้าใหม่
       
@@ -180,14 +180,21 @@ export default function Navbar() {
               🎁
             </div>
 
-            {/* ส่วนรูปภาพลับที่ถูกสุ่มมา */}
-            <div className="w-full aspect-square bg-beige rounded-2xl overflow-hidden mb-6 mt-4 shadow-inner border-2 border-palepink">
+            {/* ส่วนรูปภาพลับที่ถูกสุ่มมา พร้อมระบบป้องกันการเซฟ */}
+            <div 
+              className="relative w-full aspect-square bg-beige rounded-2xl overflow-hidden mb-6 mt-4 shadow-inner border-2 border-palepink select-none"
+              onContextMenu={(e) => e.preventDefault()} // 🔒 ป้องกันคลิกขวา
+              onDragStart={(e) => e.preventDefault()} // 🔒 ป้องกันการลากรูป
+            >
+              {/* แผ่นใสบังทับอีกชั้น */}
+              <div className="absolute inset-0 z-10 w-full h-full bg-transparent"></div>
+              
               <img 
                 src={randomImage} 
                 alt="Secret Surprise" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover pointer-events-none"
                 onError={(e) => {
-                  // Fallback กรณีที่หาภาพไม่เจอ (เช่นลืมอัปโหลดภาพเบอร์นั้นๆ)
+                  // Fallback กรณีที่หาภาพไม่เจอ
                   e.target.onerror = null; 
                   e.target.src = "https://via.placeholder.com/400x400/FFE4E1/2D3748?text=Secret+Photo";
                 }}

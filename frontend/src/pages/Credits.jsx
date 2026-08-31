@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
-import { useLanguage } from '../contexts/LanguageContext'; // ดึงระบบ 2 ภาษามาใช้
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Credits() {
   const { t } = useLanguage();
@@ -64,6 +64,16 @@ export default function Credits() {
                 </a>
               </div>
             ))}
+          </div>
+
+          {/* +++ กล่องแจ้งเตือนลิขสิทธิ์ (Media Disclaimer) +++ */}
+          <div className="mt-8 bg-beige/50 p-6 md:p-8 rounded-2xl shadow-sm border-2 border-dashed border-palepink text-center space-y-3">
+            <h4 className="text-lg md:text-xl font-heading font-bold text-navy">
+              {t.credits.disclaimerTitle}
+            </h4>
+            <p className="text-navy/70 font-body text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+              {t.credits.disclaimerDesc}
+            </p>
           </div>
 
           <div className="mt-8 bg-white p-8 md:p-10 rounded-3xl shadow-sm text-center space-y-4 border-t-8 border-azalea hover:shadow-md transition-shadow duration-300">
