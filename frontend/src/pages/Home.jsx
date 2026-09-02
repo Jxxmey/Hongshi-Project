@@ -1,9 +1,18 @@
+import { Link } from 'react-router-dom'; // +++ นำเข้า Link สำหรับทำปุ่มนำทาง
 import Countdown from '../components/Countdown';
 import ScrollReveal from '../components/ScrollReveal';
-import { useLanguage } from '../contexts/LanguageContext'; // +++ ดึง Hook ของภาษามาใช้
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Home() {
-  const { t } = useLanguage(); // +++ เรียกใช้ตัวแปรคำแปล
+  const { t } = useLanguage();
+
+  // +++ สร้างข้อมูลปุ่มนำทางลัด +++
+  const quickLinks = [
+    { path: '/profile', label: t.nav.profile, icon: '🕺' },
+    { path: '/project', label: t.nav.project, icon: '📍' },
+    { path: '/gallery', label: t.nav.gallery, icon: '📸' },
+    { path: '/guestbook', label: t.nav.guestbook, icon: '💌' },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col items-center py-10 px-4 space-y-8 selection:bg-azalea selection:text-white pb-20">
@@ -37,8 +46,9 @@ export default function Home() {
         </ScrollReveal>
       </header>
 
-      <main className="w-full max-w-4xl">
-        {/* ส่วนที่ 3: วิดีโอแบนเนอร์ (ลอยขึ้นมาอันสุดท้าย หน่วงเวลา 400ms) */}
+      <main className="w-full max-w-4xl flex flex-col gap-10">
+        
+        {/* ส่วนที่ 3: วิดีโอแบนเนอร์ (ลอยขึ้นมา หน่วงเวลา 400ms) */}
         <ScrollReveal delay={400}>
           <div 
             className="relative rounded-3xl overflow-hidden shadow-lg border-4 border-white transition-transform hover:scale-[1.02] duration-500 bg-beige"
@@ -66,6 +76,27 @@ export default function Home() {
 
           </div>
         </ScrollReveal>
+
+        {/* +++ ส่วนที่ 4: ปุ่มเมนูลัด Quick Links (ลอยขึ้นมาอันสุดท้าย หน่วงเวลา 600ms) +++ */}
+        <ScrollReveal delay={600}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
+            {quickLinks.map((link, index) => (
+              <Link 
+                key={index} 
+                to={link.path}
+                className="flex flex-col items-center justify-center p-6 bg-white/70 hover:bg-white border-2 border-white rounded-[30px] shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-2 group backdrop-blur-sm"
+              >
+                <span className="text-3xl md:text-4xl mb-3 group-hover:scale-125 transition-transform duration-300 drop-shadow-sm">
+                  {link.icon}
+                </span>
+                <span className="font-heading font-bold text-navy text-sm md:text-base group-hover:text-azalea transition-colors text-center">
+                  {link.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </ScrollReveal>
+
       </main>
       
     </div>

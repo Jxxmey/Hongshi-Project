@@ -12,7 +12,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import SpotifyPlayer from './components/SpotifyPlayer';
 import TermsModal from './components/TermsModal';
 import AdminStats from './pages/AdminStats';
+import AdminImageRequest from './pages/AdminImageRequest';
 import FAQ from './pages/FAQ';
+import Gallery from './pages/Gallery'; // +++ Import Gallery component
 import { LanguageProvider } from './contexts/LanguageContext';
 import LoadingScreen from './components/LoadingScreen';
 
@@ -154,7 +156,9 @@ function App() {
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/reports" element={<AdminReports />} />
               <Route path="/admin/stats" element={<AdminStats />} />
+              <Route path="/admin/imagerequest" element={<AdminImageRequest />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/gallery" element={<Gallery />} />
             </Routes>
           </main>
 

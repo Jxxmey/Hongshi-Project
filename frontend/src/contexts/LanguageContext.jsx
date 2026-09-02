@@ -7,6 +7,7 @@ export const translations = {
       home: 'หน้าแรก',
       profile: 'รู้จักฮงชิ',
       project: 'รายละเอียด',
+      gallery: 'แกลเลอรี', // +++
       guestbook: 'อวยพรวันเกิด',
       faq: 'ถาม-ตอบ',
       terms: 'ข้อกำหนด',
@@ -30,6 +31,23 @@ export const translations = {
       mapBtn: '🗺️ เปิดนำทางใน Google Maps',
       giveawayTitle: '🎁 ของที่ระลึก (Giveaways)',
       tba: 'รออัปเดต'
+    },
+    gallery: {
+      title: 'HONGSHI GALLERY 📸',
+      subtitle: 'รวมโมเมนต์ความน่ารักและรอยยิ้มของฮงชิ',
+      uploadBtn: 'แชร์รูปภาพของคุณ',
+      empty: 'ยังไม่มีรูปภาพ มาเป็นคนแรกที่แชร์รูปฮงชิกันเถอะ! ✨',
+      closeBtn: 'ปิดหน้าต่าง',
+      uploadModal: {
+        title: '📸 แชร์รูปฮงชิ',
+        desc: 'รูปจะแสดงบนแกลเลอรีหลังจากแอดมินตรวจสอบแล้ว',
+        namePlaceholder: 'ชื่อของคุณ / Twitter (ไม่บังคับ)',
+        submitBtn: 'ส่งรูปภาพ 🚀',
+        uploading: 'กำลังส่งความรัก... ⏳',
+        success: 'อัปโหลดสำเร็จ! รูปของคุณกำลังรอตรวจสอบครับ 🩵',
+        error: 'เกิดข้อผิดพลาดในการอัปโหลด ❌ ลองใหม่อีกครั้งนะครับ',
+        noFile: 'กรุณาเลือกรูปภาพก่อนครับ'
+      }
     },
     guestbook: {
       title: 'Birthday Wishes Board',
@@ -157,6 +175,7 @@ export const translations = {
       home: 'Home',
       profile: 'Profile',
       project: 'Details',
+      gallery: 'Gallery', // +++
       guestbook: 'Wishes',
       faq: 'FAQ',
       terms: 'Terms',
@@ -180,6 +199,23 @@ export const translations = {
       mapBtn: '🗺️ Open in Google Maps',
       giveawayTitle: '🎁 Giveaways',
       tba: 'TBA'
+    },
+    gallery: {
+      title: 'HONGSHI GALLERY 📸',
+      subtitle: 'Collection of Hongshi\'s cute moments and smiles',
+      uploadBtn: 'Share Your Photo',
+      empty: 'No photos yet. Be the first to share Hongshi\'s moment! ✨',
+      closeBtn: 'Close',
+      uploadModal: {
+        title: '📸 Share Hongshi\'s Photo',
+        desc: 'Photos will be displayed after admin approval.',
+        namePlaceholder: 'Your Name / Twitter (Optional)',
+        submitBtn: 'Upload Photo 🚀',
+        uploading: 'Sending love... ⏳',
+        success: 'Upload successful! Waiting for admin approval 🩵',
+        error: 'An error occurred. Please try again ❌',
+        noFile: 'Please select an image first'
+      }
     },
     guestbook: {
       title: 'Birthday Wishes Board',

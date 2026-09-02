@@ -72,6 +72,7 @@ export default function Navbar() {
     { name: t.nav.home, path: '/' },
     { name: t.nav.profile, path: '/profile' },
     { name: t.nav.project, path: '/project' },
+    { name: t.nav.gallery, path: '/gallery' }, // +++ Add Gallery Link
     { name: t.nav.guestbook, path: '/guestbook' },
     { name: t.nav.faq, path: '/faq' },
   ];
