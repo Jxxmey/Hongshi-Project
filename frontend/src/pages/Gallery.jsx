@@ -122,7 +122,7 @@ export default function Gallery() {
           {photos.map((photo, index) => (
             <ScrollReveal key={photo._id || index} delay={(index % 10) * 50}>
               <div 
-                className="relative group overflow-hidden rounded-2xl md:rounded-[30px] shadow-sm cursor-pointer border-4 border-white hover:border-skyblue transition-all duration-300 hover:-translate-y-1 bg-beige select-none break-inside-avoid" // +++ เพิ่ม break-inside-avoid
+                className="relative group overflow-hidden rounded-2xl md:rounded-[30px] shadow-sm cursor-pointer border-4 border-white hover:border-skyblue transition-all duration-300 hover:-translate-y-1 bg-beige select-none break-inside-avoid mb-4" // +++ เพิ่ม break-inside-avoid และ mb-4
                 style={{ WebkitTouchCallout: 'none', userSelect: 'none' }} 
                 onClick={() => setSelectedImage(photo)}
                 onContextMenu={(e) => e.preventDefault()} 
