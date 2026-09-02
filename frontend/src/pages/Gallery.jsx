@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import ImageSkeleton from '../components/ImageSkeleton'; // นำเข้า Component ใหม่
-import SkeletonBox from '../components/SkeletonBox';     // นำเข้า Component ใหม่
+import SkeletonBox from '../components/ImageSkeleton';     // นำเข้า Component ใหม่
 import { useLanguage } from '../contexts/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
