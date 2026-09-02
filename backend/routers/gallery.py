@@ -15,7 +15,7 @@ cloudinary.config(
     api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
 
-@router.get("/")
+@router.get("")
 async def get_approved_photos():
     photos = []
     # ดึงเฉพาะรูปที่สถานะ "approved"
