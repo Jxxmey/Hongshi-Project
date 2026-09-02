@@ -7,19 +7,16 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 export default function Gallery() {
   const { t } = useLanguage();
   
-  // State สำหรับแสดงผล Gallery
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // State สำหรับ Upload Modal
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploaderName, setUploaderName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState({ text: '', type: '' });
 
-  // 1. ดึงข้อมูลรูปภาพจาก Backend ตอนโหลดหน้าเว็บ
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
@@ -37,7 +34,6 @@ export default function Gallery() {
     fetchPhotos();
   }, []);
 
-  // 2. ฟังก์ชันจัดการการอัปโหลดรูปภาพ
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
       setUploadFile(e.target.files[0]);
@@ -83,10 +79,23 @@ export default function Gallery() {
     }
   };
 
+  // ฟังก์ชันสุ่ม/กำหนดขนาดกล่องให้ดูสะเปะสะปะแบบ Bento Grid (ไม่มีทางซ้อนกัน)
+  const getGridClass = (index) => {
+    const patterns = [
+      'col-span-2 row-span-2 md:col-span-2 md:row-span-2', // ภาพใหญ่เด่น (Large square)
+      'col-span-1 row-span-1 md:col-span-1 md:row-span-1', // เล็ก (Small square)
+      'col-span-1 row-span-1 md:col-span-1 md:row-span-2', // ยาวแนวตั้ง (Tall rectangle)
+      'col-span-2 row-span-1 md:col-span-1 md:row-span-1', // กว้างแนวนอนในมือถือ, เล็กในคอม
+      'col-span-1 row-span-2 md:col-span-2 md:row-span-1', // ยาวแนวตั้งในมือถือ, กว้างแนวนอนในคอม
+      'col-span-1 row-span-1 md:col-span-1 md:row-span-1', // เล็ก (Small square)
+    ];
+    return patterns[index % patterns.length];
+  };
+
   return (
     <div className="py-12 px-4 max-w-6xl mx-auto space-y-12 pb-20">
       
-      {/* --- ส่วนหัว Header --- */}
+      {/* Header */}
       <ScrollReveal>
         <div className="text-center space-y-6">
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-navy drop-shadow-sm">
@@ -107,7 +116,7 @@ export default function Gallery() {
         </div>
       </ScrollReveal>
 
-      {/* --- ส่วนแสดงผล รูปภาพสไตล์ Pinterest (Masonry) --- */}
+      {/* Grid แบบสะเปะสะปะ (Bento Grid) - ใช้ grid-flow-row-dense หยอดกล่องลงที่ว่างอัตโนมัติ */}
       {loading ? (
         <div className="text-center font-heading font-bold text-navy/60 animate-pulse py-20">
           กำลังโหลดรูปภาพ... ⏳
@@ -117,40 +126,41 @@ export default function Gallery() {
           {t.gallery.empty}
         </div>
       ) : (
-        // +++ จุดสำคัญ: เปลี่ยนจาก grid เป็น columns +++
-        <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 auto-rows-[150px] md:auto-rows-[200px] lg:auto-rows-[250px] grid-flow-row-dense">
           {photos.map((photo, index) => (
-            <ScrollReveal key={photo._id || index} delay={(index % 10) * 50}>
-              <div 
-                className="relative group overflow-hidden rounded-2xl md:rounded-[30px] shadow-sm cursor-pointer border-4 border-white hover:border-skyblue transition-all duration-300 hover:-translate-y-1 bg-beige select-none break-inside-avoid mb-4" // +++ เพิ่ม break-inside-avoid และ mb-4
-                style={{ WebkitTouchCallout: 'none', userSelect: 'none' }} 
-                onClick={() => setSelectedImage(photo)}
-                onContextMenu={(e) => e.preventDefault()} 
-                onDragStart={(e) => e.preventDefault()}
-              >
-                <div className="absolute inset-0 z-10 bg-transparent"></div>
-                
-                {/* เอา aspect-[3/4] ออก เพื่อให้รูปแสดงตามสัดส่วนจริง (สูงต่ำไม่เท่ากัน) */}
-                <img 
-                  src={photo.imageUrl} 
-                  alt={`Uploaded by ${photo.uploaderName}`}
-                  className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
-                  loading="lazy"
-                  draggable="false"
-                />
-                
-                <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-navy/90 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                  <p className="text-white text-xs md:text-sm font-bold font-body truncate">
-                    Cr. {photo.uploaderName}
-                  </p>
+            // [>div]:h-full บังคับให้ ScrollReveal ขยายเต็มช่อง Grid เสมอ
+            <div key={photo._id || index} className={`relative w-full h-full ${getGridClass(index)} [&>*]:h-full [&>*]:w-full`}>
+              <ScrollReveal delay={(index % 10) * 50}>
+                <div 
+                  className="w-full h-full relative group overflow-hidden rounded-2xl md:rounded-[30px] shadow-sm cursor-pointer border-4 border-white hover:border-skyblue hover:shadow-xl transition-all duration-300 bg-beige select-none"
+                  onClick={() => setSelectedImage(photo)}
+                  onContextMenu={(e) => e.preventDefault()} 
+                  onDragStart={(e) => e.preventDefault()}
+                >
+                  <div className="absolute inset-0 z-10 bg-transparent"></div>
+                  
+                  {/* เปลี่ยนจาก h-auto เป็น h-full และใช้ object-cover เพื่อให้รูปเติมเต็มกรอบพอดี ไม่ซ้อน ไม่ทะลุ */}
+                  <img 
+                    src={photo.imageUrl} 
+                    alt={`Uploaded by ${photo.uploaderName}`}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
+                    loading="lazy"
+                    draggable="false"
+                  />
+                  
+                  <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-navy/90 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                    <p className="text-white text-xs md:text-sm font-bold font-body truncate">
+                      Cr. {photo.uploaderName}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </ScrollReveal>
+              </ScrollReveal>
+            </div>
           ))}
         </div>
       )}
 
-      {/* --- ป๊อปอัปดูรูปขยายใหญ่ (Lightbox) --- */}
+      {/* Lightbox Modal (ยังเหมือนเดิม) */}
       {selectedImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/90 backdrop-blur-md animate-fade-in"
@@ -184,7 +194,7 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* --- ป๊อปอัปสำหรับอัปโหลดรูปลง Backend --- */}
+      {/* Upload Modal (ยังเหมือนเดิม) */}
       {isUploadOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/70 backdrop-blur-sm animate-fade-in">
           <div className="bg-white p-8 rounded-[30px] w-full max-w-md shadow-2xl relative border-t-8 border-skyblue">
@@ -242,7 +252,6 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* Animation Styles */}
       <style dangerouslySetInnerHTML={{__html: `
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
