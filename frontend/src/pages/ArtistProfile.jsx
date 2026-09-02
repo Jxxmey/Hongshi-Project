@@ -1,4 +1,4 @@
-import ProtectedImage from '../components/ProtectedImage';
+import ImageSkeleton from '../components/ImageSkeleton'; // +++ 1. Import Component
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -39,11 +39,20 @@ export default function ArtistProfile() {
           
           <div className="md:col-span-5 flex justify-center w-full">
             <div className="group w-full max-w-[320px] flex flex-col bg-white p-3 rounded-3xl shadow-lg border-2 border-palepink hover:border-azalea hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden bg-beige">
-                <div className="w-full h-full [&>img]:w-full [&>img]:h-full [&>img]:object-cover [&>img]:object-top group-hover:scale-105 transition-transform duration-700 ease-out">
-                  <ProtectedImage apiEndpoint="/assets/profile.jpg" altText="Hong Profile" />
-                </div>
-              </div>
+              
+              {/* +++ 2. ใช้ ImageSkeleton ห่อตรงรูป Profile Card +++ */}
+              <ImageSkeleton 
+                src="/assets/profile.jpg" 
+                alt="Hong Profile"
+                containerClassName="relative w-full aspect-[3/4] rounded-2xl overflow-hidden bg-beige"
+                imageClassName="object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out"
+                onContextMenu={(e) => e.preventDefault()} // 🔒 ป้องกันคลิกขวา
+                onDragStart={(e) => e.preventDefault()} // 🔒 ป้องกันการลากรูป
+              >
+                 {/* แผ่นใสบังทับอีกชั้น */}
+                 <div className="absolute inset-0 z-10 w-full h-full bg-transparent"></div>
+              </ImageSkeleton>
+
               <div className="relative z-20 flex flex-col flex-1 pt-5 pb-2 px-2 font-body">
                 <div className="text-center mb-4">
                   <h3 className="text-2xl font-heading font-black text-navy leading-tight tracking-widest">
@@ -157,9 +166,16 @@ export default function ArtistProfile() {
                 <div key={index} className={`bg-beige/40 p-6 rounded-2xl border-l-4 ${borders[index]} hover:shadow-md transition space-y-4`}>
                   <span className="text-3xl mb-3 block">{song.emoji}</span>
                   <h4 className="text-lg font-bold text-navy mb-2">{song.title}</h4>
-                  <div className="w-full aspect-video rounded-xl overflow-hidden">
-                    <iframe width="100%" height="100%" src={youtubeLinks[index]} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
+                  
+                  {/* +++ 3. ทำ Skeleton แบบหลอกๆ ให้ iframe YouTube +++ */}
+                  <div className="w-full aspect-video rounded-xl overflow-hidden relative bg-gray-100">
+                     {/* วงกลมหมุนๆ ระหว่างรอโหลด (เนื่องจาก iframe ยิง event onLoad ให้ react ยาก เลยใส่ทิ้งไว้ซ้อนหลัง) */}
+                     <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
+                        <span className="text-navy/40 font-bold text-sm">Loading Video...</span>
+                     </div>
+                     <iframe className="relative z-10" width="100%" height="100%" src={youtubeLinks[index]} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
                   </div>
+
                   <p className="text-sm text-navy/80">{song.desc}</p>
                 </div>
               );
@@ -209,9 +225,13 @@ export default function ArtistProfile() {
             />
           </div>
 
-          <div className="w-full max-w-3xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-lg border-4 border-white">
+          {/* +++ 4. ทำ Skeleton แบบหลอกๆ ให้ iframe YouTube +++ */}
+          <div className="w-full max-w-3xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-lg border-4 border-white relative bg-gray-100">
+            <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
+               <span className="text-navy/40 font-bold text-lg">Loading Video...</span>
+            </div>
             <iframe
-              className="w-full h-full"
+              className="relative z-10 w-full h-full"
               src="https://www.youtube.com/embed/kqiruuXSplM?si=92RFSbLZIIO3BdSZ"
               title="YouTube video player"
               frameBorder="0"

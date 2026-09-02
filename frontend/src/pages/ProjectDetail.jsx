@@ -1,8 +1,12 @@
+import { useState } from 'react'; // +++ 1. Import useState
 import ScrollReveal from '../components/ScrollReveal';
-import { useLanguage } from '../contexts/LanguageContext'; // +++ ดึง Hook ของภาษามาใช้
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function ProjectDetail() {
-  const { t } = useLanguage(); // +++ เรียกใช้ตัวแปร t
+  const { t } = useLanguage();
+
+  // +++ 2. สร้าง State สำหรับตรวจสอบการโหลดของแผนที่ Google Maps
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   return (
     <div className="py-12 px-4 max-w-5xl mx-auto space-y-16 selection:bg-azalea selection:text-white pb-20">
@@ -40,12 +44,35 @@ export default function ProjectDetail() {
           <h3 className="text-2xl font-heading font-bold text-navy border-b-4 border-skyblue pb-2 mb-6 inline-block">
             {t.project.mapTitle}
           </h3>
-          <div className="w-full h-64 md:h-96 bg-gray-200 rounded-2xl overflow-hidden shadow-sm relative border-4 border-white hover:border-skyblue transition-colors duration-300">
+          
+          <div className="w-full h-64 md:h-96 bg-gray-100 rounded-2xl overflow-hidden shadow-sm relative border-4 border-white hover:border-skyblue transition-colors duration-300">
+            
+            {/* +++ 3. โหมด Skeleton: แสดงแอนิเมชันกระพริบระหว่างรอ iframe แผนที่โหลดเสร็จ +++ */}
+            {!mapLoaded && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center z-0">
+                <span className="text-navy/50 font-bold animate-pulse">กำลังโหลดแผนที่... 📍</span>
+              </div>
+            )}
+
+            {/* แท็ก iframe ของ Google Maps */}
             <iframe 
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.311!2d100.528!3d13.754!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zU29scmlzZSBDYWZl!5e0!3m2!1sth!2sth!4v1700000000000!5m2!1sth!2sth" 
-              width="100%" height="100%" style={{ border: 0 }} allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Solrise Cafe Location"
+              width="100%" 
+              height="100%" 
+              style={{ border: 0 }} 
+              allowFullScreen="" 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade" 
+              title="Solrise Cafe Location"
+              // +++ 4. ซ่อนแผนที่ไว้ด้วย opacity-0 และค่อยเฟดขึ้นมาตอน onLoad เสร็จ +++
+              onLoad={() => setMapLoaded(true)}
+              className={`absolute inset-0 z-10 transition-opacity duration-1000 ${
+                mapLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
             ></iframe>
+            
           </div>
+          
           <div className="mt-8 text-center">
             <a href="https://maps.app.goo.gl/vN6xmL9Qi9JJ7RqAA" target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-skyblue text-navy font-heading font-bold px-8 py-4 rounded-full shadow-md hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-lg">

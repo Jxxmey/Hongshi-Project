@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
+import ImageSkeleton from '../components/ImageSkeleton'; // นำเข้า Component ใหม่
+import SkeletonBox from '../components/SkeletonBox';     // นำเข้า Component ใหม่
 import { useLanguage } from '../contexts/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -79,15 +81,15 @@ export default function Gallery() {
     }
   };
 
-  // ฟังก์ชันสุ่ม/กำหนดขนาดกล่องให้ดูสะเปะสะปะแบบ Bento Grid (ไม่มีทางซ้อนกัน)
+  // แพทเทิร์น Bento Grid
   const getGridClass = (index) => {
     const patterns = [
-      'col-span-2 row-span-2 md:col-span-2 md:row-span-2', // ภาพใหญ่เด่น (Large square)
-      'col-span-1 row-span-1 md:col-span-1 md:row-span-1', // เล็ก (Small square)
-      'col-span-1 row-span-1 md:col-span-1 md:row-span-2', // ยาวแนวตั้ง (Tall rectangle)
-      'col-span-2 row-span-1 md:col-span-1 md:row-span-1', // กว้างแนวนอนในมือถือ, เล็กในคอม
-      'col-span-1 row-span-2 md:col-span-2 md:row-span-1', // ยาวแนวตั้งในมือถือ, กว้างแนวนอนในคอม
-      'col-span-1 row-span-1 md:col-span-1 md:row-span-1', // เล็ก (Small square)
+      'col-span-2 row-span-2 md:col-span-2 md:row-span-2',
+      'col-span-1 row-span-1 md:col-span-1 md:row-span-1',
+      'col-span-1 row-span-1 md:col-span-1 md:row-span-2',
+      'col-span-2 row-span-1 md:col-span-1 md:row-span-1',
+      'col-span-1 row-span-2 md:col-span-2 md:row-span-1',
+      'col-span-1 row-span-1 md:col-span-1 md:row-span-1',
     ];
     return patterns[index % patterns.length];
   };
@@ -116,10 +118,13 @@ export default function Gallery() {
         </div>
       </ScrollReveal>
 
-      {/* Grid แบบสะเปะสะปะ (Bento Grid) - ใช้ grid-flow-row-dense หยอดกล่องลงที่ว่างอัตโนมัติ */}
+      {/* Grid Layout */}
       {loading ? (
-        <div className="text-center font-heading font-bold text-navy/60 animate-pulse py-20">
-          กำลังโหลดรูปภาพ... ⏳
+        // เรียกใช้ SkeletonBox ระหว่างรอข้อมูล 
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 auto-rows-[150px] md:auto-rows-[200px] lg:auto-rows-[250px] grid-flow-row-dense">
+          {[...Array(6)].map((_, i) => (
+            <SkeletonBox key={i} className={`rounded-2xl md:rounded-[30px] w-full h-full ${getGridClass(i)}`} />
+          ))}
         </div>
       ) : photos.length === 0 ? (
         <div className="text-center font-body text-navy/60 bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-palepink">
@@ -128,32 +133,30 @@ export default function Gallery() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 auto-rows-[150px] md:auto-rows-[200px] lg:auto-rows-[250px] grid-flow-row-dense">
           {photos.map((photo, index) => (
-            // [>div]:h-full บังคับให้ ScrollReveal ขยายเต็มช่อง Grid เสมอ
             <div key={photo._id || index} className={`relative w-full h-full ${getGridClass(index)} [&>*]:h-full [&>*]:w-full`}>
               <ScrollReveal delay={(index % 10) * 50}>
-                <div 
-                  className="w-full h-full relative group overflow-hidden rounded-2xl md:rounded-[30px] shadow-sm cursor-pointer border-4 border-white hover:border-skyblue hover:shadow-xl transition-all duration-300 bg-beige select-none"
+                
+                {/* ใช้งาน ImageSkeleton Component */}
+                <ImageSkeleton
+                  src={photo.imageUrl}
+                  alt={`Uploaded by ${photo.uploaderName}`}
+                  containerClassName="group rounded-2xl md:rounded-[30px] shadow-sm cursor-pointer border-4 border-white hover:border-skyblue hover:shadow-xl transition-all duration-300 select-none"
+                  imageClassName="group-hover:scale-110 object-cover"
                   onClick={() => setSelectedImage(photo)}
-                  onContextMenu={(e) => e.preventDefault()} 
+                  onContextMenu={(e) => e.preventDefault()}
                   onDragStart={(e) => e.preventDefault()}
                 >
+                  {/* Layer กันคลิกขวา */}
                   <div className="absolute inset-0 z-10 bg-transparent"></div>
                   
-                  {/* เปลี่ยนจาก h-auto เป็น h-full และใช้ object-cover เพื่อให้รูปเติมเต็มกรอบพอดี ไม่ซ้อน ไม่ทะลุ */}
-                  <img 
-                    src={photo.imageUrl} 
-                    alt={`Uploaded by ${photo.uploaderName}`}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
-                    loading="lazy"
-                    draggable="false"
-                  />
-                  
+                  {/* ข้อความ Overlay */}
                   <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-navy/90 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
                     <p className="text-white text-xs md:text-sm font-bold font-body truncate">
                       Cr. {photo.uploaderName}
                     </p>
                   </div>
-                </div>
+                </ImageSkeleton>
+
               </ScrollReveal>
             </div>
           ))}
@@ -180,11 +183,12 @@ export default function Gallery() {
               onDragStart={(e) => e.preventDefault()}
             >
               <div className="absolute inset-0 z-10 bg-transparent"></div>
-              <img 
+              {/* ใช้ ImageSkeleton กับ Lightbox ด้วยก็ได้ เพื่อให้เนียนตาเวลาโหลดภาพขยาย */}
+              <ImageSkeleton 
                 src={selectedImage.imageUrl} 
-                className="w-full h-full max-h-[85vh] object-contain bg-black/50 pointer-events-none"
                 alt="Selected"
-                draggable="false"
+                containerClassName="w-full h-full bg-black/50"
+                imageClassName="max-h-[85vh] object-contain"
               />
             </div>
             <p className="text-white mt-4 font-body font-bold bg-navy/50 px-5 py-2 rounded-full border border-white/20">
@@ -198,21 +202,14 @@ export default function Gallery() {
       {isUploadOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/70 backdrop-blur-sm animate-fade-in">
           <div className="bg-white p-8 rounded-[30px] w-full max-w-md shadow-2xl relative border-t-8 border-skyblue">
-            
             <button 
               onClick={() => setIsUploadOpen(false)}
               className="absolute top-4 right-4 text-navy/50 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center transition-colors"
             >
               ✕
             </button>
-
-            <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center">
-              {t.gallery.uploadModal.title}
-            </h3>
-            <p className="text-sm font-body text-navy/70 text-center mb-6">
-              {t.gallery.uploadModal.desc}
-            </p>
-            
+            <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center">{t.gallery.uploadModal.title}</h3>
+            <p className="text-sm font-body text-navy/70 text-center mb-6">{t.gallery.uploadModal.desc}</p>
             <form onSubmit={handleUploadSubmit} className="space-y-5">
               <div className="bg-beige/40 p-4 rounded-2xl border-2 border-dashed border-skyblue/50 text-center">
                 <input 
@@ -222,7 +219,6 @@ export default function Gallery() {
                   className="w-full text-sm font-body file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-palepink file:text-navy hover:file:bg-azalea hover:file:text-white cursor-pointer"
                 />
               </div>
-
               <input 
                 type="text" 
                 placeholder={t.gallery.uploadModal.namePlaceholder}
@@ -230,7 +226,6 @@ export default function Gallery() {
                 onChange={(e) => setUploaderName(e.target.value)}
                 className="w-full p-3 font-body rounded-xl border-2 border-gray-100 bg-beige/30 focus:border-skyblue outline-none transition-colors"
               />
-              
               <button 
                 type="submit" 
                 disabled={isUploading}
@@ -239,12 +234,8 @@ export default function Gallery() {
                 {isUploading ? t.gallery.uploadModal.uploading : t.gallery.uploadModal.submitBtn}
               </button>
             </form>
-
             {uploadMessage.text && (
-              <div className={`mt-5 p-3 rounded-xl text-center font-bold font-body text-sm ${
-                uploadMessage.type === 'success' ? 'bg-green-100 text-green-700' : 
-                uploadMessage.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-              }`}>
+              <div className={`mt-5 p-3 rounded-xl text-center font-bold font-body text-sm ${uploadMessage.type === 'success' ? 'bg-green-100 text-green-700' : uploadMessage.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
                 {uploadMessage.text}
               </div>
             )}

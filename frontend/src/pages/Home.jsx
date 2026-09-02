@@ -1,12 +1,15 @@
-import { Link } from 'react-router-dom'; // +++ นำเข้า Link สำหรับทำปุ่มนำทาง
+import { useState } from 'react'; // +++ 1. Import useState เพิ่ม
+import { Link } from 'react-router-dom';
 import Countdown from '../components/Countdown';
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Home() {
   const { t } = useLanguage();
+  
+  // +++ 2. สร้าง State สำหรับจัดการสถานะการโหลดวิดีโอ
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
-  // +++ สร้างข้อมูลปุ่มนำทางลัด +++
   const quickLinks = [
     { path: '/profile', label: t.nav.profile, icon: '🕺' },
     { path: '/project', label: t.nav.project, icon: '📍' },
@@ -18,29 +21,25 @@ export default function Home() {
     <div className="min-h-screen flex flex-col items-center py-10 px-4 space-y-8 selection:bg-azalea selection:text-white pb-20">
       
       <header className="text-center flex flex-col items-center w-full">
-        {/* ส่วนที่ 1: หัวข้อและวันที่ (ลอยขึ้นมาทันที) */}
+        {/* ส่วนที่ 1: หัวข้อและวันที่ */}
         <ScrollReveal>
           <div className="mb-6 space-y-3">
-            {/* ข้อความต้อนรับเล็กๆ ด้านบน */}
             <span className="text-sm md:text-base font-bold text-navy/60 uppercase tracking-widest block">
               {t.home.welcome}
             </span>
-            
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-2 text-navy drop-shadow-sm">
               {t.home.title}
             </h1>
-            
             <p className="text-sm md:text-base font-body text-navy/80 max-w-2xl mx-auto px-4 pb-2">
               {t.home.subtitle}
             </p>
-
             <p className="text-lg font-bold text-navy bg-palepink inline-block px-8 py-2 rounded-full shadow-sm border-2 border-white">
               {t.home.date}
             </p>
           </div>
         </ScrollReveal>
         
-        {/* ส่วนที่ 2: นาฬิกานับถอยหลัง (ลอยตามมาทีหลัง หน่วงเวลา 200ms) */}
+        {/* ส่วนที่ 2: นาฬิกานับถอยหลัง */}
         <ScrollReveal delay={200}>
           <Countdown />
         </ScrollReveal>
@@ -48,28 +47,39 @@ export default function Home() {
 
       <main className="w-full max-w-4xl flex flex-col gap-10">
         
-        {/* ส่วนที่ 3: วิดีโอแบนเนอร์ (ลอยขึ้นมา หน่วงเวลา 400ms) */}
+        {/* ส่วนที่ 3: วิดีโอแบนเนอร์ */}
         <ScrollReveal delay={400}>
           <div 
-            className="relative rounded-3xl overflow-hidden shadow-lg border-4 border-white transition-transform hover:scale-[1.02] duration-500 bg-beige"
-            onContextMenu={(e) => e.preventDefault()} // 🔒 ป้องกันคลิกขวา
-            onDragStart={(e) => e.preventDefault()} // 🔒 ป้องกันการคลิกลาก
+            // +++ 3. เปลี่ยนพื้นหลังเริ่มต้นเป็นสีเทา (bg-gray-100)
+            className="relative rounded-3xl overflow-hidden shadow-lg border-4 border-white transition-transform hover:scale-[1.02] duration-500 bg-gray-100 aspect-video md:aspect-[21/9]"
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
           >
             
-            {/* 🔒 แผ่นใสบังวิดีโอ (Overlay) ป้องกันคนกดโดนวิดีโอโดยตรง */}
+            {/* +++ 4. โหมด Skeleton: แสดงสีเทากระพริบถ้ายังโหลดวิดีโอไม่เสร็จ */}
+            {!videoLoaded && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse z-0 flex items-center justify-center">
+                 <span className="text-navy/40 font-bold animate-pulse">Loading Video...</span>
+              </div>
+            )}
+
+            {/* แผ่นใสบังวิดีโอ (Overlay) */}
             <div className="absolute inset-0 z-10 w-full h-full bg-transparent"></div>
 
-            {/* แท็ก Video พร้อม Attributes ป้องกันการดาวน์โหลด */}
+            {/* แท็ก Video */}
             <video 
-              className="w-full h-auto object-cover pointer-events-none select-none" 
+              // +++ 5. ซ่อนวิดีโอ (opacity-0) จนกว่าจะโหลดข้อมูลพร้อมเล่น (onCanPlay)
+              className={`w-full h-full object-cover pointer-events-none select-none transition-opacity duration-1000 relative z-0 ${
+                videoLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
               autoPlay 
               loop 
               muted 
               playsInline
-              disablePictureInPicture // 🔒 ป้องกันโหมดจอเล็กซ้อนจอ
-              controlsList="nodownload nofullscreen noremoteplayback" // 🔒 ซ่อนปุ่มดาวน์โหลดเสริมของเบราว์เซอร์
+              disablePictureInPicture
+              controlsList="nodownload nofullscreen noremoteplayback"
+              onCanPlay={() => setVideoLoaded(true)} // +++ เมื่อเบราว์เซอร์ดาวน์โหลดวิดีโอพร้อมเล่น ให้เปลี่ยน State เป็น Loaded
             >
-              {/* อ้างอิงโฟลเดอร์ public/assets/banner.mp4 */}
               <source src="/assets/banner.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
@@ -77,7 +87,7 @@ export default function Home() {
           </div>
         </ScrollReveal>
 
-        {/* +++ ส่วนที่ 4: ปุ่มเมนูลัด Quick Links (ลอยขึ้นมาอันสุดท้าย หน่วงเวลา 600ms) +++ */}
+        {/* ส่วนที่ 4: ปุ่มเมนูลัด Quick Links */}
         <ScrollReveal delay={600}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
             {quickLinks.map((link, index) => (
