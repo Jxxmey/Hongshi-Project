@@ -61,11 +61,12 @@ async def upload_photo(
             "createdAt": datetime.utcnow()
         }
         
-        await gallery_collection.insert_one(new_photo)
+        # เก็บผลลัพธ์การ insert เพื่อเอา ID ของรูป
+        result = await gallery_collection.insert_one(new_photo)
+        photo_id = str(result.inserted_id) # แปลง ObjectId เป็น String
         
-        # 4. สั่งให้ส่งแจ้งเตือน LINE ทำงานอยู่เบื้องหลัง (Background Task)
-        # ส่งลิงก์ Cloudinary และชื่อคนอัปโหลดไปให้ฟังก์ชัน
-        background_tasks.add_task(send_image_upload_notification, image_url, uploaderName)
+        # 4. ส่งแจ้งเตือน LINE พร้อมแนบ photo_id ไปด้วย
+        background_tasks.add_task(send_image_upload_notification, image_url, uploaderName, photo_id)
         
         return {"message": "อัปโหลดสำเร็จ รอแอดมินตรวจสอบครับ"}
         

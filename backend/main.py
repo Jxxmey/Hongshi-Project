@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
+from routers import gallery, webhook
 
 # นำเข้า Routers จากโฟลเดอร์ routers
 from routers import wishes, admin, gallery
@@ -27,3 +28,4 @@ async def root():
 app.include_router(wishes.router)
 app.include_router(admin.router)
 app.include_router(gallery.router)
+app.include_router(webhook.router)
