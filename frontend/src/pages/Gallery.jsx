@@ -3,6 +3,7 @@ import ScrollReveal from '../components/ScrollReveal';
 import ImageSkeleton from '../components/ImageSkeleton';
 import SkeletonBox from '../components/ImageSkeleton'; 
 import { useLanguage } from '../contexts/LanguageContext';
+import Cropper from 'react-easy-crop'; // นำเข้าไลบรารีตัดรูป
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const ITEMS_PER_PAGE = 12;
@@ -19,10 +20,17 @@ export default function Gallery() {
   const [selectedImage, setSelectedImage] = useState(null);
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [uploadFile, setUploadFile] = useState(null);
   const [uploaderName, setUploaderName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState({ text: '', type: '' });
+
+  // State สำหรับระบบ Crop รูป
+  const [uploadFile, setUploadFile] = useState(null);
+  const [imageSrc, setImageSrc] = useState(null); // ไฟล์ดิบที่เพิ่งเลือก
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isCropping, setIsCropping] = useState(false); // สถานะว่าอยู่ในหน้าตัดรูปหรือไม่
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -47,7 +55,6 @@ export default function Gallery() {
     if (page === 1) return;
     const nextPhotos = allPhotos.slice(0, page * ITEMS_PER_PAGE);
     setDisplayedPhotos(nextPhotos);
-    
     if (nextPhotos.length >= allPhotos.length) {
       setHasMore(false);
     }
@@ -57,31 +64,78 @@ export default function Gallery() {
   const lastPhotoElementRef = useCallback(node => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
-    
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
         setPage(prevPage => prevPage + 1);
       }
     });
-    
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
+  // เมื่อผู้ใช้เลือกไฟล์ ให้โหลดเป็น Data URL เพื่อนำไปแสดงในตัวตัดรูป
   const handleFileChange = (e) => {
-    if (e.target.files[0]) {
-      setUploadFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setImageSrc(reader.result);
+        setIsCropping(true); // เปิดหน้าตัดรูป
+      });
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  // ฟังก์ชันสร้างไฟล์รูปภาพใหม่ที่ถูกตัดแล้ว
+  const createCroppedImage = async () => {
+    try {
+      const image = new Image();
+      image.src = imageSrc;
+      await new Promise((resolve) => (image.onload = resolve));
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // กำหนดขนาด Canvas เท่ากับขนาดรูปที่ครอบ
+      canvas.width = croppedAreaPixels.width;
+      canvas.height = croppedAreaPixels.height;
+
+      // วาดรูปลง Canvas
+      ctx.drawImage(
+        image,
+        croppedAreaPixels.x,
+        croppedAreaPixels.y,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height,
+        0,
+        0,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height
+      );
+
+      // แปลง Canvas เป็นไฟล์ Blob แบบ JPEG 
+      canvas.toBlob((blob) => {
+        const file = new File([blob], 'cropped_image.jpg', { type: 'image/jpeg' });
+        setUploadFile(file); // นำไฟล์ที่ตัดแล้วไปพักไว้เตรียมอัปโหลด
+        setIsCropping(false); // ปิดหน้าตัดรูป
+      }, 'image/jpeg', 0.9);
+    } catch (e) {
+      console.error("Crop error:", e);
     }
   };
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
     if (!uploadFile) {
-      setUploadMessage({ text: t.gallery.uploadModal.noFile, type: 'error' });
+      setUploadMessage({ text: t.gallery.uploadModal.noFile || 'กรุณาเลือกรูปภาพ', type: 'error' });
       return;
     }
 
     setIsUploading(true);
-    setUploadMessage({ text: t.gallery.uploadModal.uploading, type: 'info' });
+    setUploadMessage({ text: t.gallery.uploadModal.uploading || 'กำลังอัปโหลด...', type: 'info' });
 
     const formData = new FormData();
     formData.append('image', uploadFile);
@@ -95,32 +149,33 @@ export default function Gallery() {
 
       if (!response.ok) throw new Error('Upload Failed');
 
-      setUploadMessage({ text: t.gallery.uploadModal.success, type: 'success' });
+      setUploadMessage({ text: t.gallery.uploadModal.success || 'อัปโหลดสำเร็จ!', type: 'success' });
       
       setTimeout(() => {
-        setIsUploadOpen(false);
-        setUploadFile(null);
-        setUploaderName('');
-        setUploadMessage({ text: '', type: '' });
+        closeUploadModal();
       }, 3000);
-
     } catch (error) {
       console.error(error);
-      setUploadMessage({ text: t.gallery.uploadModal.error, type: 'error' });
+      setUploadMessage({ text: t.gallery.uploadModal.error || 'เกิดข้อผิดพลาด', type: 'error' });
     } finally {
       setIsUploading(false);
     }
   };
 
-  // สร้างลูกเล่นเอียงและขยับขึ้นลงแบบสุ่มให้ดูเป็นธรรมชาติ (ไม่ใช้การดึง row-span แล้ว)
+  const closeUploadModal = () => {
+    setIsUploadOpen(false);
+    setUploadFile(null);
+    setImageSrc(null);
+    setIsCropping(false);
+    setUploaderName('');
+    setUploadMessage({ text: '', type: '' });
+  };
+
   const getGridClass = (index) => {
     const rotations = ['-rotate-2', 'rotate-3', '-rotate-3', 'rotate-2', '-rotate-4', 'rotate-1'];
-    // ขยับขึ้นลงนิดหน่อยเพื่อให้ดูไม่เรียงกันเป๊ะเกินไป
     const translates = ['translate-y-0', 'translate-y-4 md:translate-y-8', '-translate-y-2', 'translate-y-2 md:translate-y-6', '-translate-y-4', 'translate-y-0'];
-    
     const rot = rotations[index % rotations.length];
     const trans = translates[index % translates.length];
-    
     return `${rot} ${trans}`;
   };
 
@@ -150,11 +205,10 @@ export default function Gallery() {
 
       {/* Grid Layout */}
       {loading ? (
-        // Grid ตอนโหลด: ปรับให้เว้นระยะ x, y แยกกัน
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12 md:gap-x-10 md:gap-y-16 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12 md:gap-x-10 md:gap-y-16 mt-8 px-2 md:px-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="p-4 sm:p-6 w-full aspect-[5/4]">
-              <SkeletonBox className={`rounded-2xl w-full h-full ${getGridClass(i)}`} />
+            <div key={i} className={`p-4 md:p-8 w-full aspect-[5/4] ${getGridClass(i)}`}>
+              <SkeletonBox className="rounded-[24px] w-full h-full" />
             </div>
           ))}
         </div>
@@ -164,23 +218,17 @@ export default function Gallery() {
         </div>
       ) : (
         <>
-          {/* ลบ auto-rows ออก เพื่อให้ความสูงเป็นไปตามภาพ และปรับ gap-y ให้กว้างพอไม่ให้ของตกแต่งทับกัน */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-14 md:gap-x-12 md:gap-y-20 mt-8 px-2 md:px-4">
             {displayedPhotos.map((photo, index) => {
               const isLastPhoto = displayedPhotos.length === index + 1;
-              
               return (
                 <div 
                   key={photo._id || index} 
                   ref={isLastPhoto ? lastPhotoElementRef : null} 
-                  // สร้างพื้นที่ Padding (p-4 md:p-8) กันชนให้ของตกแต่งอยู่ในกรอบ
                   className={`relative w-full p-4 md:p-8 transition-all duration-500 hover:rotate-0 hover:z-50 hover:scale-[1.02] ${getGridClass(index)}`}
                 >
                   <ScrollReveal delay={(index % 10) * 50} className="w-full">
-                    
                     <div className="frame-layout w-full group">
-                      
-                      {/* ของตกแต่ง ปรับขนาดในมือถือให้เล็กลงมาก (scale-[0.6]) เพื่อไม่ให้ซ้อนกัน */}
                       <span className="sparkle sparkle-one" aria-hidden="true">✦</span> 
                       <span className="sparkle sparkle-two" aria-hidden="true">✦</span>
                       <div className="dessert-sticker ice-cream ice-left scale-[0.6] sm:scale-75 md:scale-90 origin-bottom-right" aria-hidden="true">
@@ -191,10 +239,8 @@ export default function Gallery() {
                       </div>
                       <span className="dessert-sticker cake-slice scale-[0.65] sm:scale-75 md:scale-90 origin-bottom-left" aria-hidden="true"></span>
                       
-                      {/* ตัวกรอบหลัก */}
                       <article className="cake-frame bg-paper w-full flex flex-col cursor-pointer shadow-lg" onClick={() => setSelectedImage(photo)}>
                         <div className="photo-window relative w-full">
-                          
                           <ImageSkeleton
                             src={photo.imageUrl}
                             alt={`Uploaded by ${photo.uploaderName}`}
@@ -203,24 +249,19 @@ export default function Gallery() {
                             onContextMenu={(e) => e.preventDefault()}
                             onDragStart={(e) => e.preventDefault()}
                           />
-
                           <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-4 md:p-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
                             <p className="text-white text-sm md:text-base font-bold font-body truncate drop-shadow-md">
                               From {photo.uploaderName}
                             </p>
                           </div>
-
                         </div>
                       </article>
-
                     </div>
-
                   </ScrollReveal>
                 </div>
               );
             })}
           </div>
-          
           {hasMore && (
             <div className="flex justify-center mt-12 mb-8">
               <div className="w-8 h-8 border-4 border-skyblue border-t-transparent rounded-full animate-spin"></div>
@@ -229,66 +270,98 @@ export default function Gallery() {
         </>
       )}
 
-      {/* Lightbox Modal (ยังเหมือนเดิม) */}
+      {/* Lightbox Modal */}
       {selectedImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/90 backdrop-blur-md animate-fade-in"
           onClick={() => setSelectedImage(null)}
         >
           <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
-            <button 
-              onClick={() => setSelectedImage(null)}
-              className="absolute -top-12 right-0 md:-right-12 text-white hover:text-azalea bg-white/20 hover:bg-white/40 w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all z-20"
-            >✕</button>
-            <div 
-              className="w-full h-full overflow-hidden rounded-2xl md:rounded-[30px] border-4 border-white shadow-2xl relative select-none"
-              style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
-              onContextMenu={(e) => e.preventDefault()}
-              onDragStart={(e) => e.preventDefault()}
-            >
+            <button onClick={() => setSelectedImage(null)} className="absolute -top-12 right-0 md:-right-12 text-white hover:text-azalea bg-white/20 hover:bg-white/40 w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all z-20">✕</button>
+            <div className="w-full h-full overflow-hidden rounded-2xl md:rounded-[30px] border-4 border-white shadow-2xl relative select-none">
               <div className="absolute inset-0 z-10 bg-transparent"></div>
-              <ImageSkeleton 
-                src={selectedImage.imageUrl} 
-                alt="Selected"
-                containerClassName="w-full h-full bg-black/50"
-                imageClassName="max-h-[85vh] object-contain"
-              />
+              <ImageSkeleton src={selectedImage.imageUrl} alt="Selected" containerClassName="w-full h-full bg-black/50" imageClassName="max-h-[85vh] object-contain"/>
             </div>
-            <p className="text-white mt-4 font-body font-bold bg-navy/50 px-5 py-2 rounded-full border border-white/20">
-              From {selectedImage.uploaderName}
-            </p>
+            <p className="text-white mt-4 font-body font-bold bg-navy/50 px-5 py-2 rounded-full border border-white/20">From {selectedImage.uploaderName}</p>
           </div>
         </div>
       )}
 
-      {/* Upload Modal (ย่อไว้) */}
+      {/* Upload Modal (ปรับเพิ่มระบบ Crop รูปภาพ) */}
       {isUploadOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/70 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white p-8 rounded-[30px] w-full max-w-md shadow-2xl relative border-t-8 border-skyblue">
+          <div className="bg-white p-6 md:p-8 rounded-[30px] w-full max-w-md shadow-2xl relative border-t-8 border-skyblue flex flex-col max-h-[90vh]">
             <button 
-              onClick={() => setIsUploadOpen(false)}
-              className="absolute top-4 right-4 text-navy/50 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+              onClick={closeUploadModal}
+              className="absolute top-4 right-4 text-navy/50 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center transition-colors z-20"
             >✕</button>
-            <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center">{t.gallery.uploadModal.title}</h3>
-            <p className="text-sm font-body text-navy/70 text-center mb-6">{t.gallery.uploadModal.desc}</p>
-            <form onSubmit={handleUploadSubmit} className="space-y-5">
-              <div className="bg-beige/40 p-4 rounded-2xl border-2 border-dashed border-skyblue/50 text-center">
+            
+            <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center">
+              {isCropping ? "จัดตำแหน่งรูปภาพ" : t.gallery.uploadModal.title}
+            </h3>
+            
+            {isCropping ? (
+              <div className="flex-1 flex flex-col min-h-[300px]">
+                <p className="text-sm font-body text-navy/70 text-center mb-4">เลื่อนและซูมเพื่อให้รูปพอดีกับกรอบ</p>
+                <div className="relative w-full flex-1 bg-gray-900 rounded-2xl overflow-hidden mb-4 min-h-[300px]">
+                  <Cropper
+                    image={imageSrc}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={5 / 4} // บังคับสัดส่วนให้เป็น 5:4 พอดีกับกรอบ
+                    onCropChange={setCrop}
+                    onCropComplete={onCropComplete}
+                    onZoomChange={setZoom}
+                  />
+                </div>
+                {/* แถบเลื่อนซูม */}
                 <input 
-                  type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange}
-                  className="w-full text-sm font-body file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-palepink file:text-navy hover:file:bg-azalea hover:file:text-white cursor-pointer"
+                  type="range" min={1} max={3} step={0.1} value={zoom} 
+                  onChange={(e) => setZoom(e.target.value)} 
+                  className="w-full mb-4 accent-skyblue" 
                 />
+                <button 
+                  onClick={createCroppedImage} 
+                  className="w-full font-heading bg-skyblue text-navy font-bold py-3 rounded-xl hover:bg-azalea hover:text-white transition-all shadow-sm"
+                >
+                  ยืนยันการตัดรูป
+                </button>
               </div>
-              <input 
-                type="text" placeholder={t.gallery.uploadModal.namePlaceholder} value={uploaderName} onChange={(e) => setUploaderName(e.target.value)}
-                className="w-full p-3 font-body rounded-xl border-2 border-gray-100 bg-beige/30 focus:border-skyblue outline-none transition-colors"
-              />
-              <button 
-                type="submit" disabled={isUploading}
-                className="w-full font-heading bg-skyblue text-navy font-bold py-3.5 rounded-xl hover:bg-azalea hover:text-white transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 shadow-sm"
-              >
-                {isUploading ? t.gallery.uploadModal.uploading : t.gallery.uploadModal.submitBtn}
-              </button>
-            </form>
+            ) : (
+              <form onSubmit={handleUploadSubmit} className="space-y-5 overflow-y-auto">
+                <p className="text-sm font-body text-navy/70 text-center mb-4">{t.gallery.uploadModal.desc}</p>
+                
+                {/* ถ้าตัดรูปเสร็จแล้ว จะโชว์รูปพรีวิวให้ดูก่อนอัปโหลด */}
+                {uploadFile ? (
+                  <div className="relative w-full aspect-[5/4] rounded-2xl overflow-hidden border-4 border-skyblue shadow-inner mb-4">
+                    <img src={URL.createObjectURL(uploadFile)} alt="Preview" className="w-full h-full object-cover" />
+                    <button 
+                      type="button" onClick={() => {setUploadFile(null); setImageSrc(null);}} 
+                      className="absolute top-2 right-2 bg-navy/70 text-white text-xs px-3 py-1 rounded-full hover:bg-red-500"
+                    >เปลี่ยนรูป</button>
+                  </div>
+                ) : (
+                  <div className="bg-beige/40 p-4 rounded-2xl border-2 border-dashed border-skyblue/50 text-center">
+                    <input 
+                      type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange}
+                      className="w-full text-sm font-body file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-palepink file:text-navy hover:file:bg-azalea hover:file:text-white cursor-pointer"
+                    />
+                  </div>
+                )}
+
+                <input 
+                  type="text" placeholder={t.gallery.uploadModal.namePlaceholder || "ชื่อของคุณ"} value={uploaderName} onChange={(e) => setUploaderName(e.target.value)}
+                  className="w-full p-3 font-body rounded-xl border-2 border-gray-100 bg-beige/30 focus:border-skyblue outline-none transition-colors"
+                />
+                <button 
+                  type="submit" disabled={isUploading || !uploadFile}
+                  className="w-full font-heading bg-skyblue text-navy font-bold py-3.5 rounded-xl hover:bg-azalea hover:text-white transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 shadow-sm"
+                >
+                  {isUploading ? (t.gallery.uploadModal.uploading || "กำลังอัปโหลด...") : (t.gallery.uploadModal.submitBtn || "ส่งรูปภาพ")}
+                </button>
+              </form>
+            )}
+            
             {uploadMessage.text && (
               <div className={`mt-5 p-3 rounded-xl text-center font-bold font-body text-sm ${uploadMessage.type === 'success' ? 'bg-green-100 text-green-700' : uploadMessage.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
                 {uploadMessage.text}
@@ -298,7 +371,7 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* --- CSS กรอบรูป --- */}
+      {/* --- CSS กรอบรูป (คงเดิม) --- */}
       <style dangerouslySetInnerHTML={{__html: `
         :root {
           --ink: #234f82;
@@ -316,10 +389,7 @@ export default function Gallery() {
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .frame-layout {
-          position: relative;
-          isolation: isolate;
-        }
+        .frame-layout { position: relative; isolation: isolate; }
 
         .cake-frame {
           position: relative;
@@ -333,136 +403,32 @@ export default function Gallery() {
         .photo-window {
           position: relative;
           overflow: hidden;
-          aspect-ratio: 5 / 4; /* ล็อคสัดส่วนให้ภาพสมดุล */
+          aspect-ratio: 5 / 4; 
           border: 6px solid var(--yellow);
           border-radius: 1rem;
           background: #f8c4d0;
           box-shadow: inset 0 0 0 2px rgba(255,255,255,.8);
         }
 
-        .dessert-sticker {
-          position: absolute;
-          z-index: 7;
-          animation: floaty 3.9s ease-in-out infinite;
-          pointer-events: none; 
-        }
-
-        .ice-cream {
-          width: 5.5rem;
-          height: 7.5rem;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          filter: drop-shadow(4px 4px 0 rgba(23,61,103,.16));
-        }
-
+        .dessert-sticker { position: absolute; z-index: 7; animation: floaty 3.9s ease-in-out infinite; pointer-events: none; }
+        .ice-cream { width: 5.5rem; height: 7.5rem; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(4px 4px 0 rgba(23,61,103,.16)); }
         .ice-left { left: -1.5rem; top: 10%; transform: rotate(-13deg); }
         .ice-right { right: -1.5rem; bottom: 10%; transform: rotate(13deg); animation-delay: .55s; }
-
-        .cherry {
-          width: 1.15rem;
-          height: 1.15rem;
-          margin-bottom: -.15rem;
-          border: 2px solid var(--navy);
-          border-radius: 50%;
-          background: var(--berry);
-          position: relative;
-          z-index: 3;
-        }
-
-        .cherry::before {
-          content: "";
-          width: 1.35rem;
-          height: 1.3rem;
-          position: absolute;
-          left: .5rem;
-          bottom: .65rem;
-          border-left: 2px solid var(--navy);
-          border-radius: 70%;
-          transform: rotate(-34deg);
-        }
-
-        .scoop {
-          width: 4.65rem;
-          height: 3.8rem;
-          margin-bottom: -.75rem;
-          border: 2px solid var(--navy);
-          border-radius: 50% 50% 42% 42%;
-          z-index: 2;
-        }
-
+        .cherry { width: 1.15rem; height: 1.15rem; margin-bottom: -.15rem; border: 2px solid var(--navy); border-radius: 50%; background: var(--berry); position: relative; z-index: 3; }
+        .cherry::before { content: ""; width: 1.35rem; height: 1.3rem; position: absolute; left: .5rem; bottom: .65rem; border-left: 2px solid var(--navy); border-radius: 70%; transform: rotate(-34deg); }
+        .scoop { width: 4.65rem; height: 3.8rem; margin-bottom: -.75rem; border: 2px solid var(--navy); border-radius: 50% 50% 42% 42%; z-index: 2; }
         .scoop.pink { background: var(--pink); }
         .scoop.blue { background: var(--blue); }
-
-        .cone {
-          width: 3.5rem;
-          height: 4.1rem;
-          border: 2px solid var(--navy);
-          background:
-            repeating-linear-gradient(45deg, transparent 0 8px, rgba(112,69,40,.26) 8px 10px),
-            repeating-linear-gradient(-45deg, transparent 0 8px, rgba(112,69,40,.21) 8px 10px),
-            #eab778;
-          clip-path: polygon(5% 0, 95% 0, 50% 100%);
-        }
-
-        .cake-slice {
-          left: -1.5rem;
-          bottom: 5%;
-          width: 5.25rem;
-          height: 4.8rem;
-          border: 2px solid var(--navy);
-          border-radius: .8rem 1.25rem .8rem .8rem;
-          background: linear-gradient(to bottom, #fff7e9 0 20%, #f7adc0 20% 45%, #f3c772 45% 100%);
-          box-shadow: 4px 4px 0 rgba(23,61,103,.16);
-          transform: rotate(-11deg);
-          animation-delay: .2s;
-        }
-
-        .cake-slice::before {
-          content: "";
-          width: 1.25rem;
-          height: 1.25rem;
-          position: absolute;
-          right: .55rem;
-          top: -.9rem;
-          border: 2px solid var(--navy);
-          border-radius: 50%;
-          background: var(--berry);
-        }
-
-        .cake-slice::after {
-          content: "";
-          width: 2.9rem;
-          height: .34rem;
-          position: absolute;
-          left: .85rem;
-          bottom: 1.3rem;
-          border-radius: 999px;
-          background: #fff8ed;
-        }
-
-        .sparkle {
-          position: absolute;
-          z-index: 5;
-          width: 1.55rem;
-          height: 1.55rem;
-          color: var(--berry);
-          animation: twinkle 2.5s ease-in-out infinite;
-          pointer-events: none;
-        }
-
+        .cone { width: 3.5rem; height: 4.1rem; border: 2px solid var(--navy); background: repeating-linear-gradient(45deg, transparent 0 8px, rgba(112,69,40,.26) 8px 10px), repeating-linear-gradient(-45deg, transparent 0 8px, rgba(112,69,40,.21) 8px 10px), #eab778; clip-path: polygon(5% 0, 95% 0, 50% 100%); }
+        .cake-slice { left: -1.5rem; bottom: 5%; width: 5.25rem; height: 4.8rem; border: 2px solid var(--navy); border-radius: .8rem 1.25rem .8rem .8rem; background: linear-gradient(to bottom, #fff7e9 0 20%, #f7adc0 20% 45%, #f3c772 45% 100%); box-shadow: 4px 4px 0 rgba(23,61,103,.16); transform: rotate(-11deg); animation-delay: .2s; }
+        .cake-slice::before { content: ""; width: 1.25rem; height: 1.25rem; position: absolute; right: .55rem; top: -.9rem; border: 2px solid var(--navy); border-radius: 50%; background: var(--berry); }
+        .cake-slice::after { content: ""; width: 2.9rem; height: .34rem; position: absolute; left: .85rem; bottom: 1.3rem; border-radius: 999px; background: #fff8ed; }
+        .sparkle { position: absolute; z-index: 5; width: 1.55rem; height: 1.55rem; color: var(--berry); animation: twinkle 2.5s ease-in-out infinite; pointer-events: none; }
         .sparkle-one { top: -.35rem; right: 1.4rem; }
         .sparkle-two { bottom: -.45rem; left: 1.2rem; color: #65a6cf; animation-delay: .65s; }
 
-        @keyframes floaty {
-          0%, 100% { margin-top: 0; }
-          50% { margin-top: -8px; }
-        }
-
-        @keyframes twinkle {
-          0%, 100% { opacity: .55; transform: scale(.84) rotate(0); }
-          50% { opacity: 1; transform: scale(1.1) rotate(15deg); }
-        }
+        @keyframes floaty { 0%, 100% { margin-top: 0; } 50% { margin-top: -8px; } }
+        @keyframes twinkle { 0%, 100% { opacity: .55; transform: scale(.84) rotate(0); } 50% { opacity: 1; transform: scale(1.1) rotate(15deg); } }
       `}} />
     </div>
   );
