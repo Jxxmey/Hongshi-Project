@@ -112,21 +112,20 @@ export default function Gallery() {
     }
   };
 
-  // ปรับการจัดวางให้ดูกระจัดกระจาย (Scattered) และเว้นระยะห่าง
+  // สร้างลูกเล่นเอียงและขยับขึ้นลงแบบสุ่มให้ดูเป็นธรรมชาติ (ไม่ใช้การดึง row-span แล้ว)
   const getGridClass = (index) => {
-    const patterns = [
-      'col-span-1 row-span-1 rotate-[-3deg] hover:rotate-0 translate-y-2',
-      'col-span-1 row-span-1 rotate-[4deg] hover:rotate-0 -translate-y-4',
-      'col-span-1 row-span-2 rotate-[-1deg] hover:rotate-0',
-      'col-span-1 row-span-1 rotate-[2deg] hover:rotate-0 translate-y-6',
-      'col-span-1 row-span-1 rotate-[-4deg] hover:rotate-0 -translate-y-2',
-      'col-span-1 row-span-1 rotate-[1deg] hover:rotate-0 translate-y-8',
-    ];
-    return patterns[index % patterns.length];
+    const rotations = ['-rotate-2', 'rotate-3', '-rotate-3', 'rotate-2', '-rotate-4', 'rotate-1'];
+    // ขยับขึ้นลงนิดหน่อยเพื่อให้ดูไม่เรียงกันเป๊ะเกินไป
+    const translates = ['translate-y-0', 'translate-y-4 md:translate-y-8', '-translate-y-2', 'translate-y-2 md:translate-y-6', '-translate-y-4', 'translate-y-0'];
+    
+    const rot = rotations[index % rotations.length];
+    const trans = translates[index % translates.length];
+    
+    return `${rot} ${trans}`;
   };
 
   return (
-    <div className="py-12 px-4 max-w-7xl mx-auto space-y-12 pb-20">
+    <div className="py-12 px-4 max-w-6xl mx-auto space-y-12 pb-20 overflow-hidden">
       
       {/* Header */}
       <ScrollReveal>
@@ -151,20 +150,22 @@ export default function Gallery() {
 
       {/* Grid Layout */}
       {loading ? (
-        // เพิ่มช่องว่าง (gap) ระหว่างกรอบตอนโหลด
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-20 auto-rows-[300px] md:auto-rows-[350px] grid-flow-row-dense mt-16 px-2 md:px-8">
+        // Grid ตอนโหลด: ปรับให้เว้นระยะ x, y แยกกัน
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12 md:gap-x-10 md:gap-y-16 mt-8">
           {[...Array(6)].map((_, i) => (
-            <SkeletonBox key={i} className={`rounded-[30px] w-full h-full ${getGridClass(i)} p-6`} />
+            <div key={i} className="p-4 sm:p-6 w-full aspect-[5/4]">
+              <SkeletonBox className={`rounded-2xl w-full h-full ${getGridClass(i)}`} />
+            </div>
           ))}
         </div>
       ) : allPhotos.length === 0 ? (
-        <div className="text-center font-body text-navy/60 bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-palepink">
+        <div className="text-center font-body text-navy/60 bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-palepink mt-8">
           {t.gallery.empty}
         </div>
       ) : (
         <>
-          {/* เพิ่มช่องว่าง (gap-16 md:gap-24) และลดคอลัมน์ลง เพื่อให้มีพื้นที่เหลือให้ของตกแต่ง */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-16 md:gap-24 auto-rows-[300px] md:auto-rows-[350px] lg:auto-rows-[400px] grid-flow-row-dense mt-16 px-2 md:px-8">
+          {/* ลบ auto-rows ออก เพื่อให้ความสูงเป็นไปตามภาพ และปรับ gap-y ให้กว้างพอไม่ให้ของตกแต่งทับกัน */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-14 md:gap-x-12 md:gap-y-20 mt-8 px-2 md:px-4">
             {displayedPhotos.map((photo, index) => {
               const isLastPhoto = displayedPhotos.length === index + 1;
               
@@ -172,27 +173,27 @@ export default function Gallery() {
                 <div 
                   key={photo._id || index} 
                   ref={isLastPhoto ? lastPhotoElementRef : null} 
-                  // เพิ่ม p-6 md:p-10 ตรงนี้ เพื่อสร้างพื้นที่ปลอดภัย (Safe zone) ให้ของตกแต่งไม่ล้นไปทับกรอบอื่น
-                  className={`relative w-full h-full flex items-center justify-center p-6 md:p-10 transition-all duration-500 ${getGridClass(index)}`}
+                  // สร้างพื้นที่ Padding (p-4 md:p-8) กันชนให้ของตกแต่งอยู่ในกรอบ
+                  className={`relative w-full p-4 md:p-8 transition-all duration-500 hover:rotate-0 hover:z-50 hover:scale-[1.02] ${getGridClass(index)}`}
                 >
-                  <ScrollReveal delay={(index % 10) * 50} className="w-full h-full">
+                  <ScrollReveal delay={(index % 10) * 50} className="w-full">
                     
-                    <div className="frame-layout w-full h-full group hover:z-50 hover:scale-105 transition-transform duration-300">
+                    <div className="frame-layout w-full group">
                       
-                      {/* ของตกแต่ง (Stickers) */}
+                      {/* ของตกแต่ง ปรับขนาดในมือถือให้เล็กลงมาก (scale-[0.6]) เพื่อไม่ให้ซ้อนกัน */}
                       <span className="sparkle sparkle-one" aria-hidden="true">✦</span> 
                       <span className="sparkle sparkle-two" aria-hidden="true">✦</span>
-                      <div className="dessert-sticker ice-cream ice-left scale-75 md:scale-90" aria-hidden="true">
+                      <div className="dessert-sticker ice-cream ice-left scale-[0.6] sm:scale-75 md:scale-90 origin-bottom-right" aria-hidden="true">
                         <span className="cherry"></span> <span className="scoop pink"></span> <span className="cone"></span>
                       </div>
-                      <div className="dessert-sticker ice-cream ice-right scale-75 md:scale-90" aria-hidden="true">
+                      <div className="dessert-sticker ice-cream ice-right scale-[0.6] sm:scale-75 md:scale-90 origin-bottom-left" aria-hidden="true">
                         <span className="cherry"></span> <span className="scoop blue"></span> <span className="cone"></span>
                       </div>
-                      <span className="dessert-sticker cake-slice scale-75 md:scale-90" aria-hidden="true"></span>
+                      <span className="dessert-sticker cake-slice scale-[0.65] sm:scale-75 md:scale-90 origin-bottom-left" aria-hidden="true"></span>
                       
                       {/* ตัวกรอบหลัก */}
-                      <article className="cake-frame bg-paper w-full h-full flex flex-col cursor-pointer shadow-lg" onClick={() => setSelectedImage(photo)}>
-                        <div className="photo-window flex-1 relative w-full h-full">
+                      <article className="cake-frame bg-paper w-full flex flex-col cursor-pointer shadow-lg" onClick={() => setSelectedImage(photo)}>
+                        <div className="photo-window relative w-full">
                           
                           <ImageSkeleton
                             src={photo.imageUrl}
@@ -221,14 +222,14 @@ export default function Gallery() {
           </div>
           
           {hasMore && (
-            <div className="flex justify-center mt-16 mb-8">
+            <div className="flex justify-center mt-12 mb-8">
               <div className="w-8 h-8 border-4 border-skyblue border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
         </>
       )}
 
-      {/* Lightbox Modal */}
+      {/* Lightbox Modal (ยังเหมือนเดิม) */}
       {selectedImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/90 backdrop-blur-md animate-fade-in"
@@ -238,9 +239,7 @@ export default function Gallery() {
             <button 
               onClick={() => setSelectedImage(null)}
               className="absolute -top-12 right-0 md:-right-12 text-white hover:text-azalea bg-white/20 hover:bg-white/40 w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all z-20"
-            >
-              ✕
-            </button>
+            >✕</button>
             <div 
               className="w-full h-full overflow-hidden rounded-2xl md:rounded-[30px] border-4 border-white shadow-2xl relative select-none"
               style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
@@ -334,6 +333,7 @@ export default function Gallery() {
         .photo-window {
           position: relative;
           overflow: hidden;
+          aspect-ratio: 5 / 4; /* ล็อคสัดส่วนให้ภาพสมดุล */
           border: 6px solid var(--yellow);
           border-radius: 1rem;
           background: #f8c4d0;
