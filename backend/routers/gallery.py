@@ -1,9 +1,12 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks
 from database import db
 from datetime import datetime
 import cloudinary
 import cloudinary.uploader
 import os
+
+# นำเข้าฟังก์ชันแจ้งเตือน LINE (สมมติว่าคุณสร้างไฟล์ไว้ที่ utils/line_notify.py)
+from utils.line_notify import send_image_upload_notification
 
 router = APIRouter(prefix="/gallery", tags=["Gallery"])
 gallery_collection = db.gallery
@@ -27,6 +30,7 @@ async def get_approved_photos():
 
 @router.post("/upload")
 async def upload_photo(
+    background_tasks: BackgroundTasks, # <--- 1. เพิ่ม BackgroundTasks ตรงนี้
     image: UploadFile = File(...),
     uploaderName: str = Form("Anonymous LYKYOU")
 ):
@@ -39,7 +43,6 @@ async def upload_photo(
         contents = await image.read()
         
         # 2. อัปโหลดขึ้น Cloudinary
-        # ตั้งชื่อโฟลเดอร์ใน Cloudinary เป็น hongshi_gallery เพื่อความเป็นระเบียบ
         upload_result = cloudinary.uploader.upload(
             contents, 
             folder="hongshi_gallery"
@@ -52,13 +55,17 @@ async def upload_photo(
         # 3. บันทึกลง MongoDB พร้อมตั้งสถานะเป็น "pending"
         new_photo = {
             "imageUrl": image_url,
-            "cloudinary_id": public_id, # <--- เก็บ ID ไว้เผื่อแอดมินกดลบรูป
+            "cloudinary_id": public_id,
             "uploaderName": uploaderName,
-            "status": "pending", # <--- รอแอดมินอนุมัติ
+            "status": "pending",
             "createdAt": datetime.utcnow()
         }
         
         await gallery_collection.insert_one(new_photo)
+        
+        # 4. สั่งให้ส่งแจ้งเตือน LINE ทำงานอยู่เบื้องหลัง (Background Task)
+        # ส่งลิงก์ Cloudinary และชื่อคนอัปโหลดไปให้ฟังก์ชัน
+        background_tasks.add_task(send_image_upload_notification, image_url, uploaderName)
         
         return {"message": "อัปโหลดสำเร็จ รอแอดมินตรวจสอบครับ"}
         
