@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
-import ImageSkeleton from '../components/ImageSkeleton'; // นำเข้า Component ใหม่
-import SkeletonBox from '../components/ImageSkeleton';     // นำเข้า Component ใหม่
+import ImageSkeleton from '../components/ImageSkeleton';
+import SkeletonBox from '../components/ImageSkeleton'; 
 import { useLanguage } from '../contexts/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const ITEMS_PER_PAGE = 12;
 
 export default function Gallery() {
   const { t } = useLanguage();
   
-  const [photos, setPhotos] = useState([]);
+  const [allPhotos, setAllPhotos] = useState([]);
+  const [displayedPhotos, setDisplayedPhotos] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -25,7 +30,9 @@ export default function Gallery() {
         const response = await fetch(`${API_URL}/gallery`);
         if (response.ok) {
           const data = await response.json();
-          setPhotos(data); 
+          setAllPhotos(data);
+          setDisplayedPhotos(data.slice(0, ITEMS_PER_PAGE));
+          setHasMore(data.length > ITEMS_PER_PAGE);
         }
       } catch (error) {
         console.error("Error fetching gallery:", error);
@@ -35,6 +42,30 @@ export default function Gallery() {
     };
     fetchPhotos();
   }, []);
+
+  useEffect(() => {
+    if (page === 1) return;
+    const nextPhotos = allPhotos.slice(0, page * ITEMS_PER_PAGE);
+    setDisplayedPhotos(nextPhotos);
+    
+    if (nextPhotos.length >= allPhotos.length) {
+      setHasMore(false);
+    }
+  }, [page, allPhotos]);
+
+  const observer = useRef();
+  const lastPhotoElementRef = useCallback(node => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore]);
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
@@ -120,50 +151,84 @@ export default function Gallery() {
 
       {/* Grid Layout */}
       {loading ? (
-        // เรียกใช้ SkeletonBox ระหว่างรอข้อมูล 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 auto-rows-[150px] md:auto-rows-[200px] lg:auto-rows-[250px] grid-flow-row-dense">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 auto-rows-[200px] md:auto-rows-[250px] lg:auto-rows-[300px] grid-flow-row-dense">
           {[...Array(6)].map((_, i) => (
             <SkeletonBox key={i} className={`rounded-2xl md:rounded-[30px] w-full h-full ${getGridClass(i)}`} />
           ))}
         </div>
-      ) : photos.length === 0 ? (
+      ) : allPhotos.length === 0 ? (
         <div className="text-center font-body text-navy/60 bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-palepink">
           {t.gallery.empty}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 auto-rows-[150px] md:auto-rows-[200px] lg:auto-rows-[250px] grid-flow-row-dense">
-          {photos.map((photo, index) => (
-            <div key={photo._id || index} className={`relative w-full h-full ${getGridClass(index)} [&>*]:h-full [&>*]:w-full`}>
-              <ScrollReveal delay={(index % 10) * 50}>
-                
-                {/* ใช้งาน ImageSkeleton Component */}
-                <ImageSkeleton
-                  src={photo.imageUrl}
-                  alt={`Uploaded by ${photo.uploaderName}`}
-                  containerClassName="group rounded-2xl md:rounded-[30px] shadow-sm cursor-pointer border-4 border-white hover:border-skyblue hover:shadow-xl transition-all duration-300 select-none"
-                  imageClassName="group-hover:scale-110 object-cover"
-                  onClick={() => setSelectedImage(photo)}
-                  onContextMenu={(e) => e.preventDefault()}
-                  onDragStart={(e) => e.preventDefault()}
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-10 auto-rows-[200px] md:auto-rows-[250px] lg:auto-rows-[300px] grid-flow-row-dense mt-8">
+            {displayedPhotos.map((photo, index) => {
+              const isLastPhoto = displayedPhotos.length === index + 1;
+              
+              return (
+                <div 
+                  key={photo._id || index} 
+                  ref={isLastPhoto ? lastPhotoElementRef : null} 
+                  className={`relative w-full h-full flex items-center justify-center ${getGridClass(index)}`}
                 >
-                  {/* Layer กันคลิกขวา */}
-                  <div className="absolute inset-0 z-10 bg-transparent"></div>
-                  
-                  {/* ข้อความ Overlay */}
-                  <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-navy/90 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                    <p className="text-white text-xs md:text-sm font-bold font-body truncate">
-                      Cr. {photo.uploaderName}
-                    </p>
-                  </div>
-                </ImageSkeleton>
+                  <ScrollReveal delay={(index % 10) * 50} className="w-full h-full">
+                    
+                    {/* โครงสร้างกรอบรูป Custom ที่ดึงมาจาก HTML */}
+                    <div className="frame-layout w-full h-full group hover:z-50 hover:scale-[1.02] transition-transform duration-300">
+                      
+                      {/* ของตกแต่ง (Stickers) */}
+                      <span className="sparkle sparkle-one" aria-hidden="true">✦</span> 
+                      <span className="sparkle sparkle-two" aria-hidden="true">✦</span>
+                      <div className="dessert-sticker ice-cream ice-left scale-75 md:scale-100" aria-hidden="true">
+                        <span className="cherry"></span> <span className="scoop pink"></span> <span className="cone"></span>
+                      </div>
+                      <div className="dessert-sticker ice-cream ice-right scale-75 md:scale-100" aria-hidden="true">
+                        <span className="cherry"></span> <span className="scoop blue"></span> <span className="cone"></span>
+                      </div>
+                      <span className="dessert-sticker cake-slice scale-75 md:scale-100" aria-hidden="true"></span>
+                      
+                      {/* ตัวกรอบหลัก */}
+                      <article className="cake-frame bg-paper w-full h-full flex flex-col cursor-pointer shadow-lg" onClick={() => setSelectedImage(photo)}>
+                        <div className="photo-window flex-1 relative w-full h-full">
+                          
+                          {/* นำ ImageSkeleton มาใส่แทน img ธรรมดาเพื่อให้โหลดเนียนขึ้น */}
+                          <ImageSkeleton
+                            src={photo.imageUrl}
+                            alt={`Uploaded by ${photo.uploaderName}`}
+                            containerClassName="absolute inset-0 w-full h-full"
+                            imageClassName="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onContextMenu={(e) => e.preventDefault()}
+                            onDragStart={(e) => e.preventDefault()}
+                          />
 
-              </ScrollReveal>
+                          {/* Overlay ข้อความ เปลี่ยนเป็น "From" */}
+                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-4 md:p-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                            <p className="text-white text-sm md:text-base font-bold font-body truncate drop-shadow-md">
+                              From {photo.uploaderName}
+                            </p>
+                          </div>
+
+                        </div>
+                      </article>
+
+                    </div>
+
+                  </ScrollReveal>
+                </div>
+              );
+            })}
+          </div>
+          
+          {hasMore && (
+            <div className="flex justify-center mt-12 mb-8">
+              <div className="w-8 h-8 border-4 border-skyblue border-t-transparent rounded-full animate-spin"></div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
-      {/* Lightbox Modal (ยังเหมือนเดิม) */}
+      {/* Lightbox Modal */}
       {selectedImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/90 backdrop-blur-md animate-fade-in"
@@ -183,7 +248,6 @@ export default function Gallery() {
               onDragStart={(e) => e.preventDefault()}
             >
               <div className="absolute inset-0 z-10 bg-transparent"></div>
-              {/* ใช้ ImageSkeleton กับ Lightbox ด้วยก็ได้ เพื่อให้เนียนตาเวลาโหลดภาพขยาย */}
               <ImageSkeleton 
                 src={selectedImage.imageUrl} 
                 alt="Selected"
@@ -191,44 +255,37 @@ export default function Gallery() {
                 imageClassName="max-h-[85vh] object-contain"
               />
             </div>
+            {/* เปลี่ยน Cr. เป็น From */}
             <p className="text-white mt-4 font-body font-bold bg-navy/50 px-5 py-2 rounded-full border border-white/20">
-              Cr. {selectedImage.uploaderName}
+              From {selectedImage.uploaderName}
             </p>
           </div>
         </div>
       )}
 
-      {/* Upload Modal (ยังเหมือนเดิม) */}
+      {/* Upload Modal (ย่อไว้เพื่อประหยัดพื้นที่) */}
       {isUploadOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/70 backdrop-blur-sm animate-fade-in">
           <div className="bg-white p-8 rounded-[30px] w-full max-w-md shadow-2xl relative border-t-8 border-skyblue">
             <button 
               onClick={() => setIsUploadOpen(false)}
               className="absolute top-4 right-4 text-navy/50 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-            >
-              ✕
-            </button>
+            >✕</button>
             <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center">{t.gallery.uploadModal.title}</h3>
             <p className="text-sm font-body text-navy/70 text-center mb-6">{t.gallery.uploadModal.desc}</p>
             <form onSubmit={handleUploadSubmit} className="space-y-5">
               <div className="bg-beige/40 p-4 rounded-2xl border-2 border-dashed border-skyblue/50 text-center">
                 <input 
-                  type="file" 
-                  accept="image/png, image/jpeg, image/webp" 
-                  onChange={handleFileChange}
+                  type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange}
                   className="w-full text-sm font-body file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-palepink file:text-navy hover:file:bg-azalea hover:file:text-white cursor-pointer"
                 />
               </div>
               <input 
-                type="text" 
-                placeholder={t.gallery.uploadModal.namePlaceholder}
-                value={uploaderName}
-                onChange={(e) => setUploaderName(e.target.value)}
+                type="text" placeholder={t.gallery.uploadModal.namePlaceholder} value={uploaderName} onChange={(e) => setUploaderName(e.target.value)}
                 className="w-full p-3 font-body rounded-xl border-2 border-gray-100 bg-beige/30 focus:border-skyblue outline-none transition-colors"
               />
               <button 
-                type="submit" 
-                disabled={isUploading}
+                type="submit" disabled={isUploading}
                 className="w-full font-heading bg-skyblue text-navy font-bold py-3.5 rounded-xl hover:bg-azalea hover:text-white transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 shadow-sm"
               >
                 {isUploading ? t.gallery.uploadModal.uploading : t.gallery.uploadModal.submitBtn}
@@ -243,9 +300,172 @@ export default function Gallery() {
         </div>
       )}
 
+      {/* --- CSS กรอบรูป (แปลงจากต้นฉบับให้เข้ากับ React Grid) --- */}
       <style dangerouslySetInnerHTML={{__html: `
+        :root {
+          --ink: #234f82;
+          --navy: #173d67;
+          --cream: #fff7e9;
+          --paper: #fffdf9;
+          --pink: #f7adc0;
+          --berry: #ed789b;
+          --blue: #b9dcef;
+          --mint: #c6e3cc;
+          --yellow: #ffd77b;
+          --choco: #a8664c;
+        }
+
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* การตั้งค่า Layout ของกรอบ */
+        .frame-layout {
+          position: relative;
+          isolation: isolate;
+        }
+
+        .cake-frame {
+          position: relative;
+          padding: clamp(.5rem, 1.5vw, 1rem); /* ปรับ padding เล็กลงนิดหน่อยเพื่อให้เข้ากับ Grid */
+          border: 4px solid var(--navy);
+          border-radius: 1.5rem; /* ลดความโค้งลงนิดหน่อยให้พอดับ grid */
+          box-shadow: 6px 8px 0 var(--navy), 0 10px 20px rgba(23, 61, 103, .13);
+          background-color: var(--paper);
+        }
+
+        .photo-window {
+          position: relative;
+          overflow: hidden;
+          border: 6px solid var(--yellow);
+          border-radius: 1rem;
+          background: #f8c4d0;
+          box-shadow: inset 0 0 0 2px rgba(255,255,255,.8);
+        }
+
+        /* ของตกแต่ง (ไอศกรีม, เค้ก) */
+        .dessert-sticker {
+          position: absolute;
+          z-index: 7;
+          animation: floaty 3.9s ease-in-out infinite;
+          pointer-events: none; /* เพื่อไม่ให้บังการคลิกรูป */
+        }
+
+        .ice-cream {
+          width: 5.5rem;
+          height: 7.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          filter: drop-shadow(4px 4px 0 rgba(23,61,103,.16));
+        }
+
+        .ice-left { left: -1.5rem; top: 10%; transform: rotate(-13deg); }
+        .ice-right { right: -1.5rem; bottom: 10%; transform: rotate(13deg); animation-delay: .55s; }
+
+        .cherry {
+          width: 1.15rem;
+          height: 1.15rem;
+          margin-bottom: -.15rem;
+          border: 2px solid var(--navy);
+          border-radius: 50%;
+          background: var(--berry);
+          position: relative;
+          z-index: 3;
+        }
+
+        .cherry::before {
+          content: "";
+          width: 1.35rem;
+          height: 1.3rem;
+          position: absolute;
+          left: .5rem;
+          bottom: .65rem;
+          border-left: 2px solid var(--navy);
+          border-radius: 70%;
+          transform: rotate(-34deg);
+        }
+
+        .scoop {
+          width: 4.65rem;
+          height: 3.8rem;
+          margin-bottom: -.75rem;
+          border: 2px solid var(--navy);
+          border-radius: 50% 50% 42% 42%;
+          z-index: 2;
+        }
+
+        .scoop.pink { background: var(--pink); }
+        .scoop.blue { background: var(--blue); }
+
+        .cone {
+          width: 3.5rem;
+          height: 4.1rem;
+          border: 2px solid var(--navy);
+          background:
+            repeating-linear-gradient(45deg, transparent 0 8px, rgba(112,69,40,.26) 8px 10px),
+            repeating-linear-gradient(-45deg, transparent 0 8px, rgba(112,69,40,.21) 8px 10px),
+            #eab778;
+          clip-path: polygon(5% 0, 95% 0, 50% 100%);
+        }
+
+        .cake-slice {
+          left: -1.5rem;
+          bottom: 5%;
+          width: 5.25rem;
+          height: 4.8rem;
+          border: 2px solid var(--navy);
+          border-radius: .8rem 1.25rem .8rem .8rem;
+          background: linear-gradient(to bottom, #fff7e9 0 20%, #f7adc0 20% 45%, #f3c772 45% 100%);
+          box-shadow: 4px 4px 0 rgba(23,61,103,.16);
+          transform: rotate(-11deg);
+          animation-delay: .2s;
+        }
+
+        .cake-slice::before {
+          content: "";
+          width: 1.25rem;
+          height: 1.25rem;
+          position: absolute;
+          right: .55rem;
+          top: -.9rem;
+          border: 2px solid var(--navy);
+          border-radius: 50%;
+          background: var(--berry);
+        }
+
+        .cake-slice::after {
+          content: "";
+          width: 2.9rem;
+          height: .34rem;
+          position: absolute;
+          left: .85rem;
+          bottom: 1.3rem;
+          border-radius: 999px;
+          background: #fff8ed;
+        }
+
+        .sparkle {
+          position: absolute;
+          z-index: 5;
+          width: 1.55rem;
+          height: 1.55rem;
+          color: var(--berry);
+          animation: twinkle 2.5s ease-in-out infinite;
+          pointer-events: none;
+        }
+
+        .sparkle-one { top: -.35rem; right: 1.4rem; }
+        .sparkle-two { bottom: -.45rem; left: 1.2rem; color: #65a6cf; animation-delay: .65s; }
+
+        @keyframes floaty {
+          0%, 100% { margin-top: 0; }
+          50% { margin-top: -8px; }
+        }
+
+        @keyframes twinkle {
+          0%, 100% { opacity: .55; transform: scale(.84) rotate(0); }
+          50% { opacity: 1; transform: scale(1.1) rotate(15deg); }
+        }
       `}} />
     </div>
   );
