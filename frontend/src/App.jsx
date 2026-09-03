@@ -10,7 +10,6 @@ import Credits from './pages/Credits';
 import AdminReports from './pages/AdminReports';
 import AdminDashboard from './pages/AdminDashboard';
 import SpotifyPlayer from './components/SpotifyPlayer';
-import TermsModal from './components/TermsModal';
 import AdminStats from './pages/AdminStats';
 import AdminImageRequest from './pages/AdminImageRequest';
 import FAQ from './pages/FAQ';
@@ -164,7 +163,6 @@ function App() {
 
           <Footer />
           <SpotifyPlayer />
-          <TermsModal />
         </div>
       </BrowserRouter>
     </LanguageProvider>
