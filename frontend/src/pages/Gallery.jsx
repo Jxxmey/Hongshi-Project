@@ -112,21 +112,21 @@ export default function Gallery() {
     }
   };
 
-  // แพทเทิร์น Bento Grid
+  // ปรับการจัดวางให้ดูกระจัดกระจาย (Scattered) และเว้นระยะห่าง
   const getGridClass = (index) => {
     const patterns = [
-      'col-span-2 row-span-2 md:col-span-2 md:row-span-2',
-      'col-span-1 row-span-1 md:col-span-1 md:row-span-1',
-      'col-span-1 row-span-1 md:col-span-1 md:row-span-2',
-      'col-span-2 row-span-1 md:col-span-1 md:row-span-1',
-      'col-span-1 row-span-2 md:col-span-2 md:row-span-1',
-      'col-span-1 row-span-1 md:col-span-1 md:row-span-1',
+      'col-span-1 row-span-1 rotate-[-3deg] hover:rotate-0 translate-y-2',
+      'col-span-1 row-span-1 rotate-[4deg] hover:rotate-0 -translate-y-4',
+      'col-span-1 row-span-2 rotate-[-1deg] hover:rotate-0',
+      'col-span-1 row-span-1 rotate-[2deg] hover:rotate-0 translate-y-6',
+      'col-span-1 row-span-1 rotate-[-4deg] hover:rotate-0 -translate-y-2',
+      'col-span-1 row-span-1 rotate-[1deg] hover:rotate-0 translate-y-8',
     ];
     return patterns[index % patterns.length];
   };
 
   return (
-    <div className="py-12 px-4 max-w-6xl mx-auto space-y-12 pb-20">
+    <div className="py-12 px-4 max-w-7xl mx-auto space-y-12 pb-20">
       
       {/* Header */}
       <ScrollReveal>
@@ -151,9 +151,10 @@ export default function Gallery() {
 
       {/* Grid Layout */}
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 auto-rows-[200px] md:auto-rows-[250px] lg:auto-rows-[300px] grid-flow-row-dense">
+        // เพิ่มช่องว่าง (gap) ระหว่างกรอบตอนโหลด
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-20 auto-rows-[300px] md:auto-rows-[350px] grid-flow-row-dense mt-16 px-2 md:px-8">
           {[...Array(6)].map((_, i) => (
-            <SkeletonBox key={i} className={`rounded-2xl md:rounded-[30px] w-full h-full ${getGridClass(i)}`} />
+            <SkeletonBox key={i} className={`rounded-[30px] w-full h-full ${getGridClass(i)} p-6`} />
           ))}
         </div>
       ) : allPhotos.length === 0 ? (
@@ -162,7 +163,8 @@ export default function Gallery() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-10 auto-rows-[200px] md:auto-rows-[250px] lg:auto-rows-[300px] grid-flow-row-dense mt-8">
+          {/* เพิ่มช่องว่าง (gap-16 md:gap-24) และลดคอลัมน์ลง เพื่อให้มีพื้นที่เหลือให้ของตกแต่ง */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-16 md:gap-24 auto-rows-[300px] md:auto-rows-[350px] lg:auto-rows-[400px] grid-flow-row-dense mt-16 px-2 md:px-8">
             {displayedPhotos.map((photo, index) => {
               const isLastPhoto = displayedPhotos.length === index + 1;
               
@@ -170,29 +172,28 @@ export default function Gallery() {
                 <div 
                   key={photo._id || index} 
                   ref={isLastPhoto ? lastPhotoElementRef : null} 
-                  className={`relative w-full h-full flex items-center justify-center ${getGridClass(index)}`}
+                  // เพิ่ม p-6 md:p-10 ตรงนี้ เพื่อสร้างพื้นที่ปลอดภัย (Safe zone) ให้ของตกแต่งไม่ล้นไปทับกรอบอื่น
+                  className={`relative w-full h-full flex items-center justify-center p-6 md:p-10 transition-all duration-500 ${getGridClass(index)}`}
                 >
                   <ScrollReveal delay={(index % 10) * 50} className="w-full h-full">
                     
-                    {/* โครงสร้างกรอบรูป Custom ที่ดึงมาจาก HTML */}
-                    <div className="frame-layout w-full h-full group hover:z-50 hover:scale-[1.02] transition-transform duration-300">
+                    <div className="frame-layout w-full h-full group hover:z-50 hover:scale-105 transition-transform duration-300">
                       
                       {/* ของตกแต่ง (Stickers) */}
                       <span className="sparkle sparkle-one" aria-hidden="true">✦</span> 
                       <span className="sparkle sparkle-two" aria-hidden="true">✦</span>
-                      <div className="dessert-sticker ice-cream ice-left scale-75 md:scale-100" aria-hidden="true">
+                      <div className="dessert-sticker ice-cream ice-left scale-75 md:scale-90" aria-hidden="true">
                         <span className="cherry"></span> <span className="scoop pink"></span> <span className="cone"></span>
                       </div>
-                      <div className="dessert-sticker ice-cream ice-right scale-75 md:scale-100" aria-hidden="true">
+                      <div className="dessert-sticker ice-cream ice-right scale-75 md:scale-90" aria-hidden="true">
                         <span className="cherry"></span> <span className="scoop blue"></span> <span className="cone"></span>
                       </div>
-                      <span className="dessert-sticker cake-slice scale-75 md:scale-100" aria-hidden="true"></span>
+                      <span className="dessert-sticker cake-slice scale-75 md:scale-90" aria-hidden="true"></span>
                       
                       {/* ตัวกรอบหลัก */}
                       <article className="cake-frame bg-paper w-full h-full flex flex-col cursor-pointer shadow-lg" onClick={() => setSelectedImage(photo)}>
                         <div className="photo-window flex-1 relative w-full h-full">
                           
-                          {/* นำ ImageSkeleton มาใส่แทน img ธรรมดาเพื่อให้โหลดเนียนขึ้น */}
                           <ImageSkeleton
                             src={photo.imageUrl}
                             alt={`Uploaded by ${photo.uploaderName}`}
@@ -202,7 +203,6 @@ export default function Gallery() {
                             onDragStart={(e) => e.preventDefault()}
                           />
 
-                          {/* Overlay ข้อความ เปลี่ยนเป็น "From" */}
                           <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-4 md:p-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
                             <p className="text-white text-sm md:text-base font-bold font-body truncate drop-shadow-md">
                               From {photo.uploaderName}
@@ -221,7 +221,7 @@ export default function Gallery() {
           </div>
           
           {hasMore && (
-            <div className="flex justify-center mt-12 mb-8">
+            <div className="flex justify-center mt-16 mb-8">
               <div className="w-8 h-8 border-4 border-skyblue border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
@@ -255,7 +255,6 @@ export default function Gallery() {
                 imageClassName="max-h-[85vh] object-contain"
               />
             </div>
-            {/* เปลี่ยน Cr. เป็น From */}
             <p className="text-white mt-4 font-body font-bold bg-navy/50 px-5 py-2 rounded-full border border-white/20">
               From {selectedImage.uploaderName}
             </p>
@@ -263,7 +262,7 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* Upload Modal (ย่อไว้เพื่อประหยัดพื้นที่) */}
+      {/* Upload Modal (ย่อไว้) */}
       {isUploadOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/70 backdrop-blur-sm animate-fade-in">
           <div className="bg-white p-8 rounded-[30px] w-full max-w-md shadow-2xl relative border-t-8 border-skyblue">
@@ -300,7 +299,7 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* --- CSS กรอบรูป (แปลงจากต้นฉบับให้เข้ากับ React Grid) --- */}
+      {/* --- CSS กรอบรูป --- */}
       <style dangerouslySetInnerHTML={{__html: `
         :root {
           --ink: #234f82;
@@ -318,7 +317,6 @@ export default function Gallery() {
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* การตั้งค่า Layout ของกรอบ */
         .frame-layout {
           position: relative;
           isolation: isolate;
@@ -326,9 +324,9 @@ export default function Gallery() {
 
         .cake-frame {
           position: relative;
-          padding: clamp(.5rem, 1.5vw, 1rem); /* ปรับ padding เล็กลงนิดหน่อยเพื่อให้เข้ากับ Grid */
+          padding: clamp(.5rem, 1.5vw, 1rem); 
           border: 4px solid var(--navy);
-          border-radius: 1.5rem; /* ลดความโค้งลงนิดหน่อยให้พอดับ grid */
+          border-radius: 1.5rem; 
           box-shadow: 6px 8px 0 var(--navy), 0 10px 20px rgba(23, 61, 103, .13);
           background-color: var(--paper);
         }
@@ -342,12 +340,11 @@ export default function Gallery() {
           box-shadow: inset 0 0 0 2px rgba(255,255,255,.8);
         }
 
-        /* ของตกแต่ง (ไอศกรีม, เค้ก) */
         .dessert-sticker {
           position: absolute;
           z-index: 7;
           animation: floaty 3.9s ease-in-out infinite;
-          pointer-events: none; /* เพื่อไม่ให้บังการคลิกรูป */
+          pointer-events: none; 
         }
 
         .ice-cream {
