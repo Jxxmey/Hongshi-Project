@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext'; 
-import ReCAPTCHA from 'react-google-recaptcha'; // +++ นำเข้าไลบรารี reCAPTCHA
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -19,7 +19,6 @@ export default function Guestbook() {
   const wishesRef = useRef(wishes);
   const activeBubblesRef = useRef(activeBubbles); 
   
-  // +++ สร้าง Ref สำหรับ reCAPTCHA
   const recaptchaRef = useRef();
 
   useEffect(() => {
@@ -101,7 +100,6 @@ export default function Guestbook() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // +++ ตรวจสอบว่าผู้ใช้ติ๊ก reCAPTCHA หรือยัง
     const captchaToken = recaptchaRef.current?.getValue();
     if (!captchaToken) {
       alert("กรุณายืนยันว่าคุณไม่ใช่บอท");
@@ -113,7 +111,7 @@ export default function Guestbook() {
     const newWishData = {
       name: name.trim() || "Anonymous LYY",
       message: message.trim(),
-      recaptchaToken: captchaToken, // +++ แนบ Token เข้าไปกับข้อมูลที่จะส่ง
+      recaptchaToken: captchaToken,
     };
 
     try {
@@ -142,22 +140,18 @@ export default function Guestbook() {
         setTimeout(() => {
           setShowSuccess(false);
           setIsModalOpen(false);
-          // +++ รีเซ็ต Captcha เมื่อส่งสำเร็จ เผื่อเปิด Modal ครั้งถัดไป
           if (recaptchaRef.current) recaptchaRef.current.reset();
         }, 2000);
       } else {
-        // ดัก Error จาก Rate Limit ของ slowapi (ส่งมาเป็น 429)
         if (response.status === 429) {
           alert("คุณส่งข้อความบ่อยเกินไป กรุณารอสักครู่");
         } else {
           alert(responseData.detail || "Error sending wish.");
         }
-        // +++ รีเซ็ต Captcha หากส่งไม่สำเร็จ
         if (recaptchaRef.current) recaptchaRef.current.reset();
       }
     } catch (error) {
       alert("Cannot connect to server.");
-      // +++ รีเซ็ต Captcha หากเกิดข้อผิดพลาดในการเชื่อมต่อ
       if (recaptchaRef.current) recaptchaRef.current.reset();
     } finally {
       setIsSubmitting(false);
@@ -191,7 +185,8 @@ export default function Guestbook() {
         </div>
       </ScrollReveal>
 
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      {/* แก้ไข pointer-events ตรงนี้ เพื่อให้เนื้อหาด้านในสามารถถูกกดได้ */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         {wishes.length === 0 && !isSubmitting && (
           <div className="absolute inset-0 flex items-center justify-center opacity-50">
             <p className="font-body text-navy bg-white/50 px-6 py-3 rounded-full">{t.guestbook.waiting}</p>
@@ -204,17 +199,23 @@ export default function Guestbook() {
             className="absolute float-in-out pointer-events-auto hover:z-50"
             style={{ top: wish.top, left: wish.left }}
           >
-            <div className={`relative p-[3px] rounded-[30px] bg-gradient-to-br ${wish.theme} shadow-[0_8px_30px_rgb(0,0,0,0.08)] max-w-[280px] md:max-w-[320px] group transition-transform duration-300 hover:scale-105`}>
+            {/* นำการหยุด animation ชั่วคราว (pause) ออก เพื่อไม่ให้เกิดปัญหามือกดไม่ติดเวลาฟองสบู่ขยับ */}
+            <div className={`relative p-[3px] rounded-[30px] bg-gradient-to-br ${wish.theme} shadow-[0_8px_30px_rgb(0,0,0,0.08)] max-w-[280px] md:max-w-[320px] group transition-transform duration-300`}>
               
+              {/* ปรับให้ในมือถือ ปุ่ม Report โชว์จางๆ เสมอ (md:opacity-0) เพื่อให้เห็นและกดได้ */}
               <button 
-                onClick={() => handleReport(wish.id, wish.bubbleId)}
-                className="absolute -top-3 -right-3 bg-white text-gray-300 hover:text-red-500 hover:bg-red-50 w-8 h-8 rounded-full shadow-md flex items-center justify-center text-sm transition-all opacity-0 group-hover:opacity-100 border border-gray-100 z-20"
+                onClick={(e) => {
+                  e.stopPropagation(); // ป้องกัน event ทะลุ
+                  handleReport(wish.id, wish.bubbleId);
+                }}
+                className="absolute -top-3 -right-3 bg-white text-gray-300 hover:text-red-500 hover:bg-red-50 w-9 h-9 md:w-8 md:h-8 rounded-full shadow-md flex items-center justify-center text-sm md:text-xs transition-all opacity-80 md:opacity-0 group-hover:opacity-100 border border-gray-100 z-[60] cursor-pointer"
                 title="Report"
+                type="button"
               >
                 🚨
               </button>
               
-              <div className="bg-white/95 backdrop-blur-md px-6 py-5 rounded-[27px] flex flex-col gap-3 relative">
+              <div className="bg-white/95 backdrop-blur-md px-6 py-5 rounded-[27px] flex flex-col gap-3 relative pointer-events-none">
                 <span className={`absolute top-2 left-4 text-5xl opacity-10 bg-clip-text text-transparent bg-gradient-to-br ${wish.theme} font-serif leading-none`}>
                   "
                 </span>
@@ -247,14 +248,14 @@ export default function Guestbook() {
       </ScrollReveal>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/30 backdrop-blur-sm animate-fade-in pointer-events-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/30 backdrop-blur-sm animate-fade-in pointer-events-auto">
           <div className="bg-white p-8 md:p-10 rounded-[35px] w-[95%] md:w-full max-w-lg shadow-2xl relative max-h-[90vh] overflow-y-auto border-t-8 border-skyblue">
             <button 
               onClick={() => {
                 setIsModalOpen(false);
-                if (recaptchaRef.current) recaptchaRef.current.reset(); // +++ เคลียร์ Captcha ตอนกดปิด (ถ้ามี)
+                if (recaptchaRef.current) recaptchaRef.current.reset();
               }}
-              className="absolute top-5 right-6 text-navy/40 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center text-xl font-bold transition-colors"
+              className="absolute top-5 right-6 text-navy/40 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center text-xl font-bold transition-colors z-20"
             >
               ✕
             </button>
@@ -282,7 +283,6 @@ export default function Guestbook() {
                   <textarea rows="3" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t.guestbook.msgPlaceholder} className="w-full bg-beige/20 border-2 border-skyblue/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-azalea focus:ring-4 focus:ring-azalea/10 transition-all resize-none" required ></textarea>
                 </div>
                 
-                {/* +++ กล่อง reCAPTCHA +++ */}
                 <div className="flex justify-center mt-2 mb-4">
                   <ReCAPTCHA
                     ref={recaptchaRef}
