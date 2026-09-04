@@ -1,11 +1,19 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Request
 from database import db
 from datetime import datetime
 import cloudinary
 import cloudinary.uploader
 import os
+import requests # <--- นำเข้า requests สำหรับยิง API ตรวจสอบ Captcha กับ Google
 
-# นำเข้าฟังก์ชันแจ้งเตือน LINE (สมมติว่าคุณสร้างไฟล์ไว้ที่ utils/line_notify.py)
+# --- นำเข้าส่วนที่เกี่ยวข้องกับ Rate Limit ---
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+# ----------------------------------------
+
+# นำเข้าฟังก์ชันแจ้งเตือน LINE
 from utils.line_notify import send_image_upload_notification
 
 router = APIRouter(prefix="/gallery", tags=["Gallery"])
@@ -29,12 +37,32 @@ async def get_approved_photos():
     return photos
 
 @router.post("/upload")
+@limiter.limit("3/minute") # <--- จำกัดการเข้าถึง: 1 IP อัปโหลดได้แค่ 3 ครั้งต่อนาที
 async def upload_photo(
-    background_tasks: BackgroundTasks, # <--- 1. เพิ่ม BackgroundTasks ตรงนี้
+    request: Request, # <--- ต้องรับ parameter 'request' เสมอเพื่อให้ slowapi ดึง IP ได้
+    background_tasks: BackgroundTasks,
     image: UploadFile = File(...),
-    uploaderName: str = Form("Anonymous LYKYOU")
+    uploaderName: str = Form("Anonymous LYKYOU"),
+    recaptchaToken: str = Form(...) # <--- รับค่า Token ของ Captcha ที่ส่งมาจาก Frontend
 ):
-    # 1. ตรวจสอบชนิดไฟล์ (รับเฉพาะรูปภาพ)
+    # 1. ตรวจสอบความถูกต้องของ reCAPTCHA
+    RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
+    if RECAPTCHA_SECRET_KEY:
+        try:
+            captcha_response = requests.post(
+                "https://www.google.com/recaptcha/api/siteverify",
+                data={
+                    "secret": RECAPTCHA_SECRET_KEY,
+                    "response": recaptchaToken
+                }
+            )
+            captcha_result = captcha_response.json()
+            if not captcha_result.get("success"):
+                raise HTTPException(status_code=400, detail="การยืนยันตัวตนล้มเหลว (Captcha Failed) อาจเป็นบอท")
+        except requests.exceptions.RequestException:
+            raise HTTPException(status_code=500, detail="ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ตรวจสอบ Captcha ได้")
+
+    # 2. ตรวจสอบชนิดไฟล์ (รับเฉพาะรูปภาพ)
     if not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="ไฟล์ที่อัปโหลดต้องเป็นรูปภาพเท่านั้น")
 
@@ -42,7 +70,7 @@ async def upload_photo(
         # อ่านไฟล์รูปภาพ
         contents = await image.read()
         
-        # 2. อัปโหลดขึ้น Cloudinary
+        # 3. อัปโหลดขึ้น Cloudinary
         upload_result = cloudinary.uploader.upload(
             contents, 
             folder="hongshi_gallery"
@@ -52,7 +80,7 @@ async def upload_photo(
         image_url = upload_result.get("secure_url")
         public_id = upload_result.get("public_id")
 
-        # 3. บันทึกลง MongoDB พร้อมตั้งสถานะเป็น "pending"
+        # 4. บันทึกลง MongoDB พร้อมตั้งสถานะเป็น "pending"
         new_photo = {
             "imageUrl": image_url,
             "cloudinary_id": public_id,
@@ -65,7 +93,7 @@ async def upload_photo(
         result = await gallery_collection.insert_one(new_photo)
         photo_id = str(result.inserted_id) # แปลง ObjectId เป็น String
         
-        # 4. ส่งแจ้งเตือน LINE พร้อมแนบ photo_id ไปด้วย
+        # 5. ส่งแจ้งเตือน LINE พร้อมแนบ photo_id ไปด้วย
         background_tasks.add_task(send_image_upload_notification, image_url, uploaderName, photo_id)
         
         return {"message": "อัปโหลดสำเร็จ รอแอดมินตรวจสอบครับ"}

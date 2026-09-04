@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
-import { useLanguage } from '../contexts/LanguageContext'; // +++ ดึง Hook ของภาษามาใช้
+import { useLanguage } from '../contexts/LanguageContext'; 
+import ReCAPTCHA from 'react-google-recaptcha'; // +++ นำเข้าไลบรารี reCAPTCHA
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function Guestbook() {
-  const { t } = useLanguage(); // +++ เรียกใช้ตัวแปร t
+  const { t } = useLanguage(); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
@@ -17,6 +18,9 @@ export default function Guestbook() {
   
   const wishesRef = useRef(wishes);
   const activeBubblesRef = useRef(activeBubbles); 
+  
+  // +++ สร้าง Ref สำหรับ reCAPTCHA
+  const recaptchaRef = useRef();
 
   useEffect(() => {
     wishesRef.current = wishes;
@@ -96,11 +100,20 @@ export default function Guestbook() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // +++ ตรวจสอบว่าผู้ใช้ติ๊ก reCAPTCHA หรือยัง
+    const captchaToken = recaptchaRef.current?.getValue();
+    if (!captchaToken) {
+      alert("กรุณายืนยันว่าคุณไม่ใช่บอท");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const newWishData = {
       name: name.trim() || "Anonymous LYY",
       message: message.trim(),
+      recaptchaToken: captchaToken, // +++ แนบ Token เข้าไปกับข้อมูลที่จะส่ง
     };
 
     try {
@@ -129,12 +142,23 @@ export default function Guestbook() {
         setTimeout(() => {
           setShowSuccess(false);
           setIsModalOpen(false);
+          // +++ รีเซ็ต Captcha เมื่อส่งสำเร็จ เผื่อเปิด Modal ครั้งถัดไป
+          if (recaptchaRef.current) recaptchaRef.current.reset();
         }, 2000);
       } else {
-        alert(responseData.detail || "Error sending wish.");
+        // ดัก Error จาก Rate Limit ของ slowapi (ส่งมาเป็น 429)
+        if (response.status === 429) {
+          alert("คุณส่งข้อความบ่อยเกินไป กรุณารอสักครู่");
+        } else {
+          alert(responseData.detail || "Error sending wish.");
+        }
+        // +++ รีเซ็ต Captcha หากส่งไม่สำเร็จ
+        if (recaptchaRef.current) recaptchaRef.current.reset();
       }
     } catch (error) {
       alert("Cannot connect to server.");
+      // +++ รีเซ็ต Captcha หากเกิดข้อผิดพลาดในการเชื่อมต่อ
+      if (recaptchaRef.current) recaptchaRef.current.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -226,7 +250,10 @@ export default function Guestbook() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/30 backdrop-blur-sm animate-fade-in pointer-events-auto">
           <div className="bg-white p-8 md:p-10 rounded-[35px] w-[95%] md:w-full max-w-lg shadow-2xl relative max-h-[90vh] overflow-y-auto border-t-8 border-skyblue">
             <button 
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                setIsModalOpen(false);
+                if (recaptchaRef.current) recaptchaRef.current.reset(); // +++ เคลียร์ Captcha ตอนกดปิด (ถ้ามี)
+              }}
               className="absolute top-5 right-6 text-navy/40 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center text-xl font-bold transition-colors"
             >
               ✕
@@ -255,6 +282,14 @@ export default function Guestbook() {
                   <textarea rows="3" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t.guestbook.msgPlaceholder} className="w-full bg-beige/20 border-2 border-skyblue/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-azalea focus:ring-4 focus:ring-azalea/10 transition-all resize-none" required ></textarea>
                 </div>
                 
+                {/* +++ กล่อง reCAPTCHA +++ */}
+                <div className="flex justify-center mt-2 mb-4">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY} 
+                  />
+                </div>
+
                 <button type="submit" disabled={isSubmitting} className="w-full font-heading font-bold text-lg px-8 py-4 rounded-2xl shadow-lg transition-all duration-300 bg-skyblue text-navy hover:bg-azalea hover:text-white hover:-translate-y-1">
                   {isSubmitting ? t.guestbook.submitting : t.guestbook.submitBtn}
                 </button>

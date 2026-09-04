@@ -3,7 +3,8 @@ import ScrollReveal from '../components/ScrollReveal';
 import ImageSkeleton from '../components/ImageSkeleton';
 import SkeletonBox from '../components/ImageSkeleton'; 
 import { useLanguage } from '../contexts/LanguageContext';
-import Cropper from 'react-easy-crop'; // นำเข้าไลบรารีตัดรูป
+import Cropper from 'react-easy-crop'; 
+import ReCAPTCHA from 'react-google-recaptcha'; // 1. นำเข้าไลบรารี reCAPTCHA
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const ITEMS_PER_PAGE = 12;
@@ -24,13 +25,15 @@ export default function Gallery() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState({ text: '', type: '' });
 
-  // State สำหรับระบบ Crop รูป
   const [uploadFile, setUploadFile] = useState(null);
-  const [imageSrc, setImageSrc] = useState(null); // ไฟล์ดิบที่เพิ่งเลือก
+  const [imageSrc, setImageSrc] = useState(null); 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-  const [isCropping, setIsCropping] = useState(false); // สถานะว่าอยู่ในหน้าตัดรูปหรือไม่
+  const [isCropping, setIsCropping] = useState(false); 
+
+  // 2. สร้าง Ref สำหรับเข้าถึงและรีเซ็ต reCAPTCHA
+  const recaptchaRef = useRef();
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -72,14 +75,13 @@ export default function Gallery() {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
-  // เมื่อผู้ใช้เลือกไฟล์ ให้โหลดเป็น Data URL เพื่อนำไปแสดงในตัวตัดรูป
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.addEventListener('load', () => {
         setImageSrc(reader.result);
-        setIsCropping(true); // เปิดหน้าตัดรูป
+        setIsCropping(true); 
       });
       reader.readAsDataURL(file);
     }
@@ -89,7 +91,6 @@ export default function Gallery() {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  // ฟังก์ชันสร้างไฟล์รูปภาพใหม่ที่ถูกตัดแล้ว
   const createCroppedImage = async () => {
     try {
       const image = new Image();
@@ -99,11 +100,9 @@ export default function Gallery() {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
-      // กำหนดขนาด Canvas เท่ากับขนาดรูปที่ครอบ
       canvas.width = croppedAreaPixels.width;
       canvas.height = croppedAreaPixels.height;
 
-      // วาดรูปลง Canvas
       ctx.drawImage(
         image,
         croppedAreaPixels.x,
@@ -116,11 +115,10 @@ export default function Gallery() {
         croppedAreaPixels.height
       );
 
-      // แปลง Canvas เป็นไฟล์ Blob แบบ JPEG 
       canvas.toBlob((blob) => {
         const file = new File([blob], 'cropped_image.jpg', { type: 'image/jpeg' });
-        setUploadFile(file); // นำไฟล์ที่ตัดแล้วไปพักไว้เตรียมอัปโหลด
-        setIsCropping(false); // ปิดหน้าตัดรูป
+        setUploadFile(file); 
+        setIsCropping(false); 
       }, 'image/jpeg', 0.9);
     } catch (e) {
       console.error("Crop error:", e);
@@ -134,12 +132,20 @@ export default function Gallery() {
       return;
     }
 
+    // 3. ตรวจสอบว่าผู้ใช้กดติ๊ก reCAPTCHA หรือยัง
+    const captchaToken = recaptchaRef.current?.getValue();
+    if (!captchaToken) {
+      setUploadMessage({ text: 'กรุณายืนยันว่าคุณไม่ใช่บอท', type: 'error' });
+      return;
+    }
+
     setIsUploading(true);
     setUploadMessage({ text: t.gallery.uploadModal.uploading || 'กำลังอัปโหลด...', type: 'info' });
 
     const formData = new FormData();
     formData.append('image', uploadFile);
     formData.append('uploaderName', uploaderName || 'Anonymous LYKYOU');
+    formData.append('recaptchaToken', captchaToken); // 4. ส่ง Token ไปให้ Backend
 
     try {
       const response = await fetch(`${API_URL}/gallery/upload`, {
@@ -147,7 +153,13 @@ export default function Gallery() {
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Upload Failed');
+      if (!response.ok) {
+        // ดักจับ Error จาก Rate Limit (HTTP 429)
+        if (response.status === 429) {
+          throw new Error('คุณอัปโหลดบ่อยเกินไป กรุณารอสักครู่');
+        }
+        throw new Error('Upload Failed');
+      }
 
       setUploadMessage({ text: t.gallery.uploadModal.success || 'อัปโหลดสำเร็จ!', type: 'success' });
       
@@ -156,7 +168,9 @@ export default function Gallery() {
       }, 3000);
     } catch (error) {
       console.error(error);
-      setUploadMessage({ text: t.gallery.uploadModal.error || 'เกิดข้อผิดพลาด', type: 'error' });
+      setUploadMessage({ text: error.message || t.gallery.uploadModal.error || 'เกิดข้อผิดพลาด', type: 'error' });
+      // 5. หากเกิด Error ให้รีเซ็ตกล่อง Captcha ใหม่
+      recaptchaRef.current?.reset();
     } finally {
       setIsUploading(false);
     }
@@ -169,11 +183,13 @@ export default function Gallery() {
     setIsCropping(false);
     setUploaderName('');
     setUploadMessage({ text: '', type: '' });
+    // รีเซ็ต Captcha เมื่อปิดหน้าต่าง
+    if (recaptchaRef.current) recaptchaRef.current.reset();
   };
 
   const getGridClass = (index) => {
-    const rotations = ['-rotate-2', 'rotate-3', '-rotate-3', 'rotate-2', '-rotate-4', 'rotate-1'];
-    const translates = ['translate-y-0', 'translate-y-4 md:translate-y-8', '-translate-y-2', 'translate-y-2 md:translate-y-6', '-translate-y-4', 'translate-y-0'];
+    const rotations = ['-rotate-2', 'rotate-2', '-rotate-3', 'rotate-3', '-rotate-1', 'rotate-1'];
+    const translates = ['translate-y-0', 'translate-y-2', '-translate-y-1', 'translate-y-1', '-translate-y-2', 'translate-y-0'];
     const rot = rotations[index % rotations.length];
     const trans = translates[index % translates.length];
     return `${rot} ${trans}`;
@@ -182,7 +198,6 @@ export default function Gallery() {
   return (
     <div className="py-12 px-4 max-w-6xl mx-auto space-y-12 pb-20 overflow-hidden">
       
-      {/* Header */}
       <ScrollReveal>
         <div className="text-center space-y-6">
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-navy drop-shadow-sm">
@@ -203,11 +218,10 @@ export default function Gallery() {
         </div>
       </ScrollReveal>
 
-      {/* Grid Layout */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12 md:gap-x-10 md:gap-y-16 mt-8 px-2 md:px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12 mt-8 px-2 md:px-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className={`p-4 md:p-8 w-full aspect-[5/4] ${getGridClass(i)}`}>
+            <div key={i} className={`p-3 sm:p-5 md:p-8 w-full aspect-[5/4] ${getGridClass(i)}`}>
               <SkeletonBox className="rounded-[24px] w-full h-full" />
             </div>
           ))}
@@ -218,26 +232,26 @@ export default function Gallery() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-14 md:gap-x-12 md:gap-y-20 mt-8 px-2 md:px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12 mt-8 px-2 md:px-4">
             {displayedPhotos.map((photo, index) => {
               const isLastPhoto = displayedPhotos.length === index + 1;
               return (
                 <div 
                   key={photo._id || index} 
                   ref={isLastPhoto ? lastPhotoElementRef : null} 
-                  className={`relative w-full p-4 md:p-8 transition-all duration-500 hover:rotate-0 hover:z-50 hover:scale-[1.02] ${getGridClass(index)}`}
+                  className={`relative w-full p-3 sm:p-5 md:p-8 transition-all duration-500 hover:rotate-0 hover:z-50 hover:scale-105 ${getGridClass(index)}`}
                 >
                   <ScrollReveal delay={(index % 10) * 50} className="w-full">
                     <div className="frame-layout w-full group">
                       <span className="sparkle sparkle-one" aria-hidden="true">✦</span> 
                       <span className="sparkle sparkle-two" aria-hidden="true">✦</span>
-                      <div className="dessert-sticker ice-cream ice-left scale-[0.6] sm:scale-75 md:scale-90 origin-bottom-right" aria-hidden="true">
+                      <div className="dessert-sticker ice-cream ice-left scale-[0.55] sm:scale-75 md:scale-90 origin-bottom-right" aria-hidden="true">
                         <span className="cherry"></span> <span className="scoop pink"></span> <span className="cone"></span>
                       </div>
-                      <div className="dessert-sticker ice-cream ice-right scale-[0.6] sm:scale-75 md:scale-90 origin-bottom-left" aria-hidden="true">
+                      <div className="dessert-sticker ice-cream ice-right scale-[0.55] sm:scale-75 md:scale-90 origin-bottom-left" aria-hidden="true">
                         <span className="cherry"></span> <span className="scoop blue"></span> <span className="cone"></span>
                       </div>
-                      <span className="dessert-sticker cake-slice scale-[0.65] sm:scale-75 md:scale-90 origin-bottom-left" aria-hidden="true"></span>
+                      <span className="dessert-sticker cake-slice scale-[0.6] sm:scale-75 md:scale-90 origin-bottom-left" aria-hidden="true"></span>
                       
                       <article className="cake-frame bg-paper w-full flex flex-col cursor-pointer shadow-lg" onClick={() => setSelectedImage(photo)}>
                         <div className="photo-window relative w-full">
@@ -270,7 +284,6 @@ export default function Gallery() {
         </>
       )}
 
-      {/* Lightbox Modal */}
       {selectedImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/90 backdrop-blur-md animate-fade-in"
@@ -287,7 +300,6 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* Upload Modal (ปรับเพิ่มระบบ Crop รูปภาพ) */}
       {isUploadOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/70 backdrop-blur-sm animate-fade-in">
           <div className="bg-white p-6 md:p-8 rounded-[30px] w-full max-w-md shadow-2xl relative border-t-8 border-skyblue flex flex-col max-h-[90vh]">
@@ -308,13 +320,12 @@ export default function Gallery() {
                     image={imageSrc}
                     crop={crop}
                     zoom={zoom}
-                    aspect={5 / 4} // บังคับสัดส่วนให้เป็น 5:4 พอดีกับกรอบ
+                    aspect={5 / 4} 
                     onCropChange={setCrop}
                     onCropComplete={onCropComplete}
                     onZoomChange={setZoom}
                   />
                 </div>
-                {/* แถบเลื่อนซูม */}
                 <input 
                   type="range" min={1} max={3} step={0.1} value={zoom} 
                   onChange={(e) => setZoom(e.target.value)} 
@@ -331,7 +342,6 @@ export default function Gallery() {
               <form onSubmit={handleUploadSubmit} className="space-y-5 overflow-y-auto">
                 <p className="text-sm font-body text-navy/70 text-center mb-4">{t.gallery.uploadModal.desc}</p>
                 
-                {/* ถ้าตัดรูปเสร็จแล้ว จะโชว์รูปพรีวิวให้ดูก่อนอัปโหลด */}
                 {uploadFile ? (
                   <div className="relative w-full aspect-[5/4] rounded-2xl overflow-hidden border-4 border-skyblue shadow-inner mb-4">
                     <img src={URL.createObjectURL(uploadFile)} alt="Preview" className="w-full h-full object-cover" />
@@ -353,6 +363,15 @@ export default function Gallery() {
                   type="text" placeholder={t.gallery.uploadModal.namePlaceholder || "ชื่อของคุณ"} value={uploaderName} onChange={(e) => setUploaderName(e.target.value)}
                   className="w-full p-3 font-body rounded-xl border-2 border-gray-100 bg-beige/30 focus:border-skyblue outline-none transition-colors"
                 />
+
+                {/* 6. เพิ่มกล่อง reCAPTCHA ก่อนปุ่ม Submit */}
+                <div className="flex justify-center my-2">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                  />
+                </div>
+
                 <button 
                   type="submit" disabled={isUploading || !uploadFile}
                   className="w-full font-heading bg-skyblue text-navy font-bold py-3.5 rounded-xl hover:bg-azalea hover:text-white transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 shadow-sm"
@@ -371,7 +390,6 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* --- CSS กรอบรูป (คงเดิม) --- */}
       <style dangerouslySetInnerHTML={{__html: `
         :root {
           --ink: #234f82;
@@ -414,13 +432,21 @@ export default function Gallery() {
         .ice-cream { width: 5.5rem; height: 7.5rem; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(4px 4px 0 rgba(23,61,103,.16)); }
         .ice-left { left: -1.5rem; top: 10%; transform: rotate(-13deg); }
         .ice-right { right: -1.5rem; bottom: 10%; transform: rotate(13deg); animation-delay: .55s; }
+        .cake-slice { left: -1.5rem; bottom: 5%; width: 5.25rem; height: 4.8rem; border: 2px solid var(--navy); border-radius: .8rem 1.25rem .8rem .8rem; background: linear-gradient(to bottom, #fff7e9 0 20%, #f7adc0 20% 45%, #f3c772 45% 100%); box-shadow: 4px 4px 0 rgba(23,61,103,.16); transform: rotate(-11deg); animation-delay: .2s; }
+        
+        @media (max-width: 600px) {
+          .ice-left { left: -0.75rem; top: 12%; }
+          .ice-right { right: -0.75rem; bottom: 12%; }
+          .cake-slice { left: -0.75rem; bottom: 8%; }
+          .cake-frame { padding: 0.5rem; border-radius: 1.2rem; box-shadow: 4px 6px 0 var(--navy); }
+        }
+
         .cherry { width: 1.15rem; height: 1.15rem; margin-bottom: -.15rem; border: 2px solid var(--navy); border-radius: 50%; background: var(--berry); position: relative; z-index: 3; }
         .cherry::before { content: ""; width: 1.35rem; height: 1.3rem; position: absolute; left: .5rem; bottom: .65rem; border-left: 2px solid var(--navy); border-radius: 70%; transform: rotate(-34deg); }
         .scoop { width: 4.65rem; height: 3.8rem; margin-bottom: -.75rem; border: 2px solid var(--navy); border-radius: 50% 50% 42% 42%; z-index: 2; }
         .scoop.pink { background: var(--pink); }
         .scoop.blue { background: var(--blue); }
         .cone { width: 3.5rem; height: 4.1rem; border: 2px solid var(--navy); background: repeating-linear-gradient(45deg, transparent 0 8px, rgba(112,69,40,.26) 8px 10px), repeating-linear-gradient(-45deg, transparent 0 8px, rgba(112,69,40,.21) 8px 10px), #eab778; clip-path: polygon(5% 0, 95% 0, 50% 100%); }
-        .cake-slice { left: -1.5rem; bottom: 5%; width: 5.25rem; height: 4.8rem; border: 2px solid var(--navy); border-radius: .8rem 1.25rem .8rem .8rem; background: linear-gradient(to bottom, #fff7e9 0 20%, #f7adc0 20% 45%, #f3c772 45% 100%); box-shadow: 4px 4px 0 rgba(23,61,103,.16); transform: rotate(-11deg); animation-delay: .2s; }
         .cake-slice::before { content: ""; width: 1.25rem; height: 1.25rem; position: absolute; right: .55rem; top: -.9rem; border: 2px solid var(--navy); border-radius: 50%; background: var(--berry); }
         .cake-slice::after { content: ""; width: 2.9rem; height: .34rem; position: absolute; left: .85rem; bottom: 1.3rem; border-radius: 999px; background: #fff8ed; }
         .sparkle { position: absolute; z-index: 5; width: 1.55rem; height: 1.55rem; color: var(--berry); animation: twinkle 2.5s ease-in-out infinite; pointer-events: none; }
