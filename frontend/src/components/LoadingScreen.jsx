@@ -4,32 +4,61 @@ export default function LoadingScreen({ onComplete }) {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isAgreed, setIsAgreed] = useState(false);
+  
+  // State สำหรับสลับภาษาในหน้า T&C (th / en)
+  const [tcLang, setTcLang] = useState('th');
+  const [isCheckingStorage, setIsCheckingStorage] = useState(true);
 
+  // 1. ตรวจสอบ LocalStorage ก่อนว่าเคยกดยอมรับไปแล้วหรือยัง
   useEffect(() => {
-    let timer;
-    const startLoading = () => {
-      setProgress(0);
-      setIsComplete(false);
-
-      timer = setInterval(() => {
-        setProgress((prev) => {
-          const increment = prev < 65 ? 2 : prev < 88 ? 1 : 0.5;
-          const nextProgress = Math.round((prev + increment) * 10) / 10;
-          
-          if (nextProgress >= 100) {
-            clearInterval(timer);
-            setIsComplete(true);
-            return 100;
-          }
-          return nextProgress;
-        });
-      }, 75);
+    const checkTermsStatus = () => {
+      const hasAccepted = localStorage.getItem('hasAcceptedTerms');
+      if (hasAccepted === 'true') {
+        // ถ้าเคยกดยอมรับแล้ว ให้ข้ามหน้านี้ไปเลยทันที
+        if (onComplete) onComplete();
+      } else {
+        // ถ้ายังไม่เคย ให้เริ่มแสดงหน้าโหลด
+        setIsCheckingStorage(false);
+        startLoadingProcess();
+      }
     };
+    checkTermsStatus();
+  }, [onComplete]);
 
-    startLoading();
+  // แยกฟังก์ชันการโหลดตัวเลขออกมา
+  const startLoadingProcess = () => {
+    setProgress(0);
+    setIsComplete(false);
 
-    return () => clearInterval(timer);
-  }, []);
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        const increment = prev < 65 ? 2 : prev < 88 ? 1 : 0.5;
+        const nextProgress = Math.round((prev + increment) * 10) / 10;
+        
+        if (nextProgress >= 100) {
+          clearInterval(timer);
+          setIsComplete(true);
+          return 100;
+        }
+        return nextProgress;
+      });
+    }, 75);
+    
+    return timer;
+  };
+
+  // 2. ฟังก์ชันเมื่อผู้ใช้กดยอมรับเงื่อนไข
+  const handleAcceptTerms = () => {
+    // บันทึกค่าลงใน LocalStorage ว่ายอมรับแล้ว
+    localStorage.setItem('hasAcceptedTerms', 'true');
+    // เรียก onComplete เพื่อเข้าสู่หน้าหลัก
+    if (onComplete) onComplete();
+  };
+
+  // ถ้ากำลังเช็ค LocalStorage อยู่ จะเรนเดอร์หน้าจอเปล่าๆ สีพื้นหลังไปก่อน (กันหน้าเค้กกระพริบ)
+  if (isCheckingStorage) {
+    return <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom, #fffafa, #fdf2f6)' }}></div>;
+  }
 
   return (
     <>
@@ -191,12 +220,38 @@ export default function LoadingScreen({ onComplete }) {
             text-align: center;
           }
 
+          /* ตัวสลับภาษาใน T&C */
+          .tc-lang-switch {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+          }
+          
+          .tc-lang-btn {
+            background: transparent;
+            border: 2px solid #e1e1e8;
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #77798c;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          
+          .tc-lang-btn.active {
+            border-color: var(--blue-deep);
+            background: rgba(149, 206, 244, 0.15);
+            color: var(--blue-deep);
+          }
+
           .tc-content-box {
             background: #f9f9fb;
             border: 1px solid #e1e1e8;
             border-radius: 16px;
             padding: 24px;
-            max-height: 55vh;
+            max-height: 50vh;
             overflow-y: auto;
             margin-bottom: 24px;
             text-align: left;
@@ -286,7 +341,7 @@ export default function LoadingScreen({ onComplete }) {
             .balloon-small { display: none; }
             .tc-card { padding: 30px 20px; border-radius: 24px; }
             .checkbox-text { font-size: 0.9rem; }
-            .tc-content-box { font-size: 0.85rem; padding: 16px; }
+            .tc-content-box { font-size: 0.85rem; padding: 16px; max-height: 45vh; }
           }
         `}
       </style>
@@ -339,40 +394,89 @@ export default function LoadingScreen({ onComplete }) {
       ) : (
         <div className="tc-container">
           <main className="tc-card">
-            <h2 className="title" style={{ marginTop: 0, marginBottom: '16px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }}>
-              ข้อตกลงและเงื่อนไขการใช้งาน
+            <h2 className="title" style={{ marginTop: 0, marginBottom: '8px', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }}>
+              {tcLang === 'th' ? 'ข้อตกลงและเงื่อนไขการใช้งาน' : 'Terms and Conditions'}
             </h2>
-            <p className="message" style={{ marginBottom: '24px', fontWeight: '500' }}>
-              (Terms & Conditions)
+            <p className="message" style={{ marginBottom: '20px', fontWeight: '500' }}>
+              {tcLang === 'th' ? 'สำหรับเว็บไซต์ ONE MORE STEP with HONGSHI' : 'for ONE MORE STEP with HONGSHI website'}
             </p>
 
+            {/* ส่วนสลับภาษา */}
+            <div className="tc-lang-switch">
+              <button 
+                className={`tc-lang-btn ${tcLang === 'th' ? 'active' : ''}`}
+                onClick={() => setTcLang('th')}
+              >
+                TH
+              </button>
+              <button 
+                className={`tc-lang-btn ${tcLang === 'en' ? 'active' : ''}`}
+                onClick={() => setTcLang('en')}
+              >
+                EN
+              </button>
+            </div>
+
             <div className="tc-content-box">
-              <p className="mb-4">
-                ยินดีต้อนรับเข้าสู่เว็บไซต์ <strong>ONE MORE STEP with HONGSHI</strong> การที่คุณเข้าใช้งานเว็บไซต์นี้ ถือว่าคุณได้ยอมรับข้อตกลงและเงื่อนไขต่างๆ ดังต่อไปนี้:
-              </p>
-              <ol className="list-decimal pl-5 space-y-3">
-                <li>
-                  <strong>วัตถุประสงค์ของเว็บไซต์</strong><br />
-                  เว็บไซต์นี้เป็นส่วนหนึ่งของโปรเจควันเกิดเพื่อร่วมเฉลิมฉลองและรวบรวมความทรงจำดีๆ ให้กับ HONGSHI จัดทำขึ้นโดยแฟนคลับ และไม่มีวัตถุประสงค์เพื่อการค้าหรือแสวงหาผลกำไรในเชิงพาณิชย์แต่อย่างใด
-                </li>
-                <li>
-                  <strong>ทรัพย์สินทางปัญญาและลิขสิทธิ์</strong><br />
-                  ภาพถ่าย วิดีโอ กราฟิก โค้ด และเนื้อหาต่างๆ ที่ปรากฏบนเว็บไซต์นี้ ส่วนหนึ่งจัดทำขึ้นโดยทีมงานผู้จัดทำโปรเจค และบางส่วนอาจเป็นภาพของ HONGSHI ซึ่งลิขสิทธิ์ยังคงเป็นของเจ้าของภาพ ต้นสังกัด หรือผู้สร้างสรรค์ผลงานนั้นๆ ทางเรานำมาใช้เพื่อการโปรโมทและสนับสนุนด้วยความชื่นชอบเท่านั้น<br />
-                  <span className="text-red-500 font-medium">ไม่อนุญาต</span> ให้นำภาพกราฟิก ผลงานศิลปะ (Fanart) หรือเนื้อหาที่สร้างสรรค์โดยทีมงานจากเว็บไซต์นี้ ไปดัดแปลง ทำซ้ำ หรือใช้ในเชิงพาณิชย์โดยเด็ดขาด หากต้องการนำไปแชร์ต่อ กรุณาให้เครดิตเว็บไซต์และโปรเจคของเรา
-                </li>
-                <li>
-                  <strong>การใช้งานที่เหมาะสม</strong><br />
-                  ผู้ใช้งานตกลงที่จะใช้เว็บไซต์นี้อย่างสร้างสรรค์ และจะไม่กระทำการใดๆ ที่อาจก่อให้เกิดความเสียหายต่อเว็บไซต์ ต่อผู้ใช้งานท่านอื่น หรือต่อ HONGSHI รวมถึงไม่ส่งข้อความสแปม ข้อความหยาบคาย หรือข้อความที่ผิดกฎหมาย/สร้างความเกลียดชังเข้ามาในระบบของเว็บไซต์
-                </li>
-                <li>
-                  <strong>การเก็บรวบรวมข้อมูล</strong><br />
-                  หากคุณร่วมกิจกรรมส่งข้อความอวยพรหรือลงชื่อร่วมโปรเจค ข้อมูลที่คุณระบุ (เช่น ชื่อ นามแฝง หรือข้อความ) จะถูกนำมาแสดงผลบนเว็บไซต์ตามวัตถุประสงค์ของโปรเจคเท่านั้น ทางทีมงานจะไม่มีการนำข้อมูลของคุณไปใช้ในเชิงพาณิชย์หรือนำไปแสวงหาผลประโยชน์อื่นใดเด็ดขาด
-                </li>
-                <li>
-                  <strong>การติดต่อทีมงาน</strong><br />
-                  หากมีข้อสงสัย พบปัญหาในการใช้งานเว็บไซต์ หรือต้องการแจ้งลบข้อมูล/ข้อความของคุณ สามารถติดต่อทีมงานได้ทางอีเมล: <a href="mailto:help.omswh@icloud.com" className="text-blue-500 hover:underline">help.omswh@icloud.com</a>
-                </li>
-              </ol>
+              {tcLang === 'th' ? (
+                <>
+                  <p className="mb-4">
+                    ยินดีต้อนรับเข้าสู่เว็บไซต์ <strong>ONE MORE STEP with HONGSHI</strong> การที่คุณเข้าใช้งานเว็บไซต์นี้ ถือว่าคุณได้ยอมรับข้อตกลงและเงื่อนไขต่างๆ ดังต่อไปนี้:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-3">
+                    <li>
+                      <strong>วัตถุประสงค์ของเว็บไซต์</strong><br />
+                      เว็บไซต์นี้เป็นส่วนหนึ่งของโปรเจควันเกิดเพื่อร่วมเฉลิมฉลองและรวบรวมความทรงจำดีๆ ให้กับ HONGSHI จัดทำขึ้นโดยแฟนคลับ และไม่มีวัตถุประสงค์เพื่อการค้าหรือแสวงหาผลกำไรในเชิงพาณิชย์แต่อย่างใด
+                    </li>
+                    <li>
+                      <strong>ทรัพย์สินทางปัญญาและลิขสิทธิ์</strong><br />
+                      ภาพถ่าย วิดีโอ กราฟิก โค้ด และเนื้อหาต่างๆ ที่ปรากฏบนเว็บไซต์นี้ ส่วนหนึ่งจัดทำขึ้นโดยทีมงานผู้จัดทำโปรเจค และบางส่วนอาจเป็นภาพของ HONGSHI ซึ่งลิขสิทธิ์ยังคงเป็นของเจ้าของภาพ ต้นสังกัด หรือผู้สร้างสรรค์ผลงานนั้นๆ ทางเรานำมาใช้เพื่อการโปรโมทและสนับสนุนด้วยความชื่นชอบเท่านั้น<br />
+                      <span className="text-red-500 font-medium">ไม่อนุญาต</span> ให้นำภาพกราฟิก ผลงานศิลปะ (Fanart) หรือเนื้อหาที่สร้างสรรค์โดยทีมงานจากเว็บไซต์นี้ ไปดัดแปลง ทำซ้ำ หรือใช้ในเชิงพาณิชย์โดยเด็ดขาด หากต้องการนำไปแชร์ต่อ กรุณาให้เครดิตเว็บไซต์และโปรเจคของเรา
+                    </li>
+                    <li>
+                      <strong>การใช้งานที่เหมาะสม</strong><br />
+                      ผู้ใช้งานตกลงที่จะใช้เว็บไซต์นี้อย่างสร้างสรรค์ และจะไม่กระทำการใดๆ ที่อาจก่อให้เกิดความเสียหายต่อเว็บไซต์ ต่อผู้ใช้งานท่านอื่น หรือต่อ HONGSHI รวมถึงไม่ส่งข้อความสแปม ข้อความหยาบคาย หรือข้อความที่ผิดกฎหมาย/สร้างความเกลียดชังเข้ามาในระบบของเว็บไซต์
+                    </li>
+                    <li>
+                      <strong>การเก็บรวบรวมข้อมูล</strong><br />
+                      หากคุณร่วมกิจกรรมส่งข้อความอวยพรหรือลงชื่อร่วมโปรเจค ข้อมูลที่คุณระบุ (เช่น ชื่อ นามแฝง หรือข้อความ) จะถูกนำมาแสดงผลบนเว็บไซต์ตามวัตถุประสงค์ของโปรเจคเท่านั้น ทางทีมงานจะไม่มีการนำข้อมูลของคุณไปใช้ในเชิงพาณิชย์หรือนำไปแสวงหาผลประโยชน์อื่นใดเด็ดขาด
+                    </li>
+                    <li>
+                      <strong>การติดต่อทีมงาน</strong><br />
+                      หากมีข้อสงสัย พบปัญหาในการใช้งานเว็บไซต์ หรือต้องการแจ้งลบข้อมูล/ข้อความของคุณ สามารถติดต่อทีมงานได้ทางอีเมล: <a href="mailto:help.omswh@icloud.com" className="text-blue-500 hover:underline">help.omswh@icloud.com</a>
+                    </li>
+                  </ol>
+                </>
+              ) : (
+                <>
+                  <p className="mb-4">
+                    Welcome to the <strong>ONE MORE STEP with HONGSHI</strong> website. By accessing and using this website, you agree to comply with the following terms and conditions:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-3">
+                    <li>
+                      <strong>Purpose of the Website</strong><br />
+                      This website is part of a birthday project created by fans to celebrate and gather good memories for HONGSHI. It is strictly non-profit and not intended for commercial use.
+                    </li>
+                    <li>
+                      <strong>Intellectual Property and Copyright</strong><br />
+                      The photos, videos, graphics, code, and other content on this website are partly created by the project team, and some may include images of HONGSHI, whose copyrights belong to the respective owners, agencies, or creators. We use them solely for promotion and support out of admiration.<br />
+                      <span className="text-red-500 font-medium">It is strictly prohibited</span> to modify, reproduce, or use the graphics, fanart, or any creative content made by the team for commercial purposes. If you wish to share them, please credit our website and project.
+                    </li>
+                    <li>
+                      <strong>Appropriate Usage</strong><br />
+                      Users agree to use this website constructively and will not engage in any actions that may cause harm to the website, other users, or HONGSHI. This includes refraining from sending spam, profanity, illegal, or hateful messages into the website's system.
+                    </li>
+                    <li>
+                      <strong>Data Collection</strong><br />
+                      If you participate in sending wishes or signing the project, the information you provide (e.g., name, alias, or message) will be displayed on the website solely for the project's purposes. The team will never use your data commercially or for any other benefits.
+                    </li>
+                    <li>
+                      <strong>Contact the Team</strong><br />
+                      If you have any questions, encounter issues using the website, or wish to request the removal of your data/messages, you can contact the team via email: <a href="mailto:help.omswh@icloud.com" className="text-blue-500 hover:underline">help.omswh@icloud.com</a>
+                    </li>
+                  </ol>
+                </>
+              )}
             </div>
 
             <label className="checkbox-wrapper">
@@ -382,16 +486,16 @@ export default function LoadingScreen({ onComplete }) {
                 onChange={(e) => setIsAgreed(e.target.checked)}
               />
               <span className="checkbox-text">
-                ฉันได้อ่านและยอมรับข้อตกลงและเงื่อนไขต่างๆ ข้างต้นแล้ว
+                {tcLang === 'th' ? 'ฉันได้อ่านและยอมรับข้อตกลงและเงื่อนไขต่างๆ ข้างต้นแล้ว' : 'I have read and agree to the terms and conditions above.'}
               </span>
             </label>
 
             <button 
               className="accept-button" 
               disabled={!isAgreed}
-              onClick={() => { if(onComplete) onComplete(); }}
+              onClick={handleAcceptTerms}
             >
-              เข้าสู่เว็บไซต์
+              {tcLang === 'th' ? 'เข้าสู่เว็บไซต์' : 'Enter Website'}
             </button>
           </main>
         </div>
