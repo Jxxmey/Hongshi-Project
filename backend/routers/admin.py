@@ -38,6 +38,35 @@ async def delete_wish(wish_id: str):
     await wishes_collection.delete_one({"_id": obj_id})
     return {"message": "Wish deleted"}
 
+@router.get("/cafe-wishes")
+async def get_cafe_wishes():
+    wishes = []
+    # แก้ไขให้ค้นหาทั้งแบบ Boolean(True) และ String("true")
+    cursor = db.wishes.find({
+        "$or": [{"reported": {"$exists": False}}, {"reported": False}],
+        "$or": [{"isConsentGiven": True}, {"isConsentGiven": "true"}] 
+    }).sort("_id", -1)
+    
+    async for doc in cursor:
+        doc["id"] = str(doc["_id"])
+        del doc["_id"]
+        wishes.append(doc)
+    return wishes
+
+@router.get("/cafe-photos")
+async def get_cafe_photos():
+    photos = []
+    # แก้ไขให้ค้นหาทั้งแบบ Boolean(True) และ String("true")
+    cursor = db.gallery.find({
+        "status": "approved",
+        "$or": [{"isConsentGiven": True}, {"isConsentGiven": "true"}]
+    }).sort("createdAt", -1)
+    
+    async for doc in cursor:
+        doc["_id"] = str(doc["_id"])
+        photos.append(doc)
+    return photos
+
 # ==========================================
 # จัดการ Gallery
 # ==========================================
