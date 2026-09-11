@@ -157,9 +157,10 @@ export default function ArtistProfile() {
                 "https://www.youtube.com/embed/nFp4zjAARFs?si=fzzBSqHBMQEJKnFb",
                 "https://www.youtube.com/embed/N2Rh3gNWFRI?si=XY6UQ2FqFrQvHzTC",
                 "https://www.youtube.com/embed/b0V35uxCnmY?si=xemconHUfQWqOWsq",
-                "https://www.youtube.com/embed/lF4DsUojTFU?si=rstowdvI5DGDIpMu" 
+                "https://www.youtube.com/embed/lF4DsUojTFU?si=rstowdvI5DGDIpMu",
+                "https://www.youtube.com/embed/JuA266F91Ok?si=C38L1TWkFnnHsPFX" 
               ];
-              const borders = ["border-skyblue", "border-azalea", "border-palepink", "border-skyblue", "border-navy"]; 
+              const borders = ["border-skyblue", "border-azalea", "border-palepink", "border-skyblue", "border-navy", "border-azalea"]; 
               
               return (
                 <div key={index} className={`bg-beige/40 p-6 rounded-2xl border-l-4 ${borders[index]} hover:shadow-md transition space-y-4`}>
@@ -170,7 +171,7 @@ export default function ArtistProfile() {
                      <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
                         <span className="text-navy/40 font-bold text-sm">Loading Video...</span>
                      </div>
-                     <iframe className="relative z-10" width="100%" height="100%" src={youtubeLinks[index]} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
+                     <iframe className="relative z-10" width="100%" height="100%" src={youtubeLinks[index]} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
                   </div>
 
                   <p className="text-sm text-navy/80">{song.desc}</p>
@@ -181,7 +182,7 @@ export default function ArtistProfile() {
         </section>
       </ScrollReveal>
 
-      {/* 5. On Screen Universe (เพิ่ม ThamePo และ I Love 'A Lot Of' You) */}
+      {/* 5. On Screen Universe */}
       <ScrollReveal delay={200}>
         <section className="space-y-8 bg-palepink/20 p-6 md:p-10 rounded-3xl border-2 border-palepink">
           <div className="text-center">
@@ -213,14 +214,14 @@ export default function ArtistProfile() {
                       src="https://www.youtube.com/embed/cSGe16e5iys?si=rjehnV8nEBWEVrNQ" 
                       title="ThamePo Trailer" 
                       frameBorder="0" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                       referrerPolicy="strict-origin-when-cross-origin" 
                       allowFullScreen
                     ></iframe>
                   </div>
                 )}
 
-                {/* +++ เพิ่มวิดีโอช่องที่สอง: I Love 'A Lot Of' You (รก(รัก)นะน้องชาย) +++ */}
+                {/* วิดีโอช่องที่สอง: I Love 'A Lot Of' You (รก(รัก)นะน้องชาย) */}
                 {index === 1 && (
                   <div className="w-full mt-2 aspect-video rounded-xl overflow-hidden relative bg-gray-100 shadow-inner">
                     <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
@@ -233,7 +234,7 @@ export default function ArtistProfile() {
                       src="https://www.youtube.com/embed/QkpSKQ_Usus?si=Hj_J86x4bKB7jzfP" 
                       title="I Love A Lot Of You" 
                       frameBorder="0" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                       referrerPolicy="strict-origin-when-cross-origin" 
                       allowFullScreen
                     ></iframe>
@@ -274,7 +275,7 @@ export default function ArtistProfile() {
               src="https://www.youtube.com/embed/kqiruuXSplM?si=92RFSbLZIIO3BdSZ"
               title="YouTube video player"
               frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             ></iframe>

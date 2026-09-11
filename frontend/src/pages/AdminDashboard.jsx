@@ -9,7 +9,7 @@ export default function AdminDashboard() {
     visits: 0, 
     totalWishes: 0,
     pendingReports: 0,
-    pendingPhotos: 0 // +++ เพิ่ม state เก็บจำนวนรูปรออนุมัติ
+    pendingPhotos: 0 
   });
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
           fetch(`${API_URL}/wishes`),
           fetch(`${API_URL}/admin/reports`),
           fetch(`${API_URL}/admin/stats`),
-          fetch(`${API_URL}/admin/gallery/pending`) // +++ ดึงจำนวนรูปรอตรวจสอบ
+          fetch(`${API_URL}/admin/gallery/pending`) 
         ]);
 
         const wishes = wishesRes.ok ? await wishesRes.json() : [];
@@ -31,7 +31,7 @@ export default function AdminDashboard() {
           visits: statsData.views, 
           totalWishes: wishes.length,
           pendingReports: reports.length,
-          pendingPhotos: photos.length // +++
+          pendingPhotos: photos.length 
         });
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
@@ -53,7 +53,6 @@ export default function AdminDashboard() {
       </ScrollReveal>
 
       {/* สถิติภาพรวม */}
-      {/* +++ เปลี่ยนจาก 3 คอลัมน์เป็น 4 คอลัมน์ บนหน้าจอใหญ่ +++ */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         <ScrollReveal delay={100}>
           <div className="bg-white p-6 rounded-3xl shadow-sm border-t-8 border-skyblue text-center h-full flex flex-col justify-center hover:-translate-y-1 transition-transform duration-300">
@@ -82,7 +81,6 @@ export default function AdminDashboard() {
           </div>
         </ScrollReveal>
 
-        {/* +++ เพิ่มสถิติรูปรออนุมัติ +++ */}
         <ScrollReveal delay={550}>
           <div className="bg-white p-6 rounded-3xl shadow-sm border-t-8 border-yellow-400 text-center relative h-full flex flex-col justify-center hover:-translate-y-1 transition-transform duration-300">
             <p className="text-navy/70 text-xs md:text-sm font-bold mb-2">📸 รออนุมัติรูป</p>
@@ -105,8 +103,8 @@ export default function AdminDashboard() {
           </h3>
         </ScrollReveal>
         
-        {/* +++ ปรับเป็น 3 คอลัมน์ และจัดให้อยู่ตรงกลาง +++ */}
-        <div className="grid md:grid-cols-3 gap-4 mt-4">
+        {/* +++ ปรับเป็น 4 คอลัมน์ เพื่อเพิ่มปุ่ม Export +++ */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
           
           <ScrollReveal delay={600}>
             <Link to="/admin/reports" className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border-2 border-transparent hover:border-azalea group flex flex-col items-center gap-3 text-center h-full">
@@ -118,7 +116,6 @@ export default function AdminDashboard() {
             </Link>
           </ScrollReveal>
 
-          {/* +++ เมนูใหม่: ตรวจสอบรูปภาพ +++ */}
           <ScrollReveal delay={700}>
             <Link to="/admin/imagerequest" className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border-2 border-transparent hover:border-yellow-400 group flex flex-col items-center gap-3 text-center h-full">
               <span className="text-4xl group-hover:scale-110 transition-transform">📸</span>
@@ -135,6 +132,17 @@ export default function AdminDashboard() {
               <div>
                 <h4 className="font-heading font-bold text-navy text-lg">สถิติเชิงลึก</h4>
                 <p className="text-sm text-navy/70">ดูข้อมูลการเข้าชมและภาพรวมเว็บไซต์</p>
+              </div>
+            </Link>
+          </ScrollReveal>
+
+          {/* +++ เมนูใหม่: Export ข้อมูลคาเฟ่ +++ */}
+          <ScrollReveal delay={900}>
+            <Link to="/admin/export" className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border-2 border-transparent hover:border-green-400 group flex flex-col items-center gap-3 text-center h-full">
+              <span className="text-4xl group-hover:scale-110 transition-transform">📥</span>
+              <div>
+                <h4 className="font-heading font-bold text-navy text-lg">Export ข้อมูล</h4>
+                <p className="text-sm text-navy/70">ดาวน์โหลดรูปและข้อความไปใช้ในคาเฟ่</p>
               </div>
             </Link>
           </ScrollReveal>

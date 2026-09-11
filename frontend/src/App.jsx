@@ -12,8 +12,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import SpotifyPlayer from './components/SpotifyPlayer';
 import AdminStats from './pages/AdminStats';
 import AdminImageRequest from './pages/AdminImageRequest';
+import AdminCafeExport from './pages/AdminCafeExport'; // +++ 1. Import หน้า Admin Export
 import FAQ from './pages/FAQ';
-import Gallery from './pages/Gallery'; // +++ Import Gallery component
+import Gallery from './pages/Gallery'; 
 import { LanguageProvider } from './contexts/LanguageContext';
 import LoadingScreen from './components/LoadingScreen';
 
@@ -156,6 +157,7 @@ function App() {
               <Route path="/admin/reports" element={<AdminReports />} />
               <Route path="/admin/stats" element={<AdminStats />} />
               <Route path="/admin/imagerequest" element={<AdminImageRequest />} />
+              <Route path="/admin/export" element={<AdminCafeExport />} /> {/* +++ 2. เพิ่ม Route หน้า Export */}
               <Route path="/faq" element={<FAQ />} />
               <Route path="/gallery" element={<Gallery />} />
             </Routes>

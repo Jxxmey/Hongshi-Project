@@ -22,13 +22,14 @@ export default function Gallery() {
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploaderName, setUploaderName] = useState('');
-  // 1. เพิ่ม State สำหรับเก็บค่าการอนุญาต
   const [isConsentGiven, setIsConsentGiven] = useState(false);
   
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState({ text: '', type: '' });
 
-  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadFile, setUploadFile] = useState(null); // สำหรับภาพที่ตัดแล้ว (Cropped)
+  const [originalFile, setOriginalFile] = useState(null); // +++ 1. State สำหรับภาพขนาดจริง (Original)
+  
   const [imageSrc, setImageSrc] = useState(null); 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -80,6 +81,8 @@ export default function Gallery() {
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      setOriginalFile(file); // +++ 2. เก็บไฟล์ขนาดจริงไว้ใน State ทันทีที่เลือกรูป
+      
       const reader = new FileReader();
       reader.addEventListener('load', () => {
         setImageSrc(reader.result);
@@ -144,10 +147,10 @@ export default function Gallery() {
     setUploadMessage({ text: t.gallery.uploadModal?.uploading || 'กำลังอัปโหลด...', type: 'info' });
 
     const formData = new FormData();
-    formData.append('image', uploadFile);
+    formData.append('image', uploadFile); // รูปที่ตัดแล้ว (สัดส่วน 5:4)
+    formData.append('originalImage', originalFile); // +++ 3. แนบไฟล์รูปขนาดจริงส่งไปด้วย
     formData.append('uploaderName', uploaderName || 'Anonymous LYKYOU');
     formData.append('recaptchaToken', captchaToken); 
-    // 2. ส่งค่าการอนุญาตไปพร้อมกับข้อมูลอื่นๆ (FormData จะแปลงค่า boolean เป็นคำว่า "true" หรือ "false")
     formData.append('isConsentGiven', isConsentGiven);
 
     try {
@@ -180,11 +183,11 @@ export default function Gallery() {
   const closeUploadModal = () => {
     setIsUploadOpen(false);
     setUploadFile(null);
+    setOriginalFile(null); // +++ 4. เคลียร์ค่าไฟล์ขนาดจริง
     setImageSrc(null);
     setIsCropping(false);
     setUploaderName('');
     setUploadMessage({ text: '', type: '' });
-    // 3. รีเซ็ตค่า Consent เมื่อปิดหน้าต่าง
     setIsConsentGiven(false);
     if (recaptchaRef.current) recaptchaRef.current.reset();
   };
@@ -295,7 +298,8 @@ export default function Gallery() {
             <button onClick={() => setSelectedImage(null)} className="absolute -top-12 right-0 md:-right-12 text-white hover:text-azalea bg-white/20 hover:bg-white/40 w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all z-20">✕</button>
             <div className="w-full h-full overflow-hidden rounded-2xl md:rounded-[30px] border-4 border-white shadow-2xl relative select-none">
               <div className="absolute inset-0 z-10 bg-transparent"></div>
-              <ImageSkeleton src={selectedImage.imageUrl} alt="Selected" containerClassName="w-full h-full bg-black/50" imageClassName="max-h-[85vh] object-contain"/>
+              {/* เปลี่ยนให้โชว์รูป Original แทนรูป Crop เมื่อกดขยายดูเต็มจอ ถ้ามี */}
+              <ImageSkeleton src={selectedImage.originalImageUrl || selectedImage.imageUrl} alt="Selected" containerClassName="w-full h-full bg-black/50" imageClassName="max-h-[85vh] object-contain"/>
             </div>
             <p className="text-white mt-4 font-body font-bold bg-navy/50 px-5 py-2 rounded-full border border-white/20">From {selectedImage.uploaderName}</p>
           </div>
@@ -348,7 +352,7 @@ export default function Gallery() {
                   <div className="relative w-full aspect-[5/4] rounded-2xl overflow-hidden border-4 border-skyblue shadow-inner mb-4">
                     <img src={URL.createObjectURL(uploadFile)} alt="Preview" className="w-full h-full object-cover" />
                     <button 
-                      type="button" onClick={() => {setUploadFile(null); setImageSrc(null);}} 
+                      type="button" onClick={() => {setUploadFile(null); setOriginalFile(null); setImageSrc(null);}} 
                       className="absolute top-2 right-2 bg-navy/70 text-white text-xs px-3 py-1 rounded-full hover:bg-red-500"
                     >เปลี่ยนรูป</button>
                   </div>
@@ -366,7 +370,6 @@ export default function Gallery() {
                   className="w-full p-3 font-body rounded-xl border-2 border-gray-100 bg-beige/30 focus:border-skyblue outline-none transition-colors"
                 />
 
-                {/* 4. เพิ่ม Checkbox ส่วนนี้ลงไปในแบบฟอร์ม */}
                 <div className="flex items-start space-x-3 my-4 p-3 bg-white/50 rounded-xl border border-gray-100">
                   <input 
                     type="checkbox" 

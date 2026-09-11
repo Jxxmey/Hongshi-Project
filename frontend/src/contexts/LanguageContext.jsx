@@ -46,7 +46,8 @@ export const translations = {
         uploading: 'กำลังส่งความรัก... ⏳',
         success: 'อัปโหลดสำเร็จ! รูปของคุณกำลังรอตรวจสอบครับ 🩵',
         error: 'เกิดข้อผิดพลาดในการอัปโหลด ❌ ลองใหม่อีกครั้งนะครับ',
-        noFile: 'กรุณาเลือกรูปภาพก่อนครับ'
+        noFile: 'กรุณาเลือกรูปภาพก่อนครับ',
+        consent: 'ฉันอนุญาตให้นำรูปภาพและข้อความนี้ไปใช้ประกอบคลิปโปรเจกต์วันเกิด หรือกิจกรรมอื่นๆ ที่เกี่ยวข้องกับโปรเจกต์ได้'
       }
     },
     guestbook: {
@@ -62,7 +63,8 @@ export const translations = {
       submitBtn: '🚀 ส่งข้อความ',
       submitting: 'กำลังส่งความรัก... 💌',
       successTitle: 'ส่งคำอวยพรสำเร็จ!',
-      successDesc: 'ข้อความของคุณลอยไปหาฮงชิแล้วครับ ✨'
+      successDesc: 'ข้อความของคุณลอยไปหาฮงชิแล้วครับ ✨',
+      modalConsent: 'ฉันอนุญาตให้นำข้อความนี้ไปใช้ประกอบคลิปโปรเจกต์วันเกิด หรือกิจกรรมอื่นๆ ที่เกี่ยวข้องกับโปรเจกต์ได้'
     },
     profile: {
       title: 'HONGSHI',
@@ -84,7 +86,8 @@ export const translations = {
         { emoji: "🔥", title: "โฮ่ง! (SUGOI)", desc: "ซิงเกิลสไตล์ Electronic Hip-hop ที่ฮงมีส่วนร่วมเป็นผู้ช่วยเขียนเนื้อเพลง (ได้รับโหวตความนิยมสูงถึง 14%)" },
         { emoji: "✍️", title: "ทัก (FIRST SIGHT)", desc: "ผลงานที่ได้รับความไว้วางใจให้ร่วมแต่งเนื้อร้องและท่อนแร็ป สะท้อนศักยภาพด้านดนตรีที่เติบโตขึ้นอย่างชัดเจน" },
         { emoji: "😉", title: "หยอกไม่หลอก (Trick Or Treat)", desc: "อีกหนึ่งผลงานคุณภาพที่ได้รับความนิยม สะท้อนความสามารถที่หลากหลาย" },
-        { emoji: "🎬", title: "กับฉันในความฝัน - neofolk", desc: "ผลงานแสดงมิวสิกวิดีโอในฐานะพระเอก MV ถ่ายทอดอารมณ์ความเศร้าและความคิดถึงได้อย่างลึกซึ้ง" } // +++ เพิ่มอันนี้
+        { emoji: "🎬", title: "กับฉันในความฝัน - neofolk", desc: "ผลงานแสดงมิวสิกวิดีโอในฐานะพระเอก MV ถ่ายทอดอารมณ์ความเศร้าและความคิดถึงได้อย่างลึกซึ้ง" },
+        { emoji: "✨", title: "SEXY x LADY - PROJECT ALPHA", desc: "สเตจไวรัลในรายการ Project Alpha กับการโชว์ศักยภาพการแร็ปและเต้นสุดทรงพลังร่วมกับเพื่อนร่วมทีม" } 
       ],
       screenTitle: '🎬 On Screen Universe',
       screenSubtitle: 'พิสูจน์เสน่ห์ทางการแสดงผ่านหน้าจอซีรีส์และรายการ',
@@ -201,7 +204,8 @@ export const translations = {
         uploading: 'Sending love... ⏳',
         success: 'Upload successful! Waiting for admin approval 🩵',
         error: 'An error occurred. Please try again ❌',
-        noFile: 'Please select an image first'
+        noFile: 'Please select an image first',
+        consent: 'I allow this image and message to be used in birthday project videos or related activities.'
       }
     },
     guestbook: {
@@ -217,7 +221,8 @@ export const translations = {
       submitBtn: '🚀 Send Message',
       submitting: 'Sending love... 💌',
       successTitle: 'Wish Sent Successfully!',
-      successDesc: 'Your message is floating to Hongshi ✨'
+      successDesc: 'Your message is floating to Hongshi ✨',
+      modalConsent: 'I allow this message to be used in birthday project videos or related activities.'
     },
     profile: {
       title: 'HONGSHI',
@@ -239,7 +244,8 @@ export const translations = {
         { emoji: "🔥", title: "SUGOI (โฮ่ง!)", desc: "Electronic Hip-hop single where Hong participated as an assistant lyricist (received a high popularity vote of 14%)." },
         { emoji: "✍️", title: "FIRST SIGHT (ทัก)", desc: "A project where he was trusted to co-write lyrics and rap verses, reflecting his clearly growing musical potential." },
         { emoji: "😉", title: "Trick or Treat (หยอกไม่หลอก)", desc: "Another highly popular, quality release reflecting his versatile abilities." },
-        { emoji: "🎬", title: "กับฉันในความฝัน (In My Dreams) - neofolk", desc: "Music video appearance as the lead actor, deeply portraying the emotions of sadness and longing." } // +++ เพิ่มอันนี้
+        { emoji: "🎬", title: "กับฉันในความฝัน (In My Dreams) - neofolk", desc: "Music video appearance as the lead actor, deeply portraying the emotions of sadness and longing." },
+        { emoji: "✨", title: "SEXY x LADY - PROJECT ALPHA", desc: "A viral stage performance on Project Alpha, showcasing his powerful rap and dance skills alongside his teammates." } 
       ],
       screenTitle: '🎬 On Screen Universe',
       screenSubtitle: 'Proving his acting charm through series and variety shows',
