@@ -7,7 +7,7 @@ export const translations = {
       home: 'หน้าแรก',
       profile: 'รู้จักฮงชิ',
       project: 'คาเฟ่',
-      gallery: 'แกลเลอรี', // +++
+      gallery: 'แกลเลอรี',
       guestbook: 'อวยพรวันเกิด',
       faq: 'ถาม-ตอบ',
       terms: 'ข้อกำหนด',
@@ -83,7 +83,8 @@ export const translations = {
         { emoji: "🎵", title: "ถูกสเปก (Let's Go)", desc: "Solo Debut แนว Romantic Hip-Hop ที่ฮงเขียนเนื้อเองทั้งหมด กวาดยอดวิวทะลุ 5.1 ล้านครั้งบน YouTube" },
         { emoji: "🔥", title: "โฮ่ง! (SUGOI)", desc: "ซิงเกิลสไตล์ Electronic Hip-hop ที่ฮงมีส่วนร่วมเป็นผู้ช่วยเขียนเนื้อเพลง (ได้รับโหวตความนิยมสูงถึง 14%)" },
         { emoji: "✍️", title: "ทัก (FIRST SIGHT)", desc: "ผลงานที่ได้รับความไว้วางใจให้ร่วมแต่งเนื้อร้องและท่อนแร็ป สะท้อนศักยภาพด้านดนตรีที่เติบโตขึ้นอย่างชัดเจน" },
-        { emoji: "😉", title: "หยอกไม่หลอก (Trick Or Treat)", desc: "อีกหนึ่งผลงานคุณภาพที่ได้รับความนิยม สะท้อนความสามารถที่หลากหลาย" }
+        { emoji: "😉", title: "หยอกไม่หลอก (Trick Or Treat)", desc: "อีกหนึ่งผลงานคุณภาพที่ได้รับความนิยม สะท้อนความสามารถที่หลากหลาย" },
+        { emoji: "🎬", title: "กับฉันในความฝัน - neofolk", desc: "ผลงานแสดงมิวสิกวิดีโอในฐานะพระเอก MV ถ่ายทอดอารมณ์ความเศร้าและความคิดถึงได้อย่างลึกซึ้ง" } // +++ เพิ่มอันนี้
       ],
       screenTitle: '🎬 On Screen Universe',
       screenSubtitle: 'พิสูจน์เสน่ห์ทางการแสดงผ่านหน้าจอซีรีส์และรายการ',
@@ -150,7 +151,6 @@ export const translations = {
         }
       ]
     },
-    // +++ เพิ่มส่วน Easter Egg ภาษาไทย +++
     easterEgg: {
       title: '🎉 เซอร์ไพรส์! คุณค้นพบความลับ!',
       desc: 'ขอบคุณที่แวะมาฉลองวันเกิดด้วยกันนะครับ รักทุกคนเลยยย 🩵 - ฮงชิ',
@@ -162,7 +162,7 @@ export const translations = {
       home: 'Home',
       profile: 'Profile',
       project: 'Cafe',
-      gallery: 'Gallery', // +++
+      gallery: 'Gallery',
       guestbook: 'Wishes',
       faq: 'FAQ',
       terms: 'Terms',
@@ -238,7 +238,8 @@ export const translations = {
         { emoji: "🎵", title: "Let's Go (ถูกสเปก)", desc: "Solo Debut in Romantic Hip-Hop style. Hong wrote all the lyrics himself, gaining over 5.1 million views on YouTube." },
         { emoji: "🔥", title: "SUGOI (โฮ่ง!)", desc: "Electronic Hip-hop single where Hong participated as an assistant lyricist (received a high popularity vote of 14%)." },
         { emoji: "✍️", title: "FIRST SIGHT (ทัก)", desc: "A project where he was trusted to co-write lyrics and rap verses, reflecting his clearly growing musical potential." },
-        { emoji: "😉", title: "Trick or Treat (หยอกไม่หลอก)", desc: "Another highly popular, quality release reflecting his versatile abilities." }
+        { emoji: "😉", title: "Trick or Treat (หยอกไม่หลอก)", desc: "Another highly popular, quality release reflecting his versatile abilities." },
+        { emoji: "🎬", title: "กับฉันในความฝัน (In My Dreams) - neofolk", desc: "Music video appearance as the lead actor, deeply portraying the emotions of sadness and longing." } // +++ เพิ่มอันนี้
       ],
       screenTitle: '🎬 On Screen Universe',
       screenSubtitle: 'Proving his acting charm through series and variety shows',
@@ -305,7 +306,6 @@ export const translations = {
         }
       ]
     },
-    // +++ เพิ่มส่วน Easter Egg ภาษาอังกฤษ +++
     easterEgg: {
       title: '🎉 Surprise! You found a secret!',
       desc: 'Thank you for coming to celebrate my birthday. Love you all! 🩵 - Hongshi',

@@ -1,4 +1,4 @@
-import ImageSkeleton from '../components/ImageSkeleton'; // +++ 1. Import Component
+import ImageSkeleton from '../components/ImageSkeleton'; 
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -40,16 +40,14 @@ export default function ArtistProfile() {
           <div className="md:col-span-5 flex justify-center w-full">
             <div className="group w-full max-w-[320px] flex flex-col bg-white p-3 rounded-3xl shadow-lg border-2 border-palepink hover:border-azalea hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
               
-              {/* +++ 2. ใช้ ImageSkeleton ห่อตรงรูป Profile Card +++ */}
               <ImageSkeleton 
                 src="/assets/profile.jpg" 
                 alt="Hong Profile"
                 containerClassName="relative w-full aspect-[3/4] rounded-2xl overflow-hidden bg-beige"
                 imageClassName="object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out"
-                onContextMenu={(e) => e.preventDefault()} // 🔒 ป้องกันคลิกขวา
-                onDragStart={(e) => e.preventDefault()} // 🔒 ป้องกันการลากรูป
+                onContextMenu={(e) => e.preventDefault()} 
+                onDragStart={(e) => e.preventDefault()} 
               >
-                 {/* แผ่นใสบังทับอีกชั้น */}
                  <div className="absolute inset-0 z-10 w-full h-full bg-transparent"></div>
               </ImageSkeleton>
 
@@ -158,18 +156,17 @@ export default function ArtistProfile() {
                 "https://www.youtube.com/embed/CvTuWXb-8hk?si=qNwA0GVYrymOsvnT",
                 "https://www.youtube.com/embed/nFp4zjAARFs?si=fzzBSqHBMQEJKnFb",
                 "https://www.youtube.com/embed/N2Rh3gNWFRI?si=XY6UQ2FqFrQvHzTC",
-                "https://www.youtube.com/embed/b0V35uxCnmY?si=xemconHUfQWqOWsq"
+                "https://www.youtube.com/embed/b0V35uxCnmY?si=xemconHUfQWqOWsq",
+                "https://www.youtube.com/embed/lF4DsUojTFU?si=rstowdvI5DGDIpMu" 
               ];
-              const borders = ["border-skyblue", "border-azalea", "border-palepink", "border-skyblue"];
+              const borders = ["border-skyblue", "border-azalea", "border-palepink", "border-skyblue", "border-navy"]; 
               
               return (
                 <div key={index} className={`bg-beige/40 p-6 rounded-2xl border-l-4 ${borders[index]} hover:shadow-md transition space-y-4`}>
                   <span className="text-3xl mb-3 block">{song.emoji}</span>
                   <h4 className="text-lg font-bold text-navy mb-2">{song.title}</h4>
                   
-                  {/* +++ 3. ทำ Skeleton แบบหลอกๆ ให้ iframe YouTube +++ */}
                   <div className="w-full aspect-video rounded-xl overflow-hidden relative bg-gray-100">
-                     {/* วงกลมหมุนๆ ระหว่างรอโหลด (เนื่องจาก iframe ยิง event onLoad ให้ react ยาก เลยใส่ทิ้งไว้ซ้อนหลัง) */}
                      <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
                         <span className="text-navy/40 font-bold text-sm">Loading Video...</span>
                      </div>
@@ -184,21 +181,64 @@ export default function ArtistProfile() {
         </section>
       </ScrollReveal>
 
-      {/* 5. On Screen Universe */}
+      {/* 5. On Screen Universe (เพิ่ม ThamePo และ I Love 'A Lot Of' You) */}
       <ScrollReveal delay={200}>
-        <section className="space-y-8">
+        <section className="space-y-8 bg-palepink/20 p-6 md:p-10 rounded-3xl border-2 border-palepink">
           <div className="text-center">
             <h2 className="text-3xl font-heading font-bold text-navy">{t.profile.screenTitle}</h2>
             <p className="font-body text-navy/80 mt-2">{t.profile.screenSubtitle}</p>
           </div>
+          
           <div className="grid md:grid-cols-2 gap-6 font-body">
             {t.profile.screenItems.map((item, index) => (
-              <div key={index} className={`bg-white p-6 rounded-2xl shadow-sm border-t-4 ${index === 0 ? 'border-skyblue' : 'border-azalea'} flex gap-4 items-start`}>
-                <span className="text-4xl">{item.emoji}</span>
-                <div>
-                  <h4 className="text-lg font-bold text-navy">{item.title}</h4>
-                  <p className="text-sm text-navy/80 mt-1">{item.desc}</p>
+              <div key={index} className={`bg-white p-6 rounded-2xl shadow-sm border-t-4 ${index === 0 ? 'border-skyblue' : 'border-azalea'} flex flex-col gap-4 items-start`}>
+                <div className="flex gap-4 items-start w-full">
+                  <span className="text-4xl">{item.emoji}</span>
+                  <div className="w-full">
+                    <h4 className="text-lg font-bold text-navy">{item.title}</h4>
+                    <p className="text-sm text-navy/80 mt-1">{item.desc}</p>
+                  </div>
                 </div>
+
+                {/* วิดีโอช่องแรก: ThamePo Trailer */}
+                {index === 0 && (
+                  <div className="w-full mt-2 aspect-video rounded-xl overflow-hidden relative bg-gray-100 shadow-inner">
+                    <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
+                      <span className="text-navy/40 font-bold text-sm">Loading Trailer...</span>
+                    </div>
+                    <iframe 
+                      className="relative z-10" 
+                      width="100%" 
+                      height="100%" 
+                      src="https://www.youtube.com/embed/cSGe16e5iys?si=rjehnV8nEBWEVrNQ" 
+                      title="ThamePo Trailer" 
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                      referrerPolicy="strict-origin-when-cross-origin" 
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                )}
+
+                {/* +++ เพิ่มวิดีโอช่องที่สอง: I Love 'A Lot Of' You (รก(รัก)นะน้องชาย) +++ */}
+                {index === 1 && (
+                  <div className="w-full mt-2 aspect-video rounded-xl overflow-hidden relative bg-gray-100 shadow-inner">
+                    <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
+                      <span className="text-navy/40 font-bold text-sm">Loading Video...</span>
+                    </div>
+                    <iframe 
+                      className="relative z-10" 
+                      width="100%" 
+                      height="100%" 
+                      src="https://www.youtube.com/embed/QkpSKQ_Usus?si=Hj_J86x4bKB7jzfP" 
+                      title="I Love A Lot Of You" 
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                      referrerPolicy="strict-origin-when-cross-origin" 
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -225,7 +265,6 @@ export default function ArtistProfile() {
             />
           </div>
 
-          {/* +++ 4. ทำ Skeleton แบบหลอกๆ ให้ iframe YouTube +++ */}
           <div className="w-full max-w-3xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-lg border-4 border-white relative bg-gray-100">
             <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
                <span className="text-navy/40 font-bold text-lg">Loading Video...</span>
