@@ -20,11 +20,12 @@ stats_collection = db.stats
 class WishModel(BaseModel):
     name: str
     message: str
-    recaptchaToken: str # <--- เพิ่มตัวแปรสำหรับรับ Token ของ Captcha จากหน้าบ้าน
+    recaptchaToken: str 
+    isConsentGiven: bool = False # <--- 1. เพิ่มตัวแปรสำหรับรับค่า Consent จากหน้าบ้าน
 
 @router.post("/visit")
-@limiter.limit("10/minute") # <--- ป้องกันการสแปมยอดวิว (จำกัด 10 ครั้ง/นาที/IP)
-async def record_visit(request: Request): # <--- ต้องใส่ request เพื่อให้ limiter ดึง IP ได้
+@limiter.limit("10/minute") 
+async def record_visit(request: Request): 
     await stats_collection.update_one(
         {"_id": "site_stats"},
         {"$inc": {"views": 1}},
@@ -46,8 +47,8 @@ async def get_wishes():
     return wishes
 
 @router.post("/wishes")
-@limiter.limit("5/minute") # <--- ป้องกันการสแปมข้อความ (จำกัด 5 ข้อความ/นาที/IP)
-async def create_wish(request: Request, wish: WishModel): # <--- ต้องใส่ request เสมอเมื่อใช้ limiter
+@limiter.limit("5/minute") 
+async def create_wish(request: Request, wish: WishModel): 
     
     # 1. ตรวจสอบความถูกต้องของ reCAPTCHA
     RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
@@ -77,6 +78,7 @@ async def create_wish(request: Request, wish: WishModel): # <--- ต้องใ
     new_wish = {
         "name": wish.name,
         "message": wish.message,
+        "isConsentGiven": wish.isConsentGiven, # <--- 2. บันทึกค่า Consent ลง Database
         "reported": False
     }
     

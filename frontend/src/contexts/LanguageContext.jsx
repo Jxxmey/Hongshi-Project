@@ -6,7 +6,7 @@ export const translations = {
     nav: {
       home: 'หน้าแรก',
       profile: 'รู้จักฮงชิ',
-      project: 'รายละเอียด',
+      project: 'คาเฟ่',
       gallery: 'แกลเลอรี', // +++
       guestbook: 'อวยพรวันเกิด',
       faq: 'ถาม-ตอบ',
@@ -82,8 +82,8 @@ export const translations = {
       songs: [
         { emoji: "🎵", title: "ถูกสเปก (Let's Go)", desc: "Solo Debut แนว Romantic Hip-Hop ที่ฮงเขียนเนื้อเองทั้งหมด กวาดยอดวิวทะลุ 5.1 ล้านครั้งบน YouTube" },
         { emoji: "🔥", title: "โฮ่ง! (SUGOI)", desc: "ซิงเกิลสไตล์ Electronic Hip-hop ที่ฮงมีส่วนร่วมเป็นผู้ช่วยเขียนเนื้อเพลง (ได้รับโหวตความนิยมสูงถึง 14%)" },
-        { emoji: "✍️", title: "ทัก (Hi!)", desc: "ผลงานที่ได้รับความไว้วางใจให้ร่วมแต่งเนื้อร้องและท่อนแร็ป สะท้อนศักยภาพด้านดนตรีที่เติบโตขึ้นอย่างชัดเจน" },
-        { emoji: "😉", title: "หยอกไม่หลอก (หยอกหยอก)", desc: "อีกหนึ่งผลงานคุณภาพที่ได้รับความนิยม สะท้อนความสามารถที่หลากหลาย" }
+        { emoji: "✍️", title: "ทัก (FIRST SIGHT)", desc: "ผลงานที่ได้รับความไว้วางใจให้ร่วมแต่งเนื้อร้องและท่อนแร็ป สะท้อนศักยภาพด้านดนตรีที่เติบโตขึ้นอย่างชัดเจน" },
+        { emoji: "😉", title: "หยอกไม่หลอก (Trick Or Treat)", desc: "อีกหนึ่งผลงานคุณภาพที่ได้รับความนิยม สะท้อนความสามารถที่หลากหลาย" }
       ],
       screenTitle: '🎬 On Screen Universe',
       screenSubtitle: 'พิสูจน์เสน่ห์ทางการแสดงผ่านหน้าจอซีรีส์และรายการ',
@@ -161,7 +161,7 @@ export const translations = {
     nav: {
       home: 'Home',
       profile: 'Profile',
-      project: 'Details',
+      project: 'Cafe',
       gallery: 'Gallery', // +++
       guestbook: 'Wishes',
       faq: 'FAQ',
@@ -237,7 +237,7 @@ export const translations = {
       songs: [
         { emoji: "🎵", title: "Let's Go (ถูกสเปก)", desc: "Solo Debut in Romantic Hip-Hop style. Hong wrote all the lyrics himself, gaining over 5.1 million views on YouTube." },
         { emoji: "🔥", title: "SUGOI (โฮ่ง!)", desc: "Electronic Hip-hop single where Hong participated as an assistant lyricist (received a high popularity vote of 14%)." },
-        { emoji: "✍️", title: "Hi! (ทัก)", desc: "A project where he was trusted to co-write lyrics and rap verses, reflecting his clearly growing musical potential." },
+        { emoji: "✍️", title: "FIRST SIGHT (ทัก)", desc: "A project where he was trusted to co-write lyrics and rap verses, reflecting his clearly growing musical potential." },
         { emoji: "😉", title: "Trick or Treat (หยอกไม่หลอก)", desc: "Another highly popular, quality release reflecting his versatile abilities." }
       ],
       screenTitle: '🎬 On Screen Universe',

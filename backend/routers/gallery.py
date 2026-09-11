@@ -4,7 +4,7 @@ from datetime import datetime
 import cloudinary
 import cloudinary.uploader
 import os
-import requests # <--- นำเข้า requests สำหรับยิง API ตรวจสอบ Captcha กับ Google
+import requests 
 
 # --- นำเข้าส่วนที่เกี่ยวข้องกับ Rate Limit ---
 from slowapi import Limiter
@@ -43,7 +43,8 @@ async def upload_photo(
     background_tasks: BackgroundTasks,
     image: UploadFile = File(...),
     uploaderName: str = Form("Anonymous LYKYOU"),
-    recaptchaToken: str = Form(...) # <--- รับค่า Token ของ Captcha ที่ส่งมาจาก Frontend
+    recaptchaToken: str = Form(...),
+    isConsentGiven: bool = Form(False) # <--- 1. รับค่าการอนุญาตจาก Frontend
 ):
     # 1. ตรวจสอบความถูกต้องของ reCAPTCHA
     RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
@@ -85,6 +86,7 @@ async def upload_photo(
             "imageUrl": image_url,
             "cloudinary_id": public_id,
             "uploaderName": uploaderName,
+            "isConsentGiven": isConsentGiven, # <--- 2. บันทึกค่า Consent ลงฐานข้อมูล
             "status": "pending",
             "createdAt": datetime.utcnow()
         }

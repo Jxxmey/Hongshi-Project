@@ -10,6 +10,10 @@ export default function Guestbook() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
+  
+  // 1. เพิ่ม State สำหรับเก็บค่าการอนุญาต
+  const [isConsentGiven, setIsConsentGiven] = useState(false);
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -108,10 +112,12 @@ export default function Guestbook() {
 
     setIsSubmitting(true);
 
+    // 2. แนบข้อมูล Consent ไปยัง Backend
     const newWishData = {
       name: name.trim() || "Anonymous LYY",
       message: message.trim(),
       recaptchaToken: captchaToken,
+      isConsentGiven: isConsentGiven,
     };
 
     try {
@@ -136,6 +142,8 @@ export default function Guestbook() {
 
         setName('');
         setMessage('');
+        setIsConsentGiven(false); // เคลียร์ค่าหลังส่งสำเร็จ
+        
         setShowSuccess(true);
         setTimeout(() => {
           setShowSuccess(false);
@@ -185,7 +193,6 @@ export default function Guestbook() {
         </div>
       </ScrollReveal>
 
-      {/* แก้ไข pointer-events ตรงนี้ เพื่อให้เนื้อหาด้านในสามารถถูกกดได้ */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         {wishes.length === 0 && !isSubmitting && (
           <div className="absolute inset-0 flex items-center justify-center opacity-50">
@@ -199,13 +206,11 @@ export default function Guestbook() {
             className="absolute float-in-out pointer-events-auto hover:z-50"
             style={{ top: wish.top, left: wish.left }}
           >
-            {/* นำการหยุด animation ชั่วคราว (pause) ออก เพื่อไม่ให้เกิดปัญหามือกดไม่ติดเวลาฟองสบู่ขยับ */}
             <div className={`relative p-[3px] rounded-[30px] bg-gradient-to-br ${wish.theme} shadow-[0_8px_30px_rgb(0,0,0,0.08)] max-w-[280px] md:max-w-[320px] group transition-transform duration-300`}>
               
-              {/* ปรับให้ในมือถือ ปุ่ม Report โชว์จางๆ เสมอ (md:opacity-0) เพื่อให้เห็นและกดได้ */}
               <button 
                 onClick={(e) => {
-                  e.stopPropagation(); // ป้องกัน event ทะลุ
+                  e.stopPropagation(); 
                   handleReport(wish.id, wish.bubbleId);
                 }}
                 className="absolute -top-3 -right-3 bg-white text-gray-300 hover:text-red-500 hover:bg-red-50 w-9 h-9 md:w-8 md:h-8 rounded-full shadow-md flex items-center justify-center text-sm md:text-xs transition-all opacity-80 md:opacity-0 group-hover:opacity-100 border border-gray-100 z-[60] cursor-pointer"
@@ -253,6 +258,7 @@ export default function Guestbook() {
             <button 
               onClick={() => {
                 setIsModalOpen(false);
+                setIsConsentGiven(false); // เคลียร์ค่าเมื่อกดยกเลิก
                 if (recaptchaRef.current) recaptchaRef.current.reset();
               }}
               className="absolute top-5 right-6 text-navy/40 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center text-xl font-bold transition-colors z-20"
@@ -281,6 +287,20 @@ export default function Guestbook() {
                 <div className="space-y-2">
                   <label className="font-bold ml-2 text-sm text-navy/80">{t.guestbook.msgLabel}</label>
                   <textarea rows="3" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t.guestbook.msgPlaceholder} className="w-full bg-beige/20 border-2 border-skyblue/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-azalea focus:ring-4 focus:ring-azalea/10 transition-all resize-none" required ></textarea>
+                </div>
+
+                {/* 3. เพิ่ม Checkbox ส่วนนี้ลงไปในแบบฟอร์ม */}
+                <div className="flex items-start space-x-3 my-4 p-3 bg-white/50 rounded-xl border border-gray-100">
+                  <input 
+                    type="checkbox" 
+                    id="consentCheck" 
+                    checked={isConsentGiven}
+                    onChange={(e) => setIsConsentGiven(e.target.checked)}
+                    className="mt-1 w-5 h-5 text-skyblue bg-white border-gray-300 rounded focus:ring-skyblue accent-skyblue cursor-pointer"
+                  />
+                  <label htmlFor="consentCheck" className="text-sm font-body text-navy/80 cursor-pointer select-none">
+                    {t.guestbook.modalConsent || "ฉันอนุญาตให้นำข้อความนี้ไปใช้ประกอบคลิปโปรเจกต์วันเกิด หรือกิจกรรมอื่นๆ ที่เกี่ยวข้องกับโปรเจกต์ได้"}
+                  </label>
                 </div>
                 
                 <div className="flex justify-center mt-2 mb-4">

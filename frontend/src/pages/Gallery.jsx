@@ -4,7 +4,7 @@ import ImageSkeleton from '../components/ImageSkeleton';
 import SkeletonBox from '../components/ImageSkeleton'; 
 import { useLanguage } from '../contexts/LanguageContext';
 import Cropper from 'react-easy-crop'; 
-import ReCAPTCHA from 'react-google-recaptcha'; // 1. นำเข้าไลบรารี reCAPTCHA
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const ITEMS_PER_PAGE = 12;
@@ -22,6 +22,9 @@ export default function Gallery() {
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploaderName, setUploaderName] = useState('');
+  // 1. เพิ่ม State สำหรับเก็บค่าการอนุญาต
+  const [isConsentGiven, setIsConsentGiven] = useState(false);
+  
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState({ text: '', type: '' });
 
@@ -32,7 +35,6 @@ export default function Gallery() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isCropping, setIsCropping] = useState(false); 
 
-  // 2. สร้าง Ref สำหรับเข้าถึงและรีเซ็ต reCAPTCHA
   const recaptchaRef = useRef();
 
   useEffect(() => {
@@ -128,11 +130,10 @@ export default function Gallery() {
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
     if (!uploadFile) {
-      setUploadMessage({ text: t.gallery.uploadModal.noFile || 'กรุณาเลือกรูปภาพ', type: 'error' });
+      setUploadMessage({ text: t.gallery.uploadModal?.noFile || 'กรุณาเลือกรูปภาพ', type: 'error' });
       return;
     }
 
-    // 3. ตรวจสอบว่าผู้ใช้กดติ๊ก reCAPTCHA หรือยัง
     const captchaToken = recaptchaRef.current?.getValue();
     if (!captchaToken) {
       setUploadMessage({ text: 'กรุณายืนยันว่าคุณไม่ใช่บอท', type: 'error' });
@@ -140,12 +141,14 @@ export default function Gallery() {
     }
 
     setIsUploading(true);
-    setUploadMessage({ text: t.gallery.uploadModal.uploading || 'กำลังอัปโหลด...', type: 'info' });
+    setUploadMessage({ text: t.gallery.uploadModal?.uploading || 'กำลังอัปโหลด...', type: 'info' });
 
     const formData = new FormData();
     formData.append('image', uploadFile);
     formData.append('uploaderName', uploaderName || 'Anonymous LYKYOU');
-    formData.append('recaptchaToken', captchaToken); // 4. ส่ง Token ไปให้ Backend
+    formData.append('recaptchaToken', captchaToken); 
+    // 2. ส่งค่าการอนุญาตไปพร้อมกับข้อมูลอื่นๆ (FormData จะแปลงค่า boolean เป็นคำว่า "true" หรือ "false")
+    formData.append('isConsentGiven', isConsentGiven);
 
     try {
       const response = await fetch(`${API_URL}/gallery/upload`, {
@@ -154,22 +157,20 @@ export default function Gallery() {
       });
 
       if (!response.ok) {
-        // ดักจับ Error จาก Rate Limit (HTTP 429)
         if (response.status === 429) {
           throw new Error('คุณอัปโหลดบ่อยเกินไป กรุณารอสักครู่');
         }
         throw new Error('Upload Failed');
       }
 
-      setUploadMessage({ text: t.gallery.uploadModal.success || 'อัปโหลดสำเร็จ!', type: 'success' });
+      setUploadMessage({ text: t.gallery.uploadModal?.success || 'อัปโหลดสำเร็จ!', type: 'success' });
       
       setTimeout(() => {
         closeUploadModal();
       }, 3000);
     } catch (error) {
       console.error(error);
-      setUploadMessage({ text: error.message || t.gallery.uploadModal.error || 'เกิดข้อผิดพลาด', type: 'error' });
-      // 5. หากเกิด Error ให้รีเซ็ตกล่อง Captcha ใหม่
+      setUploadMessage({ text: error.message || t.gallery.uploadModal?.error || 'เกิดข้อผิดพลาด', type: 'error' });
       recaptchaRef.current?.reset();
     } finally {
       setIsUploading(false);
@@ -183,7 +184,8 @@ export default function Gallery() {
     setIsCropping(false);
     setUploaderName('');
     setUploadMessage({ text: '', type: '' });
-    // รีเซ็ต Captcha เมื่อปิดหน้าต่าง
+    // 3. รีเซ็ตค่า Consent เมื่อปิดหน้าต่าง
+    setIsConsentGiven(false);
     if (recaptchaRef.current) recaptchaRef.current.reset();
   };
 
@@ -309,7 +311,7 @@ export default function Gallery() {
             >✕</button>
             
             <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center">
-              {isCropping ? "จัดตำแหน่งรูปภาพ" : t.gallery.uploadModal.title}
+              {isCropping ? "จัดตำแหน่งรูปภาพ" : t.gallery.uploadModal?.title || "อัปโหลดรูปภาพ"}
             </h3>
             
             {isCropping ? (
@@ -340,7 +342,7 @@ export default function Gallery() {
               </div>
             ) : (
               <form onSubmit={handleUploadSubmit} className="space-y-5 overflow-y-auto">
-                <p className="text-sm font-body text-navy/70 text-center mb-4">{t.gallery.uploadModal.desc}</p>
+                <p className="text-sm font-body text-navy/70 text-center mb-4">{t.gallery.uploadModal?.desc || "ร่วมแชร์ความทรงจำดีๆ ด้วยกัน"}</p>
                 
                 {uploadFile ? (
                   <div className="relative w-full aspect-[5/4] rounded-2xl overflow-hidden border-4 border-skyblue shadow-inner mb-4">
@@ -360,11 +362,24 @@ export default function Gallery() {
                 )}
 
                 <input 
-                  type="text" placeholder={t.gallery.uploadModal.namePlaceholder || "ชื่อของคุณ"} value={uploaderName} onChange={(e) => setUploaderName(e.target.value)}
+                  type="text" placeholder={t.gallery.uploadModal?.namePlaceholder || "ชื่อของคุณ"} value={uploaderName} onChange={(e) => setUploaderName(e.target.value)}
                   className="w-full p-3 font-body rounded-xl border-2 border-gray-100 bg-beige/30 focus:border-skyblue outline-none transition-colors"
                 />
 
-                {/* 6. เพิ่มกล่อง reCAPTCHA ก่อนปุ่ม Submit */}
+                {/* 4. เพิ่ม Checkbox ส่วนนี้ลงไปในแบบฟอร์ม */}
+                <div className="flex items-start space-x-3 my-4 p-3 bg-white/50 rounded-xl border border-gray-100">
+                  <input 
+                    type="checkbox" 
+                    id="consentCheck" 
+                    checked={isConsentGiven}
+                    onChange={(e) => setIsConsentGiven(e.target.checked)}
+                    className="mt-1 w-5 h-5 text-skyblue bg-white border-gray-300 rounded focus:ring-skyblue accent-skyblue cursor-pointer"
+                  />
+                  <label htmlFor="consentCheck" className="text-sm font-body text-navy/80 cursor-pointer select-none">
+                    {t.gallery.uploadModal?.consent || "ฉันอนุญาตให้นำรูปภาพและข้อความนี้ไปใช้ประกอบคลิปโปรเจกต์วันเกิด หรือกิจกรรมอื่นๆ ที่เกี่ยวข้องกับโปรเจกต์ได้"}
+                  </label>
+                </div>
+
                 <div className="flex justify-center my-2">
                   <ReCAPTCHA
                     ref={recaptchaRef}
@@ -376,7 +391,7 @@ export default function Gallery() {
                   type="submit" disabled={isUploading || !uploadFile}
                   className="w-full font-heading bg-skyblue text-navy font-bold py-3.5 rounded-xl hover:bg-azalea hover:text-white transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 shadow-sm"
                 >
-                  {isUploading ? (t.gallery.uploadModal.uploading || "กำลังอัปโหลด...") : (t.gallery.uploadModal.submitBtn || "ส่งรูปภาพ")}
+                  {isUploading ? (t.gallery.uploadModal?.uploading || "กำลังอัปโหลด...") : (t.gallery.uploadModal?.submitBtn || "ส่งรูปภาพ")}
                 </button>
               </form>
             )}

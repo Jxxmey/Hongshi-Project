@@ -72,7 +72,7 @@ export default function Navbar() {
     { name: t.nav.home, path: '/' },
     { name: t.nav.profile, path: '/profile' },
     { name: t.nav.project, path: '/project' },
-    { name: t.nav.gallery, path: '/gallery' }, // +++ Add Gallery Link
+    { name: t.nav.gallery, path: '/gallery' },
     { name: t.nav.guestbook, path: '/guestbook' },
     { name: t.nav.faq, path: '/faq' },
   ];
@@ -83,13 +83,18 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex justify-between items-center h-16">
             
-            {/* โลโก้ (ซ้าย) - ผูกฟังก์ชันนับคลิกตรงนี้ */}
+            {/* โลโก้ (ซ้าย) - ผูกฟังก์ชันนับคลิกตรงนี้ และเพิ่มรูปโลโก้ */}
             <Link 
               to="/" 
               onClick={handleLogoClick}
-              className="text-2xl font-bold tracking-wider hover:text-azalea transition z-50 select-none cursor-pointer"
+              className="flex items-center gap-3 text-2xl font-bold tracking-wider hover:text-azalea transition z-50 select-none cursor-pointer group"
             >
-              Hongshi Day
+              <img 
+                src="/assets/logo.png" 
+                alt="Hongshi Logo" 
+                className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-sm"
+              />
+              <span className="hidden sm:block">Hongshi Day</span>
             </Link>
 
             {/* เมนูสำหรับ Desktop (ซ่อนบนมือถือ) */}
