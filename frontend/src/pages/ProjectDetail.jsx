@@ -53,7 +53,7 @@ export default function ProjectDetail() {
             )}
 
             <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.311!2d100.528!3d13.754!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zU29scmlzZSBDYWZl!5e0!3m2!1sth!2sth!4v1700000000000!5m2!1sth!2sth" 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3874.9371336632967!2d100.48847857597865!3d13.782663286612443!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29b001ff7f557%3A0x79d8bb5675f6d5e9!2sSolrise%20cafe!5e0!3m2!1sth!2sth!4v1789409089486!5m2!1sth!2sth" 
               width="100%" 
               height="100%" 
               style={{ border: 0 }} 
