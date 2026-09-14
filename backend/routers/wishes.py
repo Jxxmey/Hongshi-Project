@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Query
 from pydantic import BaseModel
 from database import db
 from utils.profanity import contains_profanity
@@ -34,17 +34,37 @@ async def record_visit(request: Request):
     return {"message": "Visit recorded"}
 
 @router.get("/wishes")
-async def get_wishes():
+async def get_wishes(
+    skip: int = Query(0, ge=0, description="จำนวนที่ต้องการข้าม"),
+    limit: int = Query(20, ge=1, le=100, description="จำนวนที่ต้องการดึง (สูงสุด 100)")
+):
     wishes = []
-    cursor = wishes_collection.find({
-        "$or": [{"reported": {"$exists": False}}, {"reported": False}]
-    }).sort("_id", -1).limit(100)
+    # รองรับทั้งข้อมูลใหม่ที่มี status และข้อมูลเก่าที่ไม่มี status
+    query = {
+        "$or": [
+            {"status": "approved"}, 
+            {"status": {"$exists": False}, "reported": False},
+            {"status": {"$exists": False}, "reported": {"$exists": False}}
+        ]
+    }
+    
+    # นับจำนวนทั้งหมดเพื่อให้ Frontend รู้ว่าโหลดหมดหรือยัง
+    total_count = await wishes_collection.count_documents(query)
+    
+    # เพิ่ม .skip() และ .limit()
+    cursor = wishes_collection.find(query).sort("_id", -1).skip(skip).limit(limit)
     
     async for document in cursor:
         document["id"] = str(document["_id"])
         del document["_id"]
         wishes.append(document)
-    return wishes
+        
+    return {
+        "total": total_count,
+        "skip": skip,
+        "limit": limit,
+        "items": wishes
+    }
 
 @router.post("/wishes")
 @limiter.limit("5/minute") 
@@ -67,23 +87,26 @@ async def create_wish(request: Request, wish: WishModel):
         except requests.exceptions.RequestException:
             raise HTTPException(status_code=500, detail="ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ตรวจสอบ Captcha ได้")
 
-    # 2. ตรวจสอบคำหยาบ
-    if contains_profanity(wish.name) or contains_profanity(wish.message):
-        raise HTTPException(
-            status_code=400,
-            detail="ข้อความของคุณมีคำที่ไม่เหมาะสม กรุณาแก้ไขใหม่นะครับ 🩵"
-        )
+    # 2. ตรวจสอบคำหยาบ (ตั้งสถานะเป็น pending แทนการโยน Error)
+    has_profanity = contains_profanity(wish.name) or contains_profanity(wish.message)
+    status = "pending" if has_profanity else "approved"
         
     # 3. เตรียมข้อมูลสำหรับบันทึกลง Database (ไม่เอา recaptchaToken บันทึกลงไป)
     new_wish = {
         "name": wish.name,
         "message": wish.message,
         "isConsentGiven": wish.isConsentGiven, # <--- 2. บันทึกค่า Consent ลง Database
-        "reported": False
+        "reported": False,
+        "status": status  # <--- บันทึกสถานะเพื่อใช้จัดหมวดหมู่
     }
     
     result = await wishes_collection.insert_one(new_wish)
     new_wish["id"] = str(result.inserted_id)
     if "_id" in new_wish:
         del new_wish["_id"]
-    return new_wish
+        
+    # คืนค่าข้อความแจ้งเตือนที่แตกต่างกันถ้ามีคำสุ่มเสี่ยง
+    if has_profanity:
+        return {"message": "คำอวยพรของคุณถูกส่งแล้ว แต่อยู่ระหว่างรอผู้ดูแลตรวจสอบเนื่องจากอาจมีคำที่ไม่เหมาะสม 🩵", "data": new_wish}
+    
+    return {"message": "ส่งคำอวยพรสำเร็จ!", "data": new_wish}

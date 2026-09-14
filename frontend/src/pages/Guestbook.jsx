@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext'; 
 import ReCAPTCHA from 'react-google-recaptcha';
@@ -11,11 +11,10 @@ export default function Guestbook() {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   
-  // 1. เพิ่ม State สำหรับเก็บค่าการอนุญาต
   const [isConsentGiven, setIsConsentGiven] = useState(false);
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState(''); 
 
   const [wishes, setWishes] = useState([]);
   const [activeBubbles, setActiveBubbles] = useState([]);
@@ -35,10 +34,12 @@ export default function Guestbook() {
 
   const fetchWishes = async () => {
     try {
-      const response = await fetch(`${API_URL}/wishes`);
+      const response = await fetch(`${API_URL}/wishes?skip=0&limit=100`);
       if (response.ok) {
         const data = await response.json();
-        setWishes(data);
+        // +++ ป้องกันระบบพังจาก Backend ทั้ง 2 เวอร์ชัน +++
+        const items = data.items || (Array.isArray(data) ? data : []);
+        setWishes(items); 
       }
     } catch (error) {
       console.error("Error fetching wishes:", error);
@@ -112,7 +113,6 @@ export default function Guestbook() {
 
     setIsSubmitting(true);
 
-    // 2. แนบข้อมูล Consent ไปยัง Backend
     const newWishData = {
       name: name.trim() || "Anonymous LYY",
       message: message.trim(),
@@ -130,26 +130,25 @@ export default function Guestbook() {
       const responseData = await response.json();
 
       if (response.ok) {
-        setWishes(prev => [responseData, ...prev]);
-        const bubbleId = Date.now() + Math.random();
+        setSuccessMsg(responseData.message || t.guestbook.successDesc);
         
-        const forcedBubble = { ...responseData, bubbleId, top: '40%', left: '35%', theme: "from-skyblue to-azalea" }; 
-        setActiveBubbles(prev => [...prev.slice(-3), forcedBubble]);
-        
-        setTimeout(() => {
-          setActiveBubbles(prev => prev.filter(b => b.bubbleId !== bubbleId));
-        }, 9000);
+        if (responseData.data && responseData.data.status === "approved") {
+            setWishes(prev => [responseData.data, ...prev]);
+            const bubbleId = Date.now() + Math.random();
+            const forcedBubble = { ...responseData.data, bubbleId, top: '40%', left: '35%', theme: "from-skyblue to-azalea" }; 
+            setActiveBubbles(prev => [...prev.slice(-3), forcedBubble]);
+        }
 
         setName('');
         setMessage('');
-        setIsConsentGiven(false); // เคลียร์ค่าหลังส่งสำเร็จ
+        setIsConsentGiven(false);
         
         setShowSuccess(true);
         setTimeout(() => {
           setShowSuccess(false);
           setIsModalOpen(false);
           if (recaptchaRef.current) recaptchaRef.current.reset();
-        }, 2000);
+        }, 3000);
       } else {
         if (response.status === 429) {
           alert("คุณส่งข้อความบ่อยเกินไป กรุณารอสักครู่");
@@ -258,7 +257,7 @@ export default function Guestbook() {
             <button 
               onClick={() => {
                 setIsModalOpen(false);
-                setIsConsentGiven(false); // เคลียร์ค่าเมื่อกดยกเลิก
+                setIsConsentGiven(false);
                 if (recaptchaRef.current) recaptchaRef.current.reset();
               }}
               className="absolute top-5 right-6 text-navy/40 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center text-xl font-bold transition-colors z-20"
@@ -270,7 +269,7 @@ export default function Guestbook() {
               <div className="text-center py-10 space-y-4">
                 <span className="text-7xl block drop-shadow-md">💌</span>
                 <h3 className="text-2xl font-heading font-bold text-navy">{t.guestbook.successTitle}</h3>
-                <p className="font-body text-navy/70">{t.guestbook.successDesc}</p>
+                <p className="font-body text-navy/70">{successMsg}</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6 font-body text-navy mt-2">
@@ -289,7 +288,6 @@ export default function Guestbook() {
                   <textarea rows="3" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t.guestbook.msgPlaceholder} className="w-full bg-beige/20 border-2 border-skyblue/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-azalea focus:ring-4 focus:ring-azalea/10 transition-all resize-none" required ></textarea>
                 </div>
 
-                {/* 3. เพิ่ม Checkbox ส่วนนี้ลงไปในแบบฟอร์ม */}
                 <div className="flex items-start space-x-3 my-4 p-3 bg-white/50 rounded-xl border border-gray-100">
                   <input 
                     type="checkbox" 

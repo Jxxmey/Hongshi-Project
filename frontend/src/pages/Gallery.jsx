@@ -7,15 +7,13 @@ import Cropper from 'react-easy-crop';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-// +++ ปรับเป็น 14 ชิ้นต่อหน้า เพื่อให้โหลดมาเต็ม 1 บล็อกแพทเทิร์นพอดี
 const ITEMS_PER_PAGE = 14; 
 
 export default function Gallery() {
   const { t } = useLanguage();
   
-  const [allPhotos, setAllPhotos] = useState([]);
   const [displayedPhotos, setDisplayedPhotos] = useState([]);
-  const [page, setPage] = useState(1);
+  const [skip, setSkip] = useState(0); 
   const [hasMore, setHasMore] = useState(true);
 
   const [loading, setLoading] = useState(true);
@@ -42,12 +40,16 @@ export default function Gallery() {
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
-        const response = await fetch(`${API_URL}/gallery`);
+        const response = await fetch(`${API_URL}/gallery?skip=${skip}&limit=${ITEMS_PER_PAGE}`);
         if (response.ok) {
           const data = await response.json();
-          setAllPhotos(data);
-          setDisplayedPhotos(data.slice(0, ITEMS_PER_PAGE));
-          setHasMore(data.length > ITEMS_PER_PAGE);
+          
+          // +++ ระบบป้องกัน: รองรับทั้ง Backend เก่า (Array) และใหม่ (Object) +++
+          const items = data.items || (Array.isArray(data) ? data : []);
+          const totalCount = data.total !== undefined ? data.total : items.length;
+
+          setDisplayedPhotos(prev => skip === 0 ? items : [...prev, ...items]);
+          setHasMore(skip + ITEMS_PER_PAGE < totalCount);
         }
       } catch (error) {
         console.error("Error fetching gallery:", error);
@@ -56,16 +58,7 @@ export default function Gallery() {
       }
     };
     fetchPhotos();
-  }, []);
-
-  useEffect(() => {
-    if (page === 1) return;
-    const nextPhotos = allPhotos.slice(0, page * ITEMS_PER_PAGE);
-    setDisplayedPhotos(nextPhotos);
-    if (nextPhotos.length >= allPhotos.length) {
-      setHasMore(false);
-    }
-  }, [page, allPhotos]);
+  }, [skip]);
 
   const observer = useRef();
   const lastPhotoElementRef = useCallback(node => {
@@ -73,7 +66,7 @@ export default function Gallery() {
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
+        setSkip(prevSkip => prevSkip + ITEMS_PER_PAGE);
       }
     });
     if (node) observer.current.observe(node);
@@ -167,7 +160,7 @@ export default function Gallery() {
         throw new Error('Upload Failed');
       }
 
-      setUploadMessage({ text: t.gallery.uploadModal?.success || 'อัปโหลดสำเร็จ!', type: 'success' });
+      setUploadMessage({ text: t.gallery.uploadModal?.success || 'อัปโหลดสำเร็จ รอแอดมินตรวจสอบครับ!', type: 'success' });
       
       setTimeout(() => {
         closeUploadModal();
@@ -193,28 +186,26 @@ export default function Gallery() {
     if (recaptchaRef.current) recaptchaRef.current.reset();
   };
 
-  // +++ ฟังก์ชันจัด Grid ตามรูปภาพอ้างอิงเป๊ะๆ (14 รูปต่อ 1 บล็อก) +++
   const getGridClass = (index) => {
     const pattern = [
-      'md:col-span-6 md:row-span-4', // 1. บนซ้าย (ใหญ่)
-      'md:col-span-3 md:row-span-4', // 2. บนกลาง (สูง)
-      'md:col-span-3 md:row-span-4', // 3. บนขวา (สูง)
-      'md:col-span-3 md:row-span-3', // 4. กลางซ้าย บน (จัตุรัส)
-      'md:col-span-6 md:row-span-6', // 5. กลาง (ใหญ่มาก)
-      'md:col-span-3 md:row-span-3', // 6. กลางขวา บน (จัตุรัส)
-      'md:col-span-3 md:row-span-3', // 7. กลางซ้าย ล่าง (จัตุรัส)
-      'md:col-span-3 md:row-span-3', // 8. กลางขวา ล่าง (จัตุรัส)
-      'md:col-span-3 md:row-span-4', // 9. ล่างซ้าย (สูง)
-      'md:col-span-3 md:row-span-4', // 10. ล่างกลาง (สูง)
-      'md:col-span-6 md:row-span-4', // 11. ล่างขวา (ใหญ่)
-      'md:col-span-4 md:row-span-3', // 12. ล่างสุด ซ้าย (แนวนอน)
-      'md:col-span-4 md:row-span-3', // 13. ล่างสุด กลาง (แนวนอน)
-      'md:col-span-4 md:row-span-3', // 14. ล่างสุด ขวา (แนวนอน)
+      'md:col-span-6 md:row-span-4', 
+      'md:col-span-3 md:row-span-4', 
+      'md:col-span-3 md:row-span-4', 
+      'md:col-span-3 md:row-span-3', 
+      'md:col-span-6 md:row-span-6', 
+      'md:col-span-3 md:row-span-3', 
+      'md:col-span-3 md:row-span-3', 
+      'md:col-span-3 md:row-span-3', 
+      'md:col-span-3 md:row-span-4', 
+      'md:col-span-3 md:row-span-4', 
+      'md:col-span-6 md:row-span-4', 
+      'md:col-span-4 md:row-span-3', 
+      'md:col-span-4 md:row-span-3', 
+      'md:col-span-4 md:row-span-3', 
     ];
     return `col-span-1 sm:col-span-1 ${pattern[index % pattern.length]}`;
   };
 
-  // +++ สลับสีกรอบ ขาว/น้ำเงิน +++
   const getFrameClass = (index) => {
     return index % 2 === 0 ? 'frame-navy' : 'frame-white';
   };
@@ -224,7 +215,7 @@ export default function Gallery() {
       
       <ScrollReveal>
         <div className="text-center space-y-6 mb-12">
-          <h2 className="text-4xl md:text-5xl font-heading font-bold text-navy drop-shadow-sm" style={{ fontFamily: '"Playfair Display", serif', letterSpacing: '-0.02em' }}>
+          <h2 className="text-4xl md:text-5xl font-heading font-bold text-navy drop-shadow-sm tracking-tight">
             {t.gallery.title}
           </h2>
           <p className="text-lg font-body text-navy/80 bg-white/60 inline-block px-6 py-2 rounded-full shadow-sm backdrop-blur-sm">
@@ -242,7 +233,7 @@ export default function Gallery() {
         </div>
       </ScrollReveal>
 
-      {loading ? (
+      {loading && displayedPhotos.length === 0 ? (
         <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 md:auto-rows-[60px] lg:auto-rows-[70px] grid-flow-dense gap-3 md:gap-4 mt-8 px-2 md:px-4" aria-label="กำลังโหลดแกลลอรี่ภาพ">
           {[...Array(14)].map((_, i) => (
             <div key={i} className={`w-full h-full ${getGridClass(i)}`}>
@@ -254,13 +245,12 @@ export default function Gallery() {
             </div>
           ))}
         </section>
-      ) : allPhotos.length === 0 ? (
+      ) : displayedPhotos.length === 0 ? (
         <div className="text-center font-body text-[var(--ink)]/60 bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-[var(--ink)]/20 mt-8">
           {t.gallery.empty}
         </div>
       ) : (
         <>
-          {/* +++ Grid หลักที่เซ็ต auto-rows และ grid-flow-dense ไว้สำหรับต่อจิ๊กซอว์ +++ */}
           <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 md:auto-rows-[6vw] lg:auto-rows-[60px] xl:auto-rows-[75px] grid-flow-dense gap-3 md:gap-4 mt-8 px-2 md:px-4" aria-label="แกลลอรี่ภาพงานศิลปะ">
             {displayedPhotos.map((photo, index) => {
               const isLastPhoto = displayedPhotos.length === index + 1;
@@ -285,7 +275,6 @@ export default function Gallery() {
                           onContextMenu={(e) => e.preventDefault()}
                           onDragStart={(e) => e.preventDefault()}
                         />
-                        {/* Hover Overlay แสดงชื่อ */}
                         <div className="absolute inset-0 bg-gradient-to-t from-[var(--ink)]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-end p-3 md:p-4">
                           <p className="text-[var(--paper)] text-xs md:text-sm font-bold font-body truncate drop-shadow-md">
                             From {photo.uploaderName}
@@ -307,7 +296,6 @@ export default function Gallery() {
         </>
       )}
 
-      {/* Modal ดูรูปใหญ่ */}
       {selectedImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--ink)]/95 backdrop-blur-md animate-fade-in"
@@ -324,7 +312,6 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* Modal Upload */}
       {isUploadOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--ink)]/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-white p-6 md:p-8 rounded-[24px] w-full max-w-md shadow-2xl relative border-t-8 border-[var(--ink)] flex flex-col max-h-[90vh]">
@@ -333,7 +320,7 @@ export default function Gallery() {
               className="absolute top-4 right-4 text-navy/50 hover:text-[var(--ink)] bg-gray-100 hover:bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-20"
             >✕</button>
             
-            <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center" style={{ fontFamily: '"Playfair Display", serif' }}>
+            <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center">
               {isCropping ? "จัดตำแหน่งรูปภาพ" : t.gallery.uploadModal?.title || "อัปโหลดรูปภาพ"}
             </h3>
             
@@ -345,7 +332,7 @@ export default function Gallery() {
                     image={imageSrc}
                     crop={crop}
                     zoom={zoom}
-                    aspect={1} // ตัดเป็นสี่เหลี่ยมจัตุรัสกลางๆ ไว้ก่อน ระบบจะทำ object-cover ให้อัตโนมัติ
+                    aspect={1} 
                     onCropChange={setCrop}
                     onCropComplete={onCropComplete}
                     onZoomChange={setZoom}
@@ -427,7 +414,6 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* --- CSS เลย์เอาต์และสไตล์ --- */}
       <style dangerouslySetInnerHTML={{__html: `
         :root {
           --ink: #17324d;
@@ -438,7 +424,6 @@ export default function Gallery() {
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Art Card Configuration */
         .art-card {
           appearance: none;
           width: 100%;
@@ -465,14 +450,12 @@ export default function Gallery() {
           flex-direction: column;
         }
 
-        /* 1. สีกรอบ: กรมท่า (Navy) */
         .frame-navy {
           background: var(--ink);
-          padding: clamp(8px, 1.2vw, 12px); /* ความหนาของกรอบ */
+          padding: clamp(8px, 1.2vw, 12px); 
           box-shadow: 0 6px 16px rgba(23, 50, 77, .15);
         }
 
-        /* 2. สีกรอบ: ขาว/ครีม (White) */
         .frame-white {
           background: #ffffff;
           padding: clamp(8px, 1.2vw, 12px);
@@ -484,7 +467,6 @@ export default function Gallery() {
           box-shadow: 0 16px 28px rgba(23, 50, 77, .25);
         }
 
-        /* Responsive รูปภาพบนมือถือ */
         @media (max-width: 767px) {
           .art-card {
             aspect-ratio: 4 / 5;

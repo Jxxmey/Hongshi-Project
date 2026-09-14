@@ -38,6 +38,24 @@ async def delete_wish(wish_id: str):
     await wishes_collection.delete_one({"_id": obj_id})
     return {"message": "Wish deleted"}
 
+# --- เพิ่ม API สำหรับจัดการคำอวยพรที่ติดตัวกรองคำหยาบ ---
+@router.get("/wishes/pending")
+async def get_pending_wishes():
+    wishes = []
+    cursor = wishes_collection.find({"status": "pending"}).sort("_id", -1)
+    async for doc in cursor:
+        doc["id"] = str(doc["_id"])
+        del doc["_id"]
+        wishes.append(doc)
+    return wishes
+
+@router.post("/wishes/{wish_id}/approve")
+async def approve_wish(wish_id: str):
+    obj_id = ObjectId(wish_id)
+    await wishes_collection.update_one({"_id": obj_id}, {"$set": {"status": "approved"}})
+    return {"message": "Wish approved"}
+# --------------------------------------------------
+
 @router.get("/cafe-wishes")
 async def get_cafe_wishes():
     wishes = []

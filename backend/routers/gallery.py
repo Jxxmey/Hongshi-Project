@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Request
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Request, Query
 from typing import Optional # <--- นำเข้า Optional
 from database import db
 from datetime import datetime
@@ -28,14 +28,28 @@ cloudinary.config(
 )
 
 @router.get("")
-async def get_approved_photos():
+async def get_approved_photos(
+    skip: int = Query(0, ge=0, description="จำนวนที่ต้องการข้าม"),
+    limit: int = Query(20, ge=1, le=100, description="จำนวนที่ต้องการดึง (สูงสุด 100)")
+):
     photos = []
-    # ดึงเฉพาะรูปที่สถานะ "approved"
-    cursor = gallery_collection.find({"status": "approved"}).sort("createdAt", -1)
+    query = {"status": "approved"}
+    
+    # นับจำนวนทั้งหมดเพื่อให้ Frontend รู้ว่าโหลดหมดหรือยัง
+    total_count = await gallery_collection.count_documents(query)
+    
+    # ดึงเฉพาะรูปที่สถานะ "approved" พร้อมทำ Pagination
+    cursor = gallery_collection.find(query).sort("createdAt", -1).skip(skip).limit(limit)
     async for doc in cursor:
         doc["_id"] = str(doc["_id"])
         photos.append(doc)
-    return photos
+        
+    return {
+        "total": total_count,
+        "skip": skip,
+        "limit": limit,
+        "items": photos
+    }
 
 @router.post("/upload")
 @limiter.limit("3/minute") # <--- จำกัดการเข้าถึง: 1 IP อัปโหลดได้แค่ 3 ครั้งต่อนาที
