@@ -1,23 +1,23 @@
 import { useState } from 'react';
 
 export default function SpotifyPlayer() {
-  // เปลี่ยนค่าเริ่มต้นเป็น false เพื่อให้ซ่อนเครื่องเล่นไว้ตั้งแต่แรก
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex flex-col items-start gap-2">
+    // ย้ายไปมุมขวาล่าง (bottom-4 right-4) และใช้ items-end จัดให้อยู่ชิดขวา
+    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] flex flex-col items-end gap-3">
       
-      {/* กล่องใส่เครื่องเล่น (จะพับเก็บเมื่อ isOpen เป็น false) */}
+      {/* กล่องใส่เครื่องเล่น */}
       <div 
-        className={`w-72 md:w-80 transition-all duration-500 ease-in-out origin-bottom ${
-          isOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0 h-0 overflow-hidden'
+        className={`w-72 md:w-80 transition-all duration-300 ease-out origin-bottom-right ${
+          isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 h-0 overflow-hidden'
         }`}
       >
         <iframe
-          style={{ borderRadius: '12px' }}
+          style={{ borderRadius: '12px', boxShadow: '0 10px 25px rgba(23, 61, 103, 0.2)' }}
           src="https://open.spotify.com/embed/track/7p5yG8VirRCXPCzCNdj38Y?utm_source=generator&si=f76d08182e46433e" 
           width="100%"
-          height="80" // ปรับความสูงเป็น 80px จะได้เครื่องเล่นแบบแบน (Compact)
+          height="80" 
           frameBorder="0"
           allowFullScreen=""
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -26,12 +26,17 @@ export default function SpotifyPlayer() {
         ></iframe>
       </div>
 
-      {/* ปุ่มกด ซ่อน / แสดง */}
+      {/* ปุ่มกด ซ่อน/แสดง แบบวงกลมเล็กๆ (ลอยอยู่มุมจอ) */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-navy text-beige px-4 py-2 rounded-full text-sm font-bold font-body shadow-xl border border-navy/20 hover:bg-skyblue hover:text-navy hover:scale-105 transition-all duration-300 flex items-center gap-2"
+        className={`w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-xl border-2 transition-all duration-300 hover:scale-110 z-50 ${
+          isOpen 
+            ? 'bg-palepink text-navy border-white' 
+            : 'bg-palepink text-navy border-white'
+        }`}
+        aria-label="Toggle Spotify Player"
       >
-        {isOpen ? '⬇ ซ่อนเพลย์ลิสต์' : '🎵 ฟังเพลงฮงชิ'}
+        {isOpen ? '✕' : '🎵'}
       </button>
 
     </div>

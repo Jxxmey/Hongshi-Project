@@ -7,7 +7,8 @@ import Cropper from 'react-easy-crop';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-const ITEMS_PER_PAGE = 12;
+// +++ ปรับเป็น 14 ชิ้นต่อหน้า เพื่อให้โหลดมาเต็ม 1 บล็อกแพทเทิร์นพอดี
+const ITEMS_PER_PAGE = 14; 
 
 export default function Gallery() {
   const { t } = useLanguage();
@@ -27,8 +28,8 @@ export default function Gallery() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState({ text: '', type: '' });
 
-  const [uploadFile, setUploadFile] = useState(null); // สำหรับภาพที่ตัดแล้ว (Cropped)
-  const [originalFile, setOriginalFile] = useState(null); // +++ 1. State สำหรับภาพขนาดจริง (Original)
+  const [uploadFile, setUploadFile] = useState(null); 
+  const [originalFile, setOriginalFile] = useState(null); 
   
   const [imageSrc, setImageSrc] = useState(null); 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -81,7 +82,7 @@ export default function Gallery() {
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      setOriginalFile(file); // +++ 2. เก็บไฟล์ขนาดจริงไว้ใน State ทันทีที่เลือกรูป
+      setOriginalFile(file); 
       
       const reader = new FileReader();
       reader.addEventListener('load', () => {
@@ -147,8 +148,8 @@ export default function Gallery() {
     setUploadMessage({ text: t.gallery.uploadModal?.uploading || 'กำลังอัปโหลด...', type: 'info' });
 
     const formData = new FormData();
-    formData.append('image', uploadFile); // รูปที่ตัดแล้ว (สัดส่วน 5:4)
-    formData.append('originalImage', originalFile); // +++ 3. แนบไฟล์รูปขนาดจริงส่งไปด้วย
+    formData.append('image', uploadFile); 
+    formData.append('originalImage', originalFile); 
     formData.append('uploaderName', uploaderName || 'Anonymous LYKYOU');
     formData.append('recaptchaToken', captchaToken); 
     formData.append('isConsentGiven', isConsentGiven);
@@ -183,7 +184,7 @@ export default function Gallery() {
   const closeUploadModal = () => {
     setIsUploadOpen(false);
     setUploadFile(null);
-    setOriginalFile(null); // +++ 4. เคลียร์ค่าไฟล์ขนาดจริง
+    setOriginalFile(null); 
     setImageSrc(null);
     setIsCropping(false);
     setUploaderName('');
@@ -192,20 +193,38 @@ export default function Gallery() {
     if (recaptchaRef.current) recaptchaRef.current.reset();
   };
 
+  // +++ ฟังก์ชันจัด Grid ตามรูปภาพอ้างอิงเป๊ะๆ (14 รูปต่อ 1 บล็อก) +++
   const getGridClass = (index) => {
-    const rotations = ['-rotate-2', 'rotate-2', '-rotate-3', 'rotate-3', '-rotate-1', 'rotate-1'];
-    const translates = ['translate-y-0', 'translate-y-2', '-translate-y-1', 'translate-y-1', '-translate-y-2', 'translate-y-0'];
-    const rot = rotations[index % rotations.length];
-    const trans = translates[index % translates.length];
-    return `${rot} ${trans}`;
+    const pattern = [
+      'md:col-span-6 md:row-span-4', // 1. บนซ้าย (ใหญ่)
+      'md:col-span-3 md:row-span-4', // 2. บนกลาง (สูง)
+      'md:col-span-3 md:row-span-4', // 3. บนขวา (สูง)
+      'md:col-span-3 md:row-span-3', // 4. กลางซ้าย บน (จัตุรัส)
+      'md:col-span-6 md:row-span-6', // 5. กลาง (ใหญ่มาก)
+      'md:col-span-3 md:row-span-3', // 6. กลางขวา บน (จัตุรัส)
+      'md:col-span-3 md:row-span-3', // 7. กลางซ้าย ล่าง (จัตุรัส)
+      'md:col-span-3 md:row-span-3', // 8. กลางขวา ล่าง (จัตุรัส)
+      'md:col-span-3 md:row-span-4', // 9. ล่างซ้าย (สูง)
+      'md:col-span-3 md:row-span-4', // 10. ล่างกลาง (สูง)
+      'md:col-span-6 md:row-span-4', // 11. ล่างขวา (ใหญ่)
+      'md:col-span-4 md:row-span-3', // 12. ล่างสุด ซ้าย (แนวนอน)
+      'md:col-span-4 md:row-span-3', // 13. ล่างสุด กลาง (แนวนอน)
+      'md:col-span-4 md:row-span-3', // 14. ล่างสุด ขวา (แนวนอน)
+    ];
+    return `col-span-1 sm:col-span-1 ${pattern[index % pattern.length]}`;
+  };
+
+  // +++ สลับสีกรอบ ขาว/น้ำเงิน +++
+  const getFrameClass = (index) => {
+    return index % 2 === 0 ? 'frame-navy' : 'frame-white';
   };
 
   return (
-    <div className="py-12 px-4 max-w-6xl mx-auto space-y-12 pb-20 overflow-hidden">
+    <div className="gallery-shell py-12 px-4 max-w-[1280px] mx-auto pb-20">
       
       <ScrollReveal>
-        <div className="text-center space-y-6">
-          <h2 className="text-4xl md:text-5xl font-heading font-bold text-navy drop-shadow-sm">
+        <div className="text-center space-y-6 mb-12">
+          <h2 className="text-4xl md:text-5xl font-heading font-bold text-navy drop-shadow-sm" style={{ fontFamily: '"Playfair Display", serif', letterSpacing: '-0.02em' }}>
             {t.gallery.title}
           </h2>
           <p className="text-lg font-body text-navy/80 bg-white/60 inline-block px-6 py-2 rounded-full shadow-sm backdrop-blur-sm">
@@ -215,7 +234,7 @@ export default function Gallery() {
           <div>
             <button 
               onClick={() => setIsUploadOpen(true)}
-              className="mt-4 font-heading font-bold text-base md:text-lg px-8 py-3 rounded-full shadow-md transition-all duration-300 bg-skyblue text-navy hover:bg-azalea hover:text-white hover:-translate-y-1"
+              className="mt-4 font-heading font-bold text-base md:text-lg px-8 py-3 rounded-full shadow-md transition-all duration-300 bg-[var(--ink)] text-[var(--paper)] hover:bg-opacity-90 hover:-translate-y-1"
             >
               + {t.gallery.uploadBtn}
             </button>
@@ -224,109 +243,109 @@ export default function Gallery() {
       </ScrollReveal>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12 mt-8 px-2 md:px-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className={`p-3 sm:p-5 md:p-8 w-full aspect-[5/4] ${getGridClass(i)}`}>
-              <SkeletonBox className="rounded-[24px] w-full h-full" />
+        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 md:auto-rows-[60px] lg:auto-rows-[70px] grid-flow-dense gap-3 md:gap-4 mt-8 px-2 md:px-4" aria-label="กำลังโหลดแกลลอรี่ภาพ">
+          {[...Array(14)].map((_, i) => (
+            <div key={i} className={`w-full h-full ${getGridClass(i)}`}>
+              <div className="art-card">
+                <div className={`frame ${getFrameClass(i)}`}>
+                  <SkeletonBox className="w-full h-full" />
+                </div>
+              </div>
             </div>
           ))}
-        </div>
+        </section>
       ) : allPhotos.length === 0 ? (
-        <div className="text-center font-body text-navy/60 bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-palepink mt-8">
+        <div className="text-center font-body text-[var(--ink)]/60 bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-[var(--ink)]/20 mt-8">
           {t.gallery.empty}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12 mt-8 px-2 md:px-4">
+          {/* +++ Grid หลักที่เซ็ต auto-rows และ grid-flow-dense ไว้สำหรับต่อจิ๊กซอว์ +++ */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 md:auto-rows-[6vw] lg:auto-rows-[60px] xl:auto-rows-[75px] grid-flow-dense gap-3 md:gap-4 mt-8 px-2 md:px-4" aria-label="แกลลอรี่ภาพงานศิลปะ">
             {displayedPhotos.map((photo, index) => {
               const isLastPhoto = displayedPhotos.length === index + 1;
+
               return (
-                <div 
-                  key={photo._id || index} 
-                  ref={isLastPhoto ? lastPhotoElementRef : null} 
-                  className={`relative w-full p-3 sm:p-5 md:p-8 transition-all duration-500 hover:rotate-0 hover:z-50 hover:scale-105 ${getGridClass(index)}`}
+                <button 
+                  key={photo._id || index}
+                  type="button" 
+                  ref={isLastPhoto ? lastPhotoElementRef : null}
+                  className={`art-card group ${getGridClass(index)}`} 
+                  onClick={() => setSelectedImage(photo)}
+                  aria-label={`เลือกผลงานจาก ${photo.uploaderName}`}
                 >
-                  <ScrollReveal delay={(index % 10) * 50} className="w-full">
-                    <div className="frame-layout w-full group">
-                      <span className="sparkle sparkle-one" aria-hidden="true">✦</span> 
-                      <span className="sparkle sparkle-two" aria-hidden="true">✦</span>
-                      <div className="dessert-sticker ice-cream ice-left scale-[0.55] sm:scale-75 md:scale-90 origin-bottom-right" aria-hidden="true">
-                        <span className="cherry"></span> <span className="scoop pink"></span> <span className="cone"></span>
-                      </div>
-                      <div className="dessert-sticker ice-cream ice-right scale-[0.55] sm:scale-75 md:scale-90 origin-bottom-left" aria-hidden="true">
-                        <span className="cherry"></span> <span className="scoop blue"></span> <span className="cone"></span>
-                      </div>
-                      <span className="dessert-sticker cake-slice scale-[0.6] sm:scale-75 md:scale-90 origin-bottom-left" aria-hidden="true"></span>
-                      
-                      <article className="cake-frame bg-paper w-full flex flex-col cursor-pointer shadow-lg" onClick={() => setSelectedImage(photo)}>
-                        <div className="photo-window relative w-full">
-                          <ImageSkeleton
-                            src={photo.imageUrl}
-                            alt={`Uploaded by ${photo.uploaderName}`}
-                            containerClassName="absolute inset-0 w-full h-full"
-                            imageClassName="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            onContextMenu={(e) => e.preventDefault()}
-                            onDragStart={(e) => e.preventDefault()}
-                          />
-                          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-navy/90 via-navy/50 to-transparent p-4 md:p-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                            <p className="text-white text-sm md:text-base font-bold font-body truncate drop-shadow-md">
-                              From {photo.uploaderName}
-                            </p>
-                          </div>
+                  <ScrollReveal delay={(index % 14) * 30} className="w-full h-full">
+                    <div className={`frame ${getFrameClass(index)}`}>
+                      <div className="art-image-container relative w-full h-full overflow-hidden">
+                        <ImageSkeleton
+                          src={photo.imageUrl}
+                          alt={`Uploaded by ${photo.uploaderName}`}
+                          containerClassName="absolute inset-0 w-full h-full bg-[#f0f4f8]"
+                          imageClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          onContextMenu={(e) => e.preventDefault()}
+                          onDragStart={(e) => e.preventDefault()}
+                        />
+                        {/* Hover Overlay แสดงชื่อ */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ink)]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-end p-3 md:p-4">
+                          <p className="text-[var(--paper)] text-xs md:text-sm font-bold font-body truncate drop-shadow-md">
+                            From {photo.uploaderName}
+                          </p>
                         </div>
-                      </article>
+                      </div>
                     </div>
                   </ScrollReveal>
-                </div>
+                </button>
               );
             })}
-          </div>
+          </section>
+          
           {hasMore && (
-            <div className="flex justify-center mt-12 mb-8">
-              <div className="w-8 h-8 border-4 border-skyblue border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex justify-center mt-16 mb-8">
+              <div className="w-8 h-8 border-4 border-[var(--ink)] border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
         </>
       )}
 
+      {/* Modal ดูรูปใหญ่ */}
       {selectedImage && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/90 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--ink)]/95 backdrop-blur-md animate-fade-in"
           onClick={() => setSelectedImage(null)}
         >
           <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setSelectedImage(null)} className="absolute -top-12 right-0 md:-right-12 text-white hover:text-azalea bg-white/20 hover:bg-white/40 w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all z-20">✕</button>
-            <div className="w-full h-full overflow-hidden rounded-2xl md:rounded-[30px] border-4 border-white shadow-2xl relative select-none">
+            <button onClick={() => setSelectedImage(null)} className="absolute -top-12 right-0 md:-right-12 text-[var(--paper)] hover:text-white bg-white/20 hover:bg-white/40 w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all z-20">✕</button>
+            <div className="w-full h-full overflow-hidden rounded-[8px] md:rounded-[12px] border-8 border-white shadow-2xl relative select-none bg-white">
               <div className="absolute inset-0 z-10 bg-transparent"></div>
-              {/* เปลี่ยนให้โชว์รูป Original แทนรูป Crop เมื่อกดขยายดูเต็มจอ ถ้ามี */}
-              <ImageSkeleton src={selectedImage.originalImageUrl || selectedImage.imageUrl} alt="Selected" containerClassName="w-full h-full bg-black/50" imageClassName="max-h-[85vh] object-contain"/>
+              <ImageSkeleton src={selectedImage.originalImageUrl || selectedImage.imageUrl} alt="Selected" containerClassName="w-full h-full bg-gray-100" imageClassName="max-h-[85vh] w-full object-contain"/>
             </div>
-            <p className="text-white mt-4 font-body font-bold bg-navy/50 px-5 py-2 rounded-full border border-white/20">From {selectedImage.uploaderName}</p>
+            <p className="text-white mt-4 font-body font-bold px-6 py-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm">From {selectedImage.uploaderName}</p>
           </div>
         </div>
       )}
 
+      {/* Modal Upload */}
       {isUploadOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/70 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white p-6 md:p-8 rounded-[30px] w-full max-w-md shadow-2xl relative border-t-8 border-skyblue flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--ink)]/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white p-6 md:p-8 rounded-[24px] w-full max-w-md shadow-2xl relative border-t-8 border-[var(--ink)] flex flex-col max-h-[90vh]">
             <button 
               onClick={closeUploadModal}
-              className="absolute top-4 right-4 text-navy/50 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center transition-colors z-20"
+              className="absolute top-4 right-4 text-navy/50 hover:text-[var(--ink)] bg-gray-100 hover:bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-20"
             >✕</button>
             
-            <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center">
+            <h3 className="text-2xl font-heading font-bold text-navy mb-2 text-center" style={{ fontFamily: '"Playfair Display", serif' }}>
               {isCropping ? "จัดตำแหน่งรูปภาพ" : t.gallery.uploadModal?.title || "อัปโหลดรูปภาพ"}
             </h3>
             
             {isCropping ? (
               <div className="flex-1 flex flex-col min-h-[300px]">
-                <p className="text-sm font-body text-navy/70 text-center mb-4">เลื่อนและซูมเพื่อให้รูปพอดีกับกรอบ</p>
-                <div className="relative w-full flex-1 bg-gray-900 rounded-2xl overflow-hidden mb-4 min-h-[300px]">
+                <p className="text-sm font-body text-navy/70 text-center mb-4">จัดตำแหน่งให้อยู่ตรงกลาง</p>
+                <div className="relative w-full flex-1 bg-gray-900 rounded-xl overflow-hidden mb-4 min-h-[300px]">
                   <Cropper
                     image={imageSrc}
                     crop={crop}
                     zoom={zoom}
-                    aspect={5 / 4} 
+                    aspect={1} // ตัดเป็นสี่เหลี่ยมจัตุรัสกลางๆ ไว้ก่อน ระบบจะทำ object-cover ให้อัตโนมัติ
                     onCropChange={setCrop}
                     onCropComplete={onCropComplete}
                     onZoomChange={setZoom}
@@ -335,11 +354,11 @@ export default function Gallery() {
                 <input 
                   type="range" min={1} max={3} step={0.1} value={zoom} 
                   onChange={(e) => setZoom(e.target.value)} 
-                  className="w-full mb-4 accent-skyblue" 
+                  className="w-full mb-4 accent-[var(--ink)]" 
                 />
                 <button 
                   onClick={createCroppedImage} 
-                  className="w-full font-heading bg-skyblue text-navy font-bold py-3 rounded-xl hover:bg-azalea hover:text-white transition-all shadow-sm"
+                  className="w-full font-heading bg-[var(--ink)] text-white font-bold py-3 rounded-xl hover:bg-opacity-90 transition-all shadow-sm"
                 >
                   ยืนยันการตัดรูป
                 </button>
@@ -349,34 +368,34 @@ export default function Gallery() {
                 <p className="text-sm font-body text-navy/70 text-center mb-4">{t.gallery.uploadModal?.desc || "ร่วมแชร์ความทรงจำดีๆ ด้วยกัน"}</p>
                 
                 {uploadFile ? (
-                  <div className="relative w-full aspect-[5/4] rounded-2xl overflow-hidden border-4 border-skyblue shadow-inner mb-4">
+                  <div className="relative w-full aspect-square rounded-xl overflow-hidden border-4 border-[var(--ink)] shadow-inner mb-4 max-w-[200px] mx-auto">
                     <img src={URL.createObjectURL(uploadFile)} alt="Preview" className="w-full h-full object-cover" />
                     <button 
                       type="button" onClick={() => {setUploadFile(null); setOriginalFile(null); setImageSrc(null);}} 
-                      className="absolute top-2 right-2 bg-navy/70 text-white text-xs px-3 py-1 rounded-full hover:bg-red-500"
+                      className="absolute top-2 right-2 bg-black/70 text-white text-xs px-3 py-1 rounded-full hover:bg-red-500"
                     >เปลี่ยนรูป</button>
                   </div>
                 ) : (
-                  <div className="bg-beige/40 p-4 rounded-2xl border-2 border-dashed border-skyblue/50 text-center">
+                  <div className="bg-gray-50 p-4 rounded-xl border-2 border-dashed border-[var(--ink)]/30 text-center hover:bg-gray-100 transition">
                     <input 
                       type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange}
-                      className="w-full text-sm font-body file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-palepink file:text-navy hover:file:bg-azalea hover:file:text-white cursor-pointer"
+                      className="w-full text-sm font-body file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-[var(--ink)] file:text-white hover:file:bg-opacity-90 cursor-pointer"
                     />
                   </div>
                 )}
 
                 <input 
                   type="text" placeholder={t.gallery.uploadModal?.namePlaceholder || "ชื่อของคุณ"} value={uploaderName} onChange={(e) => setUploaderName(e.target.value)}
-                  className="w-full p-3 font-body rounded-xl border-2 border-gray-100 bg-beige/30 focus:border-skyblue outline-none transition-colors"
+                  className="w-full p-3 font-body rounded-xl border-2 border-gray-200 bg-white focus:border-[var(--ink)] outline-none transition-colors"
                 />
 
-                <div className="flex items-start space-x-3 my-4 p-3 bg-white/50 rounded-xl border border-gray-100">
+                <div className="flex items-start space-x-3 my-4 p-3 bg-gray-50 rounded-xl border border-gray-200">
                   <input 
                     type="checkbox" 
                     id="consentCheck" 
                     checked={isConsentGiven}
                     onChange={(e) => setIsConsentGiven(e.target.checked)}
-                    className="mt-1 w-5 h-5 text-skyblue bg-white border-gray-300 rounded focus:ring-skyblue accent-skyblue cursor-pointer"
+                    className="mt-1 w-5 h-5 text-[var(--ink)] bg-white border-gray-300 rounded focus:ring-[var(--ink)] accent-[var(--ink)] cursor-pointer"
                   />
                   <label htmlFor="consentCheck" className="text-sm font-body text-navy/80 cursor-pointer select-none">
                     {t.gallery.uploadModal?.consent || "ฉันอนุญาตให้นำรูปภาพและข้อความนี้ไปใช้ประกอบคลิปโปรเจกต์วันเกิด หรือกิจกรรมอื่นๆ ที่เกี่ยวข้องกับโปรเจกต์ได้"}
@@ -392,7 +411,7 @@ export default function Gallery() {
 
                 <button 
                   type="submit" disabled={isUploading || !uploadFile}
-                  className="w-full font-heading bg-skyblue text-navy font-bold py-3.5 rounded-xl hover:bg-azalea hover:text-white transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 shadow-sm"
+                  className="w-full font-heading bg-[var(--ink)] text-white font-bold py-3.5 rounded-xl transition-all duration-300 disabled:opacity-50 hover:-translate-y-1 shadow-sm"
                 >
                   {isUploading ? (t.gallery.uploadModal?.uploading || "กำลังอัปโหลด...") : (t.gallery.uploadModal?.submitBtn || "ส่งรูปภาพ")}
                 </button>
@@ -408,71 +427,69 @@ export default function Gallery() {
         </div>
       )}
 
+      {/* --- CSS เลย์เอาต์และสไตล์ --- */}
       <style dangerouslySetInnerHTML={{__html: `
         :root {
-          --ink: #234f82;
-          --navy: #173d67;
-          --cream: #fff7e9;
-          --paper: #fffdf9;
-          --pink: #f7adc0;
-          --berry: #ed789b;
-          --blue: #b9dcef;
-          --mint: #c6e3cc;
-          --yellow: #ffd77b;
-          --choco: #a8664c;
+          --ink: #17324d;
+          --paper: #fffaf5;
+          --line: #c9dceb;
         }
 
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .frame-layout { position: relative; isolation: isolate; }
-
-        .cake-frame {
+        /* Art Card Configuration */
+        .art-card {
+          appearance: none;
+          width: 100%;
+          height: 100%;
+          display: block;
           position: relative;
-          padding: clamp(.5rem, 1.5vw, 1rem); 
-          border: 4px solid var(--navy);
-          border-radius: 1.5rem; 
-          box-shadow: 6px 8px 0 var(--navy), 0 10px 20px rgba(23, 61, 103, .13);
-          background-color: var(--paper);
+          text-align: left;
+          border: 0;
+          padding: 0;
+          cursor: pointer;
+          background: transparent;
+          transition: transform .28s ease;
         }
 
-        .photo-window {
+        .art-card:hover { transform: translateY(-4px); }
+
+        .frame {
+          width: 100%;
+          height: 100%;
+          transition: box-shadow .28s ease;
           position: relative;
           overflow: hidden;
-          aspect-ratio: 5 / 4; 
-          border: 6px solid var(--yellow);
-          border-radius: 1rem;
-          background: #f8c4d0;
-          box-shadow: inset 0 0 0 2px rgba(255,255,255,.8);
+          display: flex;
+          flex-direction: column;
         }
 
-        .dessert-sticker { position: absolute; z-index: 7; animation: floaty 3.9s ease-in-out infinite; pointer-events: none; }
-        .ice-cream { width: 5.5rem; height: 7.5rem; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(4px 4px 0 rgba(23,61,103,.16)); }
-        .ice-left { left: -1.5rem; top: 10%; transform: rotate(-13deg); }
-        .ice-right { right: -1.5rem; bottom: 10%; transform: rotate(13deg); animation-delay: .55s; }
-        .cake-slice { left: -1.5rem; bottom: 5%; width: 5.25rem; height: 4.8rem; border: 2px solid var(--navy); border-radius: .8rem 1.25rem .8rem .8rem; background: linear-gradient(to bottom, #fff7e9 0 20%, #f7adc0 20% 45%, #f3c772 45% 100%); box-shadow: 4px 4px 0 rgba(23,61,103,.16); transform: rotate(-11deg); animation-delay: .2s; }
-        
-        @media (max-width: 600px) {
-          .ice-left { left: -0.75rem; top: 12%; }
-          .ice-right { right: -0.75rem; bottom: 12%; }
-          .cake-slice { left: -0.75rem; bottom: 8%; }
-          .cake-frame { padding: 0.5rem; border-radius: 1.2rem; box-shadow: 4px 6px 0 var(--navy); }
+        /* 1. สีกรอบ: กรมท่า (Navy) */
+        .frame-navy {
+          background: var(--ink);
+          padding: clamp(8px, 1.2vw, 12px); /* ความหนาของกรอบ */
+          box-shadow: 0 6px 16px rgba(23, 50, 77, .15);
         }
 
-        .cherry { width: 1.15rem; height: 1.15rem; margin-bottom: -.15rem; border: 2px solid var(--navy); border-radius: 50%; background: var(--berry); position: relative; z-index: 3; }
-        .cherry::before { content: ""; width: 1.35rem; height: 1.3rem; position: absolute; left: .5rem; bottom: .65rem; border-left: 2px solid var(--navy); border-radius: 70%; transform: rotate(-34deg); }
-        .scoop { width: 4.65rem; height: 3.8rem; margin-bottom: -.75rem; border: 2px solid var(--navy); border-radius: 50% 50% 42% 42%; z-index: 2; }
-        .scoop.pink { background: var(--pink); }
-        .scoop.blue { background: var(--blue); }
-        .cone { width: 3.5rem; height: 4.1rem; border: 2px solid var(--navy); background: repeating-linear-gradient(45deg, transparent 0 8px, rgba(112,69,40,.26) 8px 10px), repeating-linear-gradient(-45deg, transparent 0 8px, rgba(112,69,40,.21) 8px 10px), #eab778; clip-path: polygon(5% 0, 95% 0, 50% 100%); }
-        .cake-slice::before { content: ""; width: 1.25rem; height: 1.25rem; position: absolute; right: .55rem; top: -.9rem; border: 2px solid var(--navy); border-radius: 50%; background: var(--berry); }
-        .cake-slice::after { content: ""; width: 2.9rem; height: .34rem; position: absolute; left: .85rem; bottom: 1.3rem; border-radius: 999px; background: #fff8ed; }
-        .sparkle { position: absolute; z-index: 5; width: 1.55rem; height: 1.55rem; color: var(--berry); animation: twinkle 2.5s ease-in-out infinite; pointer-events: none; }
-        .sparkle-one { top: -.35rem; right: 1.4rem; }
-        .sparkle-two { bottom: -.45rem; left: 1.2rem; color: #65a6cf; animation-delay: .65s; }
+        /* 2. สีกรอบ: ขาว/ครีม (White) */
+        .frame-white {
+          background: #ffffff;
+          padding: clamp(8px, 1.2vw, 12px);
+          border: 1px solid var(--line);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, .05);
+        }
 
-        @keyframes floaty { 0%, 100% { margin-top: 0; } 50% { margin-top: -8px; } }
-        @keyframes twinkle { 0%, 100% { opacity: .55; transform: scale(.84) rotate(0); } 50% { opacity: 1; transform: scale(1.1) rotate(15deg); } }
+        .art-card:hover .frame {
+          box-shadow: 0 16px 28px rgba(23, 50, 77, .25);
+        }
+
+        /* Responsive รูปภาพบนมือถือ */
+        @media (max-width: 767px) {
+          .art-card {
+            aspect-ratio: 4 / 5;
+          }
+        }
       `}} />
     </div>
   );

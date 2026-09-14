@@ -320,15 +320,56 @@ export default function ArtistProfile() {
             <h2 className="text-3xl font-heading font-bold text-navy">{t.profile.megaTitle}</h2>
             <p className="font-body text-navy/80">{t.profile.megaSubtitle}</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6 font-body text-left">
+
+          {/* +++ โปรเจกต์ไฮไลต์หลัก: LYKN Reflxion Concert (ขยายเต็ม 2 คอลัมน์ + วิดีโอ) +++ */}
+          <div className="bg-white p-6 md:p-8 rounded-[24px] shadow-lg border-4 border-azalea text-left mb-10 flex flex-col md:flex-row gap-6 md:gap-8 items-center relative overflow-hidden">
+            
+            {/* ฝั่งข้อความ */}
+            <div className="w-full md:w-1/2 space-y-4 relative z-10 order-2 md:order-1">
+              <span className="bg-azalea text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider inline-block mb-2 shadow-sm">
+                Highlight Project
+              </span>
+              <h3 className="text-3xl md:text-4xl font-heading font-bold text-navy flex items-center gap-3">
+                🎤 LYKN Reflxion Concert
+              </h3>
+              <p className="text-base text-navy/80 font-body leading-relaxed">
+                {language === 'th' 
+                  ? 'คอนเสิร์ตใหญ่ครั้งที่ 3 ของวง LYKN ที่จะสะท้อนภาพและพัฒนาการทางดนตรีของพวกเขาแบบจัดเต็ม เตรียมตัวพบกับโชว์สุดพิเศษในปี 2026' 
+                  : 'The 3rd major concert of LYKN that reflects their true selves and musical evolution. Get ready for a spectacular show in 2026.'}
+              </p>
+            </div>
+
+            {/* ฝั่งวิดีโอ YouTube (นำ iframe ที่คุณให้มาใส่ตรงนี้) */}
+            <div className="w-full md:w-1/2 aspect-video rounded-2xl overflow-hidden relative shadow-inner border-4 border-white order-1 md:order-2 bg-gray-100">
+              <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
+                <span className="text-navy/40 font-bold text-sm">Loading Video...</span>
+              </div>
+              <iframe 
+                className="relative z-10 w-full h-full"
+                src="https://www.youtube.com/embed/GTvPnXCsLpM?si=szrj7Srs1gtVLBkU" 
+                title="LYKN Reflxion Concert" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                referrerPolicy="strict-origin-when-cross-origin" 
+                allowFullScreen
+              ></iframe>
+            </div>
+            
+            {/* ลายเส้นตกแต่งด้านหลังพื้นหลังกล่อง */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-azalea/5 rounded-full blur-3xl z-0 pointer-events-none -mr-20 -mt-20"></div>
+          </div>
+
+          {/* โปรเจกต์ที่เหลือ */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 font-body text-left">
             {t.profile.megaItems.map((item, index) => (
-              <div key={index} className="bg-white p-6 rounded-2xl shadow-sm hover:-translate-y-1 transition duration-300">
+              <div key={index} className="bg-white p-6 rounded-2xl shadow-sm hover:-translate-y-1 transition duration-300 border-2 border-white hover:border-skyblue">
                 <span className="text-3xl mb-3 block">{item.emoji}</span>
                 <h4 className="text-lg font-bold text-navy mb-2">{item.title}</h4>
                 <p className="text-sm text-navy/80">{item.desc}</p>
               </div>
             ))}
           </div>
+
         </section>
       </ScrollReveal>
 

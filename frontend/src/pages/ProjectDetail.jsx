@@ -1,11 +1,10 @@
-import { useState } from 'react'; // +++ 1. Import useState
+import { useState } from 'react'; 
+import { Link } from 'react-router-dom'; // +++ Import Link
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function ProjectDetail() {
   const { t } = useLanguage();
-
-  // +++ 2. สร้าง State สำหรับตรวจสอบการโหลดของแผนที่ Google Maps
   const [mapLoaded, setMapLoaded] = useState(false);
 
   return (
@@ -32,7 +31,7 @@ export default function ProjectDetail() {
                 <p className="text-navy/80 mb-1">{t.project.eventDate}</p>
                 <p className="text-navy font-bold">{t.project.locationLabel} {t.project.cafeName}</p>
               </div>
-              <div className="text-5xl">☕️</div>
+              <div className="text-5xl drop-shadow-sm">☕️</div>
             </div>
           </div>
         </section>
@@ -40,21 +39,19 @@ export default function ProjectDetail() {
 
       {/* แผนที่คาเฟ่ */}
       <ScrollReveal delay={200}>
-        <section>
+        <section className="flex flex-col items-center">
           <h3 className="text-2xl font-heading font-bold text-navy border-b-4 border-skyblue pb-2 mb-6 inline-block">
             {t.project.mapTitle}
           </h3>
           
           <div className="w-full h-64 md:h-96 bg-gray-100 rounded-2xl overflow-hidden shadow-sm relative border-4 border-white hover:border-skyblue transition-colors duration-300">
             
-            {/* +++ 3. โหมด Skeleton: แสดงแอนิเมชันกระพริบระหว่างรอ iframe แผนที่โหลดเสร็จ +++ */}
             {!mapLoaded && (
               <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center z-0">
                 <span className="text-navy/50 font-bold animate-pulse">กำลังโหลดแผนที่... 📍</span>
               </div>
             )}
 
-            {/* แท็ก iframe ของ Google Maps */}
             <iframe 
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.311!2d100.528!3d13.754!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zU29scmlzZSBDYWZl!5e0!3m2!1sth!2sth!4v1700000000000!5m2!1sth!2sth" 
               width="100%" 
@@ -64,7 +61,6 @@ export default function ProjectDetail() {
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade" 
               title="Solrise Cafe Location"
-              // +++ 4. ซ่อนแผนที่ไว้ด้วย opacity-0 และค่อยเฟดขึ้นมาตอน onLoad เสร็จ +++
               onLoad={() => setMapLoaded(true)}
               className={`absolute inset-0 z-10 transition-opacity duration-1000 ${
                 mapLoaded ? 'opacity-100' : 'opacity-0'
@@ -73,26 +69,31 @@ export default function ProjectDetail() {
             
           </div>
           
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center w-full flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="https://maps.app.goo.gl/vN6xmL9Qi9JJ7RqAA" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-skyblue text-navy font-heading font-bold px-8 py-4 rounded-full shadow-md hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-lg">
+              className="inline-flex items-center gap-2 bg-skyblue text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-md hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-lg w-full sm:w-auto justify-center">
               {t.project.mapBtn}
             </a>
+
+            {/* +++ เพิ่มปุ่มสำหรับอ่าน FAQ เพราะมักจะเกี่ยวข้องกัน +++ */}
+            <Link to="/faq" className="inline-flex items-center gap-2 bg-white text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-sm border-2 border-skyblue hover:bg-skyblue transition-all hover:-translate-y-1 duration-300 text-lg w-full sm:w-auto justify-center">
+              อ่านกฎและข้อควรระวัง (FAQ)
+            </Link>
           </div>
         </section>
       </ScrollReveal>
 
       {/* ของที่ระลึก */}
-      <section>
+      <section className="flex flex-col items-center">
         <ScrollReveal>
           <h3 className="text-2xl font-heading font-bold text-navy border-b-4 border-skyblue pb-2 mb-6 inline-block">
             {t.project.giveawayTitle}
           </h3>
         </ScrollReveal>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center font-body">
+        <div className="w-full grid grid-cols-2 md:grid-cols-4 gap-4 text-center font-body">
           {[t.project.tba, t.project.tba, t.project.tba, t.project.tba].map((item, i) => (
-            <ScrollReveal key={i} delay={i * 150}>
+            <ScrollReveal key={i} delay={i * 150} className="w-full">
               <div className="bg-palepink aspect-square rounded-2xl flex items-center justify-center shadow-sm border-2 border-white text-navy font-bold w-full h-full hover:scale-105 hover:border-azalea hover:bg-white hover:text-azalea transition-all duration-300 cursor-default">
                 {item}
               </div>

@@ -141,7 +141,7 @@ export const translations = {
           items: [
             { q: 'เงื่อนไขการรับของแจก (Giveaway) มีอะไรบ้าง?', a: 'เพียงสั่งเครื่องดื่มหรือขนม 1 เมนู เพื่อรับ 1 สิทธิ์ครับ (รายละเอียดเพิ่มเติมสามารถสอบถามพนักงานที่ร้านได้เลยครับ)' },
             { q: 'ของแจกมีจำกัดต่อวันไหม? ถ้าไปช้าของจะหมดไหม?', a: 'จำกัดวันละ 50 เซ็ต เพื่อให้กระจายได้ครบทุกวัน (หรือแจกจนกว่าของจะหมดในแต่ละวันครับ)' },
-            { q: 'รับของแจกแทนเพื่อนได้ไหม?', a: 'สามารถรับของแจกได้สูงสุด 3 เซ็ต ต่อ 1 ท่านครับ' }
+            { q: 'รับของแจกแทนเพื่อนได้ไหม?', a: 'สามารถรับของแจกได้เพียง 1 เซ็ต ต่อ 1 ท่านครับ' }
           ]
         },
         {
@@ -299,7 +299,7 @@ export const translations = {
           items: [
             { q: 'How to get the giveaways?', a: 'Simply purchase 1 drink or dessert to receive 1 privilege (Please ask the cafe staff for more details).' },
             { q: 'Is there a daily limit for giveaways?', a: 'Limited to 50 sets per day to ensure distribution across all days (or until out of stock each day).' },
-            { q: 'Can I collect giveaways for a friend?', a: 'You can collect a maximum of 3 giveaway sets per person.' }
+            { q: 'Can I collect giveaways for a friend?', a: 'You can collect a maximum of 1 giveaway set per person.' }
           ]
         },
         {

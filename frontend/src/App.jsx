@@ -157,7 +157,7 @@ function App() {
               <Route path="/admin/reports" element={<AdminReports />} />
               <Route path="/admin/stats" element={<AdminStats />} />
               <Route path="/admin/imagerequest" element={<AdminImageRequest />} />
-              <Route path="/admin/export" element={<AdminCafeExport />} /> {/* +++ 2. เพิ่ม Route หน้า Export */}
+              <Route path="/admin/export" element={<AdminCafeExport />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/gallery" element={<Gallery />} />
             </Routes>
