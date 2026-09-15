@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'; // +++ Import useLocation เพิ่ม
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -9,10 +9,9 @@ import ArtistProfile from './pages/ArtistProfile';
 import Credits from './pages/Credits';
 import AdminReports from './pages/AdminReports';
 import AdminDashboard from './pages/AdminDashboard';
-import SpotifyPlayer from './components/SpotifyPlayer';
 import AdminStats from './pages/AdminStats';
 import AdminImageRequest from './pages/AdminImageRequest';
-import AdminCafeExport from './pages/AdminCafeExport'; // +++ 1. Import หน้า Admin Export
+import AdminCafeExport from './pages/AdminCafeExport'; 
 import FAQ from './pages/FAQ';
 import Gallery from './pages/Gallery'; 
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -20,16 +19,25 @@ import LoadingScreen from './components/LoadingScreen';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+// +++ 1. สร้าง Component ScrollToTop เพื่อให้เลื่อนขึ้นบนสุดเมื่อเปลี่ยนหน้า +++
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 function App() {
-  // +++ 1. ตั้งค่าสถานะ Loading โดยเช็คจาก sessionStorage ทันทีตั้งแต่เริ่ม +++
   const [isLoading, setIsLoading] = useState(() => {
-    // ถ้าเคยโหลดหน้า Loading ผ่านไปแล้วในแท็บนี้ ให้เริ่มแบบไม่ต้องโหลด (false)
     const hasLoaded = sessionStorage.getItem('hasSeenLoading');
     return !hasLoaded; 
   });
 
   useEffect(() => {
-    // เช็คว่าเคยนับยอดวิวไปแล้วหรือยังใน session นี้
     const hasVisited = sessionStorage.getItem('hasVisited');
     
     if (!hasVisited) {
@@ -41,21 +49,20 @@ function App() {
     }
   }, []);
 
-  // +++ 2. ฟังก์ชันเมื่อหน้า Loading โหลดเสร็จ +++
   const handleLoadingComplete = () => {
-    sessionStorage.setItem('hasSeenLoading', 'true'); // บันทึกไว้ว่าดูหน้าโหลดไปแล้ว
+    sessionStorage.setItem('hasSeenLoading', 'true'); 
     setIsLoading(false);
   };
 
-  // +++ 3. ถ้ายังโหลดอยู่ ให้แสดงแค่หน้า LoadingScreen +++
   if (isLoading) {
     return <LoadingScreen onComplete={handleLoadingComplete} />;
   }
 
-  // +++ โหลดเสร็จแล้ว ค่อยแสดงหน้าเว็บหลัก +++
   return (
     <LanguageProvider>
       <BrowserRouter>
+        {/* +++ 2. เรียกใช้ ScrollToTop ทันทีที่อยู่ใต้ BrowserRouter +++ */}
+        <ScrollToTop />
         
         {/* 🎨 พื้นหลังหลัก (Global Background) + ลูกโป่งลอย */}
         <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden bg-gradient-to-b from-[#fffafa] to-[#fdf2f6]">
@@ -164,7 +171,6 @@ function App() {
           </main>
 
           <Footer />
-          <SpotifyPlayer />
         </div>
       </BrowserRouter>
     </LanguageProvider>

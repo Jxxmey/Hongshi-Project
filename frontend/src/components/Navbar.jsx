@@ -3,10 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-
-  // 1. ดึงภาษาปัจจุบัน, ฟังก์ชันสลับภาษา, และคำแปล (t) มาใช้งาน
   const { language, toggleLanguage, t } = useLanguage();
 
   // === 🚀 ระบบ Easter Egg (สุ่มรูปและข้อความ) ===
@@ -15,7 +12,6 @@ export default function Navbar() {
   const [randomImage, setRandomImage] = useState('');
   const [randomMessage, setRandomMessage] = useState('');
 
-  // คลังข้อความสุ่ม (แยก 2 ภาษา)
   const surpriseMessages = {
     th: [
       "แอบมากดอะไรตรงนี้เนี่ย! ความลับแตกหมดแล้ววว 🤫",
@@ -35,30 +31,25 @@ export default function Navbar() {
     ]
   };
 
-  // ฟังก์ชันนับการกดโลโก้
   const handleLogoClick = (e) => {
     setClickCount((prev) => prev + 1);
     
-    // ถ้ากดรัวๆ ครบ 3 ครั้ง
     if (clickCount + 1 === 3) {
-      e.preventDefault(); // ป้องกันไม่ให้โหลดหน้าใหม่
+      e.preventDefault(); 
       
-      // 1. สุ่มตัวเลข 1 ถึง 10 แล้วทำให้เป็น format "01", "02", ..., "10"
       const randomNum = Math.floor(Math.random() * 10) + 1;
       const formattedNum = randomNum.toString().padStart(2, '0');
       setRandomImage(`/assets/secret/${formattedNum}.png`);
 
-      // 2. สุ่มข้อความตามภาษาปัจจุบัน
       const messages = surpriseMessages[language] || surpriseMessages.th;
       const randomMsg = messages[Math.floor(Math.random() * messages.length)];
       setRandomMessage(randomMsg);
 
       setShowEasterEgg(true);
-      setClickCount(0); // รีเซ็ตการนับ
+      setClickCount(0); 
     }
   };
 
-  // รีเซ็ตการนับใหม่ ถ้าหยุดกดเกิน 2 วินาที
   useEffect(() => {
     if (clickCount > 0) {
       const timer = setTimeout(() => setClickCount(0), 2000);
@@ -67,37 +58,61 @@ export default function Navbar() {
   }, [clickCount]);
   // ===================================
 
-  // 2. เปลี่ยนข้อความให้ดึงจากไฟล์แปลภาษาแทนการพิมพ์ตรงๆ
+  // 1. เพิ่ม Icon (SVG) ให้กับแต่ละเมนูเพื่อใช้สำหรับ Bottom Navigation
   const navLinks = [
-    { name: t.nav.home, path: '/' },
-    { name: t.nav.profile, path: '/profile' },
-    { name: t.nav.project, path: '/project' },
-    { name: t.nav.gallery, path: '/gallery' },
-    { name: t.nav.guestbook, path: '/guestbook' },
-    { name: t.nav.faq, path: '/faq' },
+    { 
+      name: t.nav.home, 
+      path: '/',
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+    },
+    { 
+      name: t.nav.profile, 
+      path: '/profile',
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+    },
+    { 
+      name: t.nav.project, 
+      path: '/project',
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+    },
+    { 
+      name: t.nav.gallery, 
+      path: '/gallery',
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+    },
+    { 
+      name: t.nav.guestbook, 
+      path: '/guestbook',
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+    },
+    { 
+      name: t.nav.faq, 
+      path: '/faq',
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    },
   ];
 
   return (
     <>
+      {/* 2. Top Navbar (แสดงผลบนทุกหน้าจอ แต่บนมือถือจะเหลือแค่ Logo กับ สลับภาษา) */}
       <nav className="bg-palepink text-navy sticky top-0 z-50 shadow-sm font-heading">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex justify-between items-center h-16">
             
-            {/* โลโก้ (ซ้าย) - ผูกฟังก์ชันนับคลิกตรงนี้ และเพิ่มรูปโลโก้ */}
             <Link 
               to="/" 
               onClick={handleLogoClick}
-              className="flex items-center gap-3 text-2xl font-bold tracking-wider hover:text-azalea transition z-50 select-none cursor-pointer group"
+              className="flex items-center gap-3 text-xl md:text-2xl font-bold tracking-wider hover:text-azalea transition z-50 select-none cursor-pointer group"
             >
               <img 
                 src="/assets/logo.png" 
                 alt="Hongshi Logo" 
-                className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-sm"
+                className="h-9 md:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-sm"
               />
               <span className="hidden sm:block">Hongshi Day</span>
             </Link>
 
-            {/* เมนูสำหรับ Desktop (ซ่อนบนมือถือ) */}
+            {/* เมนูสำหรับ Desktop */}
             <div className="hidden md:flex space-x-6 items-center">
               {navLinks.map((link) => (
                 <Link 
@@ -109,7 +124,6 @@ export default function Navbar() {
                 </Link>
               ))}
 
-              {/* 3. ปุ่มสลับภาษา TH/EN สำหรับ Desktop */}
               <button 
                 onClick={toggleLanguage}
                 className="ml-4 px-3 py-1 bg-white/60 border-2 border-white rounded-full text-sm font-bold text-navy hover:bg-azalea hover:text-white hover:border-azalea transition-all duration-300 shadow-sm flex items-center gap-1 uppercase tracking-wider"
@@ -118,81 +132,58 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* ปุ่ม Hamburger Menu สำหรับมือถือ (แสดงเฉพาะหน้าจอเล็ก) */}
-            <div className="md:hidden flex items-center z-50 gap-4">
-              
-              {/* 4. ปุ่มสลับภาษา TH/EN สำหรับ Mobile (อยู่ข้างปุ่ม 3 ขีด) */}
+            {/* ปุ่มสลับภาษาบนมือถือ (ย้ายมาไว้ขวาสุดแทน Hamburger) */}
+            <div className="md:hidden flex items-center">
               <button 
                 onClick={toggleLanguage}
-                className="px-3 py-1 bg-white/60 border-2 border-white rounded-full text-xs font-bold text-navy hover:bg-azalea hover:text-white transition-all shadow-sm uppercase"
+                className="px-3 py-1 bg-white/80 border-2 border-white rounded-full text-xs font-bold text-navy hover:bg-azalea hover:text-white transition-all shadow-sm uppercase flex items-center gap-1"
               >
-                {language}
-              </button>
-
-              <button 
-                onClick={() => setIsOpen(!isOpen)} 
-                className="text-navy hover:text-azalea focus:outline-none transition-colors p-2"
-                aria-label="Toggle Menu"
-              >
-                {/* ใช้ SVG ไอคอนเพื่อให้ดูคมชัดและสวยงามบนมือถือ */}
-                {isOpen ? (
-                  // ไอคอน กากบาท (✕) ตอนเปิดเมนู
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                ) : (
-                  // ไอคอน 3 ขีด (Hamburger) ตอนปิดเมนู
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
+                🌐 {language}
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* แถบเมนู Dropdown ที่สไลด์ลงมาบนมือถือ */}
-        <div 
-          className={`md:hidden absolute top-16 left-0 w-full bg-white/95 backdrop-blur-md shadow-xl border-t border-gray-100 transition-all duration-300 ease-in-out origin-top ${
-            isOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'
-          }`}
-        >
-          <div className="flex flex-col px-4 pt-4 pb-6 space-y-2 shadow-inner">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.path} 
-                to={link.path} 
-                onClick={() => setIsOpen(false)} // กดเลือกเมนูแล้วให้ปิด Dropdown อัตโนมัติ
-                className={`block px-4 py-3 rounded-xl font-bold text-center transition-colors ${
-                  location.pathname === link.path 
-                    ? 'bg-palepink text-azalea' 
-                    : 'text-navy hover:bg-beige'
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
           </div>
         </div>
       </nav>
 
+      {/* 3. Bottom Navigation Bar (แสดงผลเฉพาะบนมือถือ) */}
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-gray-200 z-[90] pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div className="flex justify-around items-center h-16 px-1">
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.path;
+            return (
+              <Link 
+                key={link.path} 
+                to={link.path} 
+                className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-200 ${
+                  isActive ? 'text-azalea' : 'text-navy/50 hover:text-navy/80'
+                }`}
+              >
+                <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100'}`}>
+                  {link.icon}
+                </div>
+                <span className={`text-[10px] font-bold font-body leading-none ${isActive ? 'opacity-100' : 'opacity-80'}`}>
+                  {link.name}
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+
       {/* === โมดอล Easter Egg (สุ่มภาพและข้อความ) === */}
       {showEasterEgg && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/60 backdrop-blur-md transition-opacity">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/60 backdrop-blur-md transition-opacity pb-20 md:pb-4">
           <div className="bg-white p-8 md:p-10 rounded-[35px] w-[95%] md:w-full max-w-sm shadow-2xl relative border-4 border-skyblue text-center animate-bounce-short">
             
-            {/* กราฟิกตกแต่ง */}
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-6xl">
               🎁
             </div>
 
-            {/* ส่วนรูปภาพลับที่ถูกสุ่มมา พร้อมระบบป้องกันการเซฟ */}
             <div 
               className="relative w-full aspect-square bg-beige rounded-2xl overflow-hidden mb-6 mt-4 shadow-inner border-2 border-palepink select-none"
-              onContextMenu={(e) => e.preventDefault()} // 🔒 ป้องกันคลิกขวา
-              onDragStart={(e) => e.preventDefault()} // 🔒 ป้องกันการลากรูป
+              onContextMenu={(e) => e.preventDefault()} 
+              onDragStart={(e) => e.preventDefault()} 
             >
-              {/* แผ่นใสบังทับอีกชั้น */}
               <div className="absolute inset-0 z-10 w-full h-full bg-transparent"></div>
               
               <img 
@@ -200,7 +191,6 @@ export default function Navbar() {
                 alt="Secret Surprise" 
                 className="w-full h-full object-cover pointer-events-none"
                 onError={(e) => {
-                  // Fallback กรณีที่หาภาพไม่เจอ
                   e.target.onerror = null; 
                   e.target.src = "https://via.placeholder.com/400x400/FFE4E1/2D3748?text=Secret+Photo";
                 }}
@@ -211,7 +201,6 @@ export default function Navbar() {
               {language === 'th' ? '🎉 เซอร์ไพรส์!' : '🎉 Surprise!'}
             </h3>
             
-            {/* ข้อความสุ่ม */}
             <p className="font-body text-navy/80 text-sm md:text-base leading-relaxed mb-6 font-medium">
               {randomMessage}
             </p>
@@ -222,12 +211,11 @@ export default function Navbar() {
             >
               {language === 'th' ? 'ปิดหน้าต่าง' : 'Close'}
             </button>
-
           </div>
         </div>
       )}
 
-      {/* Animation พิเศษสำหรับเด้งป๊อปอัป */}
+      {/* Animation และ Safe Area สำหรับ iOS */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes bounceShort {
           0% { transform: scale(0.8); opacity: 0; }
@@ -236,6 +224,9 @@ export default function Navbar() {
         }
         .animate-bounce-short {
           animation: bounceShort 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .pb-safe {
+          padding-bottom: env(safe-area-inset-bottom, 0px);
         }
       `}} />
     </>

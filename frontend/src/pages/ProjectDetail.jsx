@@ -31,7 +31,13 @@ export default function ProjectDetail() {
                 <p className="text-navy/80 mb-1">{t.project.eventDate}</p>
                 <p className="text-navy font-bold">{t.project.locationLabel} {t.project.cafeName}</p>
               </div>
-              <div className="text-5xl drop-shadow-sm">☕️</div>
+              <div className="flex justify-center drop-shadow-sm">
+                <img 
+                  src="/assets/solrise.png" 
+                  alt="Solrise Logo" 
+                  className="w-14 h-14 object-contain" 
+                />
+              </div>
             </div>
           </div>
         </section>

@@ -44,7 +44,6 @@ export default function Gallery() {
         if (response.ok) {
           const data = await response.json();
           
-          // +++ ระบบป้องกัน: รองรับทั้ง Backend เก่า (Array) และใหม่ (Object) +++
           const items = data.items || (Array.isArray(data) ? data : []);
           const totalCount = data.total !== undefined ? data.total : items.length;
 
@@ -186,24 +185,25 @@ export default function Gallery() {
     if (recaptchaRef.current) recaptchaRef.current.reset();
   };
 
+  // เอา md: ออก เพื่อให้ทุกขนาดหน้าจอใช้แพทเทิร์น 14 รูปนี้เหมือนกัน
   const getGridClass = (index) => {
     const pattern = [
-      'md:col-span-6 md:row-span-4', 
-      'md:col-span-3 md:row-span-4', 
-      'md:col-span-3 md:row-span-4', 
-      'md:col-span-3 md:row-span-3', 
-      'md:col-span-6 md:row-span-6', 
-      'md:col-span-3 md:row-span-3', 
-      'md:col-span-3 md:row-span-3', 
-      'md:col-span-3 md:row-span-3', 
-      'md:col-span-3 md:row-span-4', 
-      'md:col-span-3 md:row-span-4', 
-      'md:col-span-6 md:row-span-4', 
-      'md:col-span-4 md:row-span-3', 
-      'md:col-span-4 md:row-span-3', 
-      'md:col-span-4 md:row-span-3', 
+      'col-span-6 row-span-4', 
+      'col-span-3 row-span-4', 
+      'col-span-3 row-span-4', 
+      'col-span-3 row-span-3', 
+      'col-span-6 row-span-6', 
+      'col-span-3 row-span-3', 
+      'col-span-3 row-span-3', 
+      'col-span-3 row-span-3', 
+      'col-span-3 row-span-4', 
+      'col-span-3 row-span-4', 
+      'col-span-6 row-span-4', 
+      'col-span-4 row-span-3', 
+      'col-span-4 row-span-3', 
+      'col-span-4 row-span-3', 
     ];
-    return `col-span-1 sm:col-span-1 ${pattern[index % pattern.length]}`;
+    return pattern[index % pattern.length];
   };
 
   const getFrameClass = (index) => {
@@ -233,8 +233,9 @@ export default function Gallery() {
         </div>
       </ScrollReveal>
 
+      {/* ปรับ grid-cols-12 ให้ทำงานตั้งแต่หน้าจอมือถือ และใช้ auto-rows-[8vw] จัดความสูง */}
       {loading && displayedPhotos.length === 0 ? (
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 md:auto-rows-[60px] lg:auto-rows-[70px] grid-flow-dense gap-3 md:gap-4 mt-8 px-2 md:px-4" aria-label="กำลังโหลดแกลลอรี่ภาพ">
+        <section className="grid grid-cols-12 auto-rows-[8vw] sm:auto-rows-[6vw] md:auto-rows-[60px] lg:auto-rows-[70px] grid-flow-dense gap-2 md:gap-4 mt-8 px-1 md:px-4" aria-label="กำลังโหลดแกลลอรี่ภาพ">
           {[...Array(14)].map((_, i) => (
             <div key={i} className={`w-full h-full ${getGridClass(i)}`}>
               <div className="art-card">
@@ -251,7 +252,7 @@ export default function Gallery() {
         </div>
       ) : (
         <>
-          <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 md:auto-rows-[6vw] lg:auto-rows-[60px] xl:auto-rows-[75px] grid-flow-dense gap-3 md:gap-4 mt-8 px-2 md:px-4" aria-label="แกลลอรี่ภาพงานศิลปะ">
+          <section className="grid grid-cols-12 auto-rows-[8vw] sm:auto-rows-[6vw] md:auto-rows-[60px] xl:auto-rows-[75px] grid-flow-dense gap-2 md:gap-4 mt-8 px-1 md:px-4" aria-label="แกลลอรี่ภาพงานศิลปะ">
             {displayedPhotos.map((photo, index) => {
               const isLastPhoto = displayedPhotos.length === index + 1;
 
@@ -275,8 +276,8 @@ export default function Gallery() {
                           onContextMenu={(e) => e.preventDefault()}
                           onDragStart={(e) => e.preventDefault()}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ink)]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-end p-3 md:p-4">
-                          <p className="text-[var(--paper)] text-xs md:text-sm font-bold font-body truncate drop-shadow-md">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ink)]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-end p-2 md:p-4">
+                          <p className="text-[var(--paper)] text-[10px] md:text-sm font-bold font-body truncate drop-shadow-md">
                             From {photo.uploaderName}
                           </p>
                         </div>
@@ -452,25 +453,19 @@ export default function Gallery() {
 
         .frame-navy {
           background: var(--ink);
-          padding: clamp(8px, 1.2vw, 12px); 
+          padding: clamp(6px, 1.2vw, 12px); 
           box-shadow: 0 6px 16px rgba(23, 50, 77, .15);
         }
 
         .frame-white {
           background: #ffffff;
-          padding: clamp(8px, 1.2vw, 12px);
+          padding: clamp(6px, 1.2vw, 12px);
           border: 1px solid var(--line);
           box-shadow: 0 6px 16px rgba(0, 0, 0, .05);
         }
 
         .art-card:hover .frame {
           box-shadow: 0 16px 28px rgba(23, 50, 77, .25);
-        }
-
-        @media (max-width: 767px) {
-          .art-card {
-            aspect-ratio: 4 / 5;
-          }
         }
       `}} />
     </div>

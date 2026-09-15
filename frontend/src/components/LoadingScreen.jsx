@@ -443,7 +443,7 @@ export default function LoadingScreen({ onComplete }) {
                     </li>
                     <li>
                       <strong>การติดต่อทีมงาน</strong><br />
-                      หากมีข้อสงสัย พบปัญหาในการใช้งานเว็บไซต์ หรือต้องการแจ้งลบข้อมูล/ข้อความของคุณ สามารถติดต่อทีมงานได้ทางอีเมล: <a href="mailto:help.omswh@icloud.com" className="text-blue-500 hover:underline">help.omswh@icloud.com</a>
+                      หากมีข้อสงสัย พบปัญหาในการใช้งานเว็บไซต์ หรือต้องการแจ้งลบข้อมูล/ข้อความของคุณ สามารถติดต่อทีมงานได้ทางอีเมล: <a href="mailto:help.omswh@icloud.com" className="text-blue-500 hover:underline">ONEMORESTEP.Hongshi@icloud.com</a>
                     </li>
                   </ol>
                 </>
@@ -472,7 +472,7 @@ export default function LoadingScreen({ onComplete }) {
                     </li>
                     <li>
                       <strong>Contact the Team</strong><br />
-                      If you have any questions, encounter issues using the website, or wish to request the removal of your data/messages, you can contact the team via email: <a href="mailto:help.omswh@icloud.com" className="text-blue-500 hover:underline">help.omswh@icloud.com</a>
+                      If you have any questions, encounter issues using the website, or wish to request the removal of your data/messages, you can contact the team via email: <a href="mailto:ONEMORESTEP.Hongshi@icloud.com" className="text-blue-500 hover:underline">help.omswh@icloud.com</a>
                     </li>
                   </ol>
                 </>

@@ -37,7 +37,6 @@ export default function Guestbook() {
       const response = await fetch(`${API_URL}/wishes?skip=0&limit=100`);
       if (response.ok) {
         const data = await response.json();
-        // +++ ป้องกันระบบพังจาก Backend ทั้ง 2 เวอร์ชัน +++
         const items = data.items || (Array.isArray(data) ? data : []);
         setWishes(items); 
       }
@@ -240,81 +239,96 @@ export default function Guestbook() {
         ))}
       </div>
 
-      <ScrollReveal delay={300}>
+
+        {/* +++ ปรับ bottom-24 บนมือถือ เพื่อไม่ให้ชน Bottom Navbar (Desktop ใช้ md:bottom-10 เหมือนเดิม) +++ */}
         <button
           onClick={() => setIsModalOpen(true)}
-          className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-40 group flex items-center gap-2 md:gap-3 bg-gradient-to-r from-skyblue to-palepink text-navy px-5 py-3 md:px-7 md:py-4 rounded-full shadow-[0_10px_30px_rgba(110,199,235,0.4)] border-[3px] border-white hover:from-azalea hover:to-palepink hover:text-white hover:shadow-[0_15px_35px_rgba(255,143,171,0.5)] hover:-translate-y-1 transition-all duration-300 pointer-events-auto"
+          className="fixed bottom-24 right-4 md:bottom-10 md:right-10 z-[80] group flex items-center gap-2 md:gap-3 bg-gradient-to-r from-skyblue to-palepink text-navy px-5 py-3 md:px-7 md:py-4 rounded-full shadow-[0_10px_30px_rgba(110,199,235,0.4)] border-[3px] border-white hover:from-azalea hover:to-palepink hover:text-white hover:shadow-[0_15px_35px_rgba(255,143,171,0.5)] hover:-translate-y-1 transition-all duration-300 pointer-events-auto"
           title="Send Wish"
         >
           <span className="text-2xl md:text-3xl group-hover:animate-bounce">💌</span>
           <span className="font-heading font-bold text-sm md:text-lg tracking-wide">{t.guestbook.sendBtn}</span>
         </button>
-      </ScrollReveal>
 
+
+      {/* =========================================
+          ส่วนของ Modal
+      ========================================= */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy/30 backdrop-blur-sm animate-fade-in pointer-events-auto">
-          <div className="bg-white p-8 md:p-10 rounded-[35px] w-[95%] md:w-full max-w-lg shadow-2xl relative max-h-[90vh] overflow-y-auto border-t-8 border-skyblue">
-            <button 
-              onClick={() => {
-                setIsModalOpen(false);
-                setIsConsentGiven(false);
-                if (recaptchaRef.current) recaptchaRef.current.reset();
-              }}
-              className="absolute top-5 right-6 text-navy/40 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center text-xl font-bold transition-colors z-20"
-            >
-              ✕
-            </button>
+        <>
+          <div 
+            className="fixed inset-0 z-[100] bg-navy/30 backdrop-blur-sm animate-fade-in"
+            onClick={() => {
+              setIsModalOpen(false);
+              setIsConsentGiven(false);
+              if (recaptchaRef.current) recaptchaRef.current.reset();
+            }}
+          ></div>
 
-            {showSuccess ? (
-              <div className="text-center py-10 space-y-4">
-                <span className="text-7xl block drop-shadow-md">💌</span>
-                <h3 className="text-2xl font-heading font-bold text-navy">{t.guestbook.successTitle}</h3>
-                <p className="font-body text-navy/70">{successMsg}</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6 font-body text-navy mt-2">
-                <div className="text-center mb-6">
-                  <span className="text-4xl block mb-2">🎈</span>
-                  <h3 className="text-2xl font-heading font-bold text-navy">{t.guestbook.modalTitle}</h3>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="font-bold ml-2 text-sm text-navy/80">{t.guestbook.nameLabel}</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.guestbook.namePlaceholder} className="w-full bg-beige/20 border-2 border-skyblue/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-azalea focus:ring-4 focus:ring-azalea/10 transition-all" required />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="font-bold ml-2 text-sm text-navy/80">{t.guestbook.msgLabel}</label>
-                  <textarea rows="3" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t.guestbook.msgPlaceholder} className="w-full bg-beige/20 border-2 border-skyblue/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-azalea focus:ring-4 focus:ring-azalea/10 transition-all resize-none" required ></textarea>
-                </div>
+          <div className="fixed inset-0 z-[101] flex items-end justify-end pointer-events-none p-4 pb-24 md:p-8">
+            <div className="bg-white p-6 md:p-8 rounded-[35px] w-full md:w-[420px] shadow-2xl relative max-h-[85vh] overflow-y-auto border-t-8 border-skyblue pointer-events-auto animate-fade-in">
+              <button 
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setIsConsentGiven(false);
+                  if (recaptchaRef.current) recaptchaRef.current.reset();
+                }}
+                className="absolute top-5 right-6 text-navy/40 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center text-xl font-bold transition-colors z-20"
+              >
+                ✕
+              </button>
 
-                <div className="flex items-start space-x-3 my-4 p-3 bg-white/50 rounded-xl border border-gray-100">
-                  <input 
-                    type="checkbox" 
-                    id="consentCheck" 
-                    checked={isConsentGiven}
-                    onChange={(e) => setIsConsentGiven(e.target.checked)}
-                    className="mt-1 w-5 h-5 text-skyblue bg-white border-gray-300 rounded focus:ring-skyblue accent-skyblue cursor-pointer"
-                  />
-                  <label htmlFor="consentCheck" className="text-sm font-body text-navy/80 cursor-pointer select-none">
-                    {t.guestbook.modalConsent || "ฉันอนุญาตให้นำข้อความนี้ไปใช้ประกอบคลิปโปรเจกต์วันเกิด หรือกิจกรรมอื่นๆ ที่เกี่ยวข้องกับโปรเจกต์ได้"}
-                  </label>
+              {showSuccess ? (
+                <div className="text-center py-10 space-y-4">
+                  <span className="text-7xl block drop-shadow-md">💌</span>
+                  <h3 className="text-2xl font-heading font-bold text-navy">{t.guestbook.successTitle}</h3>
+                  <p className="font-body text-navy/70">{successMsg}</p>
                 </div>
-                
-                <div className="flex justify-center mt-2 mb-4">
-                  <ReCAPTCHA
-                    ref={recaptchaRef}
-                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY} 
-                  />
-                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6 font-body text-navy mt-2">
+                  <div className="text-center mb-6">
+                    <span className="text-4xl block mb-2">🎈</span>
+                    <h3 className="text-2xl font-heading font-bold text-navy">{t.guestbook.modalTitle}</h3>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="font-bold ml-2 text-sm text-navy/80">{t.guestbook.nameLabel}</label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.guestbook.namePlaceholder} className="w-full bg-beige/20 border-2 border-skyblue/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-azalea focus:ring-4 focus:ring-azalea/10 transition-all" required />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="font-bold ml-2 text-sm text-navy/80">{t.guestbook.msgLabel}</label>
+                    <textarea rows="3" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t.guestbook.msgPlaceholder} className="w-full bg-beige/20 border-2 border-skyblue/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:border-azalea focus:ring-4 focus:ring-azalea/10 transition-all resize-none" required ></textarea>
+                  </div>
 
-                <button type="submit" disabled={isSubmitting} className="w-full font-heading font-bold text-lg px-8 py-4 rounded-2xl shadow-lg transition-all duration-300 bg-skyblue text-navy hover:bg-azalea hover:text-white hover:-translate-y-1">
-                  {isSubmitting ? t.guestbook.submitting : t.guestbook.submitBtn}
-                </button>
-              </form>
-            )}
+                  <div className="flex items-start space-x-3 my-4 p-3 bg-white/50 rounded-xl border border-gray-100">
+                    <input 
+                      type="checkbox" 
+                      id="consentCheck" 
+                      checked={isConsentGiven}
+                      onChange={(e) => setIsConsentGiven(e.target.checked)}
+                      className="mt-1 w-5 h-5 text-skyblue bg-white border-gray-300 rounded focus:ring-skyblue accent-skyblue cursor-pointer"
+                    />
+                    <label htmlFor="consentCheck" className="text-sm font-body text-navy/80 cursor-pointer select-none">
+                      {t.guestbook.modalConsent || "ฉันอนุญาตให้นำข้อความนี้ไปใช้ประกอบคลิปโปรเจกต์วันเกิด หรือกิจกรรมอื่นๆ ที่เกี่ยวข้องกับโปรเจกต์ได้"}
+                    </label>
+                  </div>
+                  
+                  <div className="flex justify-center mt-2 mb-4">
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY} 
+                    />
+                  </div>
+
+                  <button type="submit" disabled={isSubmitting} className="w-full font-heading font-bold text-lg px-8 py-4 rounded-2xl shadow-lg transition-all duration-300 bg-skyblue text-navy hover:bg-azalea hover:text-white hover:-translate-y-1">
+                    {isSubmitting ? t.guestbook.submitting : t.guestbook.submitBtn}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       <style dangerouslySetInnerHTML={{__html: `

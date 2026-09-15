@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
+import ContactUs from '../components/ContactUs';
 
 export default function Credits() {
   const { t } = useLanguage();
@@ -82,6 +83,9 @@ export default function Credits() {
             <p className="text-navy/80 font-body max-w-2xl mx-auto leading-relaxed">
               {t.credits.thanksDesc}
             </p>
+          </div>
+          <div className="mt-16">
+            <ContactUs />
           </div>
         </section>
       </ScrollReveal>
