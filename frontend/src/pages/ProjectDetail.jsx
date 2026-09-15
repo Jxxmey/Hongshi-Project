@@ -35,7 +35,7 @@ export default function ProjectDetail() {
                 <img 
                   src="/assets/solrise.png" 
                   alt="Solrise Logo" 
-                  className="w-14 h-14 object-contain" 
+                  className="w-50 h-50 object-contain" 
                 />
               </div>
             </div>
