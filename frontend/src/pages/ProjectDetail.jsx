@@ -77,12 +77,12 @@ export default function ProjectDetail() {
           
           <div className="mt-8 text-center w-full flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="https://maps.app.goo.gl/vN6xmL9Qi9JJ7RqAA" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-skyblue text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-md hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-lg w-full sm:w-auto justify-center">
+              className="inline-flex items-center gap-2 bg-white text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-sm border-2 border-skyblue hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-lg w-full sm:w-auto justify-center">
               {t.project.mapBtn}
             </a>
 
             {/* +++ เพิ่มปุ่มสำหรับอ่าน FAQ เพราะมักจะเกี่ยวข้องกัน +++ */}
-            <Link to="/faq" className="inline-flex items-center gap-2 bg-white text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-sm border-2 border-skyblue hover:bg-skyblue transition-all hover:-translate-y-1 duration-300 text-lg w-full sm:w-auto justify-center">
+            <Link to="/faq" className="inline-flex items-center gap-2 bg-white text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-sm border-2 border-skyblue hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-lg w-full sm:w-auto justify-center">
               อ่านกฎและข้อควรระวัง (FAQ)
             </Link>
           </div>

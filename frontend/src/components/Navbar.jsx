@@ -109,7 +109,7 @@ export default function Navbar() {
                 alt="Hongshi Logo" 
                 className="h-9 md:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-sm"
               />
-              <span className="hidden sm:block">Hongshi Day</span>
+              <span className="sm:block">Hongshi Day</span>
             </Link>
 
             {/* เมนูสำหรับ Desktop */}
