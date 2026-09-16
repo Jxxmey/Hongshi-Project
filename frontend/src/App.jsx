@@ -16,6 +16,7 @@ import FAQ from './pages/FAQ';
 import Gallery from './pages/Gallery'; 
 import { LanguageProvider } from './contexts/LanguageContext';
 import LoadingScreen from './components/LoadingScreen';
+import CustomCursor from './components/CustomCursor';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -63,7 +64,7 @@ function App() {
       <BrowserRouter>
         {/* +++ 2. เรียกใช้ ScrollToTop ทันทีที่อยู่ใต้ BrowserRouter +++ */}
         <ScrollToTop />
-        
+        <CustomCursor />
         {/* 🎨 พื้นหลังหลัก (Global Background) + ลูกโป่งลอย */}
         <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden bg-gradient-to-b from-[#fffafa] to-[#fdf2f6]">
           {/* 1. วงกลมเบลอ */}

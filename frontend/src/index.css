@@ -16,3 +16,9 @@
 body {
   @apply select-none bg-beige text-navy font-body;
 }
+
+@media (min-width: 768px) {
+  body, button, a, input, textarea {
+    cursor: none !important;
+  }
+}
