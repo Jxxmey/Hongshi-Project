@@ -19,11 +19,9 @@ function useDragScroll() {
     const startDrag = (e) => {
       isDown = true;
       setIsDragging(true);
-      // รองรับทั้งเมาส์และทัชสกรีน
       const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
       startX = pageX - slider.offsetLeft;
       scrollLeft = slider.scrollLeft;
-      // ป้องกันพฤติกรรมดึงหน้าจอของเบราว์เซอร์บางตัว
       if (e.type.includes('mouse')) e.preventDefault(); 
     };
 
@@ -34,10 +32,10 @@ function useDragScroll() {
 
     const doDrag = (e) => {
       if (!isDown) return;
-      e.preventDefault(); // กันลากภาพติดมือ
+      e.preventDefault(); 
       const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
       const x = pageX - slider.offsetLeft;
-      const walk = (x - startX) * 2; // ตัวคูณความเร็วในการลาก
+      const walk = (x - startX) * 2; 
       slider.scrollLeft = scrollLeft - walk;
     };
 
@@ -298,7 +296,7 @@ export default function ArtistProfile() {
         </section>
       </ScrollReveal>
 
-      {/* 5. Sponsor & Brands Section */}
+      {/* +++ 5. Sponsor & Brands Section +++ */}
       <ScrollReveal delay={200}>
         <section className="space-y-6">
           <div className="text-center">
@@ -314,16 +312,17 @@ export default function ArtistProfile() {
             <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
             <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
             
-            {/* นำ Hook scrollRef มาครอบตรงนี้ + ปรับ cursor เวลาลาก */}
+            {/* +++ ถอด snap-x และ snap-mandatory ออกจากคอนเทนเนอร์เพื่อให้เลื่อนได้ลื่นไหล +++ */}
             <div 
               ref={scrollRef}
-              className={`flex gap-4 overflow-x-auto py-6 px-4 md:px-8 snap-x snap-mandatory scrollbar-hide select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              className={`flex gap-4 overflow-x-auto py-6 px-4 md:px-8 scrollbar-hide select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
               style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
             >
               {SPONSORS.map((sponsor, index) => (
                 <div 
                   key={index}
-                  className="flex-none w-[200px] md:w-[260px] snap-center group"
+                  // +++ ถอด snap-center ออกจากการ์ดแต่ละใบ +++
+                  className="flex-none w-[200px] md:w-[260px] group"
                 >
                   <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-palepink hover:border-azalea hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full pointer-events-none">
                     
@@ -348,7 +347,6 @@ export default function ArtistProfile() {
               ))}
             </div>
             
-            {/* ไอคอนสอนให้ผู้ใช้รู้ว่าลากได้ (แสดงเฉพาะตอนไม่ได้ลาก) */}
             <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-azalea/50 text-sm font-bold font-body transition-opacity duration-300 pointer-events-none ${isDragging ? 'opacity-0' : 'opacity-100 animate-pulse'}`}>
               <span>←</span>
               <span>{language === 'th' ? 'เลื่อนเพื่อดูเพิ่มเติม' : 'Swipe to see more'}</span>
