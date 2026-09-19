@@ -131,7 +131,13 @@ export const translations = {
           emoji: '📍',
           title: 'การเดินทางและสถานที่',
           items: [
-            { q: 'เดินทางมาคาเฟ่ยังไง? มีที่จอดรถไหม?', a: 'แนะนำวิธีเดินทางด้วย MRT โดยออกบริเวณทางออก 2B รถยนต์หรือรถจักรยานยนต์มา ลูกค้าสามารถจอดบริเวณลานจอดรถด้านหลังได้เลยครับ' },
+            { 
+              q: 'เดินทางมาคาเฟ่ยังไง? มีที่จอดรถไหม?', 
+              a: `การเดินทาง
+1. MRT สายสีน้ำเงิน ลงสถานีสิรินธร ทางออก 2B
+2. รถเมล์สาย 28, 56, 66, 108 และ 203
+3. มีบริการที่จอดรถฟรี` 
+            },
             { q: 'จำกัดเวลานั่งในร้านไหม?', a: 'เพื่อความสะดวกของทุกคน ขอความร่วมมือนั่งไม่เกิน 45 นาที - 1 ชั่วโมงในช่วงที่มีคนเยอะนะครับ' }
           ]
         },
@@ -289,7 +295,13 @@ export const translations = {
           emoji: '📍',
           title: 'Location & Travel',
           items: [
-            { q: 'How to get there? Is there parking?', a: 'We recommend traveling by MRT and taking Exit 2B. For cars and motorcycles, you can park in the parking lot behind the cafe.' },
+            { 
+              q: 'How to get there? Is there parking?', 
+              a: `Directions:
+1. Blue Line MRT to Sirindhorn Station, Exit 2B
+2. Bus routes: 28, 56, 66, 108, and 203
+3. Free parking is available.` 
+            },
             { q: 'Is there a time limit for seating?', a: 'For everyone\'s convenience, we kindly ask you to limit your seating to 45 mins - 1 hour during peak times.' }
           ]
         },

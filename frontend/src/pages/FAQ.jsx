@@ -47,6 +47,8 @@ export default function FAQ() {
                     >
                       <button
                         onClick={() => toggleAccordion(index)}
+                        aria-expanded={isOpen}
+                        aria-controls={`faq-answer-${index}`}
                         className="w-full text-left px-5 py-4 flex justify-between items-center gap-4 focus:outline-none"
                       >
                         <span className={`font-bold text-lg md:text-xl transition-colors ${isOpen ? 'text-azalea' : 'text-navy'}`}>
@@ -57,11 +59,19 @@ export default function FAQ() {
                         </span>
                       </button>
                       
+                      {/* +++ เปลี่ยนมาใช้ Grid Animation และเพิ่ม whitespace-pre-line +++ */}
                       <div 
-                        className={`transition-all duration-300 ease-in-out px-5 text-navy/80 leading-relaxed ${isOpen ? 'max-h-40 pb-5 opacity-100' : 'max-h-0 py-0 opacity-0'}`}
+                        id={`faq-answer-${index}`}
+                        className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
                       >
-                        <strong className="text-azalea">A:</strong> {item.a}
+                        <div className="overflow-hidden">
+                          <div className="px-5 pb-5 text-navy/80 leading-relaxed whitespace-pre-line">
+                            <strong className="text-azalea">A: </strong> 
+                            {item.a}
+                          </div>
+                        </div>
                       </div>
+                      
                     </div>
                   );
                 })}

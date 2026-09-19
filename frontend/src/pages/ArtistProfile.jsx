@@ -125,7 +125,7 @@ export default function ArtistProfile() {
       </ScrollReveal>
 
       {/* 3. The Journey to Stardom */}
-      <ScrollReveal delay={200}>
+<ScrollReveal delay={200}>
         <section className="space-y-8">
           <div className="text-center">
             <h2 className="text-3xl font-heading font-bold text-navy">{t.profile.journeyTitle}</h2>
@@ -136,7 +136,45 @@ export default function ArtistProfile() {
                 <div className={`absolute w-5 h-5 bg-skyblue rounded-full -left-[10.5px] ${i % 2 === 0 ? 'md:left-[100%] md:-ml-[10.5px]' : ''} top-1 border-4 border-white shadow-sm`}></div>
                 <p className="text-sm font-bold text-azalea mb-1">{item.date}</p>
                 <h4 className="text-xl font-bold text-navy">{item.title}</h4>
-                <p className="text-navy mt-2 bg-white p-4 rounded-xl shadow-sm inline-block">{item.desc}</p>
+                
+                {/* +++ ปรับโครงสร้างเพื่อรองรับรูปภาพ/วิดีโอ +++ */}
+                <div className={`mt-3 flex flex-col gap-4 ${i % 2 === 0 ? 'md:items-end' : 'md:items-start'}`}>
+                  
+                  <p className="text-navy bg-white p-4 rounded-xl shadow-sm inline-block text-left max-w-md">
+                    {item.desc}
+                  </p>
+                  
+                  {/* แสดงวิดีโอ 2.mp4 สำหรับข้อที่ 2 (index === 1) */}
+                  {i === 1 && (
+                    <video 
+                      src="/assets/profile/2.mp4" 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline 
+                      className="w-full max-w-[320px] rounded-xl shadow-sm border-4 border-white object-cover"
+                    />
+                  )}
+
+                  {/* แสดงภาพ 3.jpg สำหรับข้อที่ 3 (index === 2) */}
+                  {i === 2 && (
+                    <img 
+                      src="/assets/profile/3.jpg" 
+                      alt={item.title} 
+                      className="w-full max-w-[320px] rounded-xl shadow-sm border-4 border-white object-cover"
+                    />
+                  )}
+
+                  {/* แสดงภาพ 4.jpg สำหรับข้อที่ 4 (index === 3) */}
+                  {i === 3 && (
+                    <img 
+                      src="/assets/profile/4.jpg" 
+                      alt={item.title} 
+                      className="w-full max-w-[320px] rounded-xl shadow-sm border-4 border-white object-cover"
+                    />
+                  )}
+
+                </div>
               </div>
             ))}
           </div>

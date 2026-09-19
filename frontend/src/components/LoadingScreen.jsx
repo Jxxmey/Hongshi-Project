@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import CustomCursor from './CustomCursor'; // +++ 1. Import Custom Cursor เข้ามาใช้งาน +++
 
 export default function LoadingScreen({ onComplete }) {
   const [progress, setProgress] = useState(0);
@@ -62,6 +63,9 @@ export default function LoadingScreen({ onComplete }) {
 
   return (
     <>
+      {/* +++ 2. เรียกใช้งาน CustomCursor ในหน้านี้ด้วย +++ */}
+      <CustomCursor />
+      
       <style>
         {`
           :root {
