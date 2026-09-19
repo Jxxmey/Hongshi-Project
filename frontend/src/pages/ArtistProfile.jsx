@@ -1,6 +1,94 @@
+import { useState, useRef, useEffect } from 'react';
 import ImageSkeleton from '../components/ImageSkeleton'; 
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
+
+// --- Custom Hook: ลื่นไหล + วนลูปไม่รู้จบ + เอามือลากได้ ---
+function useInfiniteScroll(speed = 1) {
+  const ref = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const isDownRef = useRef(false);
+  const animationRef = useRef(null);
+
+  useEffect(() => {
+    const slider = ref.current;
+    if (!slider) return;
+
+    let startX;
+    let scrollLeft;
+
+    // ฟังก์ชันเลื่อนอัตโนมัติ (60 FPS)
+    const autoScroll = () => {
+      if (!isDownRef.current && slider) {
+        slider.scrollLeft += speed;
+
+        // วนลูป: ถ้าเลื่อนไปเกินครึ่งนึง (ซึ่งเป็นจุดจบของชุดแรก) ให้เด้งกลับไปที่ 0
+        if (slider.scrollLeft >= slider.scrollWidth / 2) {
+          slider.scrollLeft -= slider.scrollWidth / 2;
+        } else if (slider.scrollLeft <= 0) {
+          slider.scrollLeft += slider.scrollWidth / 2;
+        }
+      }
+      animationRef.current = requestAnimationFrame(autoScroll);
+    };
+
+    // เริ่มแอนิเมชัน
+    animationRef.current = requestAnimationFrame(autoScroll);
+
+    // --- ระบบ Drag & Scroll ---
+    const startDrag = (e) => {
+      isDownRef.current = true;
+      setIsDragging(true);
+      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+      startX = pageX - slider.offsetLeft;
+      scrollLeft = slider.scrollLeft;
+    };
+
+    const stopDrag = () => {
+      isDownRef.current = false;
+      setIsDragging(false);
+    };
+
+    const doDrag = (e) => {
+      if (!isDownRef.current) return;
+      e.preventDefault(); 
+      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+      const x = pageX - slider.offsetLeft;
+      const walk = (x - startX) * 2; 
+      slider.scrollLeft = scrollLeft - walk;
+
+      // วนลูปตอนลากด้วยนิ้ว
+      if (slider.scrollLeft >= slider.scrollWidth / 2) {
+        slider.scrollLeft -= slider.scrollWidth / 2;
+      } else if (slider.scrollLeft <= 0) {
+        slider.scrollLeft += slider.scrollWidth / 2;
+      }
+    };
+
+    slider.addEventListener('mousedown', startDrag);
+    slider.addEventListener('touchstart', startDrag, { passive: true });
+
+    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener('touchend', stopDrag);
+    
+    slider.addEventListener('mousemove', doDrag);
+    slider.addEventListener('touchmove', doDrag, { passive: false });
+
+    return () => {
+      cancelAnimationFrame(animationRef.current);
+      slider.removeEventListener('mousedown', startDrag);
+      slider.removeEventListener('touchstart', startDrag);
+      window.removeEventListener('mouseup', stopDrag);
+      window.removeEventListener('touchend', stopDrag);
+      slider.removeEventListener('mousemove', doDrag);
+      slider.removeEventListener('touchmove', doDrag);
+    };
+  }, [speed]);
+
+  return { ref, isDragging };
+}
+// ----------------------------------------------
+
 
 // ไอคอน SVG สำหรับ Social Media
 const IconIG = () => (
@@ -28,6 +116,12 @@ const SPONSORS = [
 
 export default function ArtistProfile() {
   const { t, language } = useLanguage();
+  
+  // นำ Custom Hook มาใช้งาน (ปรับตัวเลข speed ได้ตามชอบ เช่น 0.8, 1, 1.5)
+  const { ref: scrollRef, isDragging } = useInfiniteScroll(1);
+
+  // นำ SPONSORS มาต่อกัน 2 รอบ เพื่อสร้างลูปหลอกตา (Infinite Effect)
+  const loopedSponsors = [...SPONSORS, ...SPONSORS];
 
   return (
     <div className="py-12 px-4 max-w-5xl mx-auto space-y-20 selection:bg-azalea selection:text-white pb-20">
@@ -156,6 +250,7 @@ export default function ArtistProfile() {
                     {item.desc}
                   </p>
                   
+                  {/* แสดงวิดีโอ 2.mp4 สำหรับข้อที่ 2 (index === 1) */}
                   {i === 1 && (
                     <video 
                       src="/assets/profile/2.mp4" 
@@ -167,6 +262,7 @@ export default function ArtistProfile() {
                     />
                   )}
 
+                  {/* แสดงภาพ 3.jpg สำหรับข้อที่ 3 (index === 2) */}
                   {i === 2 && (
                     <img 
                       src="/assets/profile/3.jpg" 
@@ -175,6 +271,7 @@ export default function ArtistProfile() {
                     />
                   )}
 
+                  {/* แสดงภาพ 4.jpg สำหรับข้อที่ 4 (index === 3) */}
                   {i === 3 && (
                     <img 
                       src="/assets/profile/4.jpg" 
@@ -231,7 +328,7 @@ export default function ArtistProfile() {
 
       {/* +++ 5. Sponsor & Brands Section +++ */}
       <ScrollReveal delay={200}>
-        <section className="space-y-6 overflow-hidden">
+        <section className="space-y-6">
           <div className="text-center">
             <h2 className="text-3xl font-heading font-bold text-navy">
               {language === 'th' ? 'แบรนด์ที่ไว้วางใจฮงชิ' : 'Trusted by Brands'}
@@ -242,86 +339,50 @@ export default function ArtistProfile() {
           </div>
 
           <div className="w-full relative">
-            {/* เงาซ้าย-ขวา */}
-            <div className="absolute left-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-r from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-l from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
             
-            {/* 
-              กล่องครอบ Slider สำหรับ CSS Animation
-              สามารถเปลี่ยนความเร็วในการเลื่อนได้ที่ class: duration-[30s]
-            */}
-            <div className="flex w-[200%] gap-4 py-6 px-4 md:px-8 hover:[&>div]:pause-animation">
-              
-              {/* ชุดที่ 1 */}
-              <div className="flex gap-4 animate-infinite-scroll w-1/2">
-                {SPONSORS.map((sponsor, index) => (
-                  <div key={`set1-${index}`} className="flex-none w-[200px] md:w-[260px] group cursor-pointer">
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-palepink hover:border-azalea hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full pointer-events-none">
-                      <div className="w-full aspect-square rounded-xl overflow-hidden bg-beige/30 mb-4 relative pointer-events-none">
-                        <ImageSkeleton 
-                          src={`/assets/sponsor/${sponsor.file}`} 
-                          alt={sponsor.name}
-                          containerClassName="absolute inset-0 w-full h-full"
-                          imageClassName="w-full h-full object-contain p-2"
-                        />
-                      </div>
-                      <div className="text-center mt-auto pointer-events-none">
-                        <h4 className="font-heading font-bold text-navy text-sm md:text-base">
-                          {sponsor.name}
-                        </h4>
-                      </div>
+            {/* โครงสร้าง Slider แบบแถวเดียว (ไม่ซ้อน) ซ่อน Scrollbar */}
+            <div 
+              ref={scrollRef}
+              className={`flex gap-4 overflow-x-hidden py-6 px-4 md:px-8 select-none whitespace-nowrap ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              style={{ scrollBehavior: 'auto' }}
+            >
+              {loopedSponsors.map((sponsor, index) => (
+                <div 
+                  key={index}
+                  className="inline-block flex-none w-[200px] md:w-[260px]"
+                >
+                  <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-palepink hover:border-azalea hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full pointer-events-none">
+                    
+                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-beige/30 mb-4 relative pointer-events-none">
+                      <ImageSkeleton 
+                        src={`/assets/sponsor/${sponsor.file}`} 
+                        alt={sponsor.name}
+                        containerClassName="absolute inset-0 w-full h-full"
+                        imageClassName="w-full h-full object-contain p-2"
+                        onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
+                      />
+                    </div>
+                    
+                    <div className="text-center mt-auto pointer-events-none whitespace-normal">
+                      <h4 className="font-heading font-bold text-navy text-sm md:text-base">
+                        {sponsor.name}
+                      </h4>
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {/* ชุดที่ 2 (โคลนจากชุด 1 เพื่อความเนียน) */}
-              <div className="flex gap-4 animate-infinite-scroll w-1/2">
-                {SPONSORS.map((sponsor, index) => (
-                  <div key={`set2-${index}`} className="flex-none w-[200px] md:w-[260px] group cursor-pointer">
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-palepink hover:border-azalea hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full pointer-events-none">
-                      <div className="w-full aspect-square rounded-xl overflow-hidden bg-beige/30 mb-4 relative pointer-events-none">
-                        <ImageSkeleton 
-                          src={`/assets/sponsor/${sponsor.file}`} 
-                          alt={sponsor.name}
-                          containerClassName="absolute inset-0 w-full h-full"
-                          imageClassName="w-full h-full object-contain p-2"
-                        />
-                      </div>
-                      <div className="text-center mt-auto pointer-events-none">
-                        <h4 className="font-heading font-bold text-navy text-sm md:text-base">
-                          {sponsor.name}
-                        </h4>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
+                </div>
+              ))}
+            </div>
+            
+            <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-azalea/50 text-sm font-bold font-body transition-opacity duration-300 pointer-events-none ${isDragging ? 'opacity-0' : 'opacity-100 animate-pulse'}`}>
+              <span>←</span>
+              <span>{language === 'th' ? 'เลื่อนเพื่อดูเพิ่มเติม' : 'Swipe to see more'}</span>
+              <span>→</span>
             </div>
 
           </div>
-
-          {/* สไตล์สำหรับ CSS Animation การเลื่อนอัตโนมัติ */}
-          <style dangerouslySetInnerHTML={{__html: `
-            @keyframes infinite-scroll {
-              from { transform: translateX(0); }
-              /* ลบระยะห่าง gap-4 (1rem) ครึ่งนึงเพื่อให้วนลูปเนียนกริบ */
-              to { transform: translateX(calc(-100% - 0.5rem)); }
-            }
-            .animate-infinite-scroll {
-              animation: infinite-scroll 40s linear infinite;
-            }
-            /* หยุดชั่วคราวเมื่อเอาเมาส์ชี้หรือใช้นิ้วแตะค้าง */
-            .pause-animation {
-              animation-play-state: paused !important;
-            }
-            @media (max-width: 768px) {
-              .animate-infinite-scroll {
-                animation: infinite-scroll 30s linear infinite;
-              }
-            }
-          `}} />
         </section>
       </ScrollReveal>
 
@@ -344,6 +405,7 @@ export default function ArtistProfile() {
                   </div>
                 </div>
 
+                {/* วิดีโอช่องแรก: ThamePo Trailer */}
                 {index === 0 && (
                   <div className="w-full mt-2 aspect-video rounded-xl overflow-hidden relative bg-gray-100 shadow-inner">
                     <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
@@ -363,6 +425,7 @@ export default function ArtistProfile() {
                   </div>
                 )}
 
+                {/* วิดีโอช่องที่สอง: I Love 'A Lot Of' You (รก(รัก)นะน้องชาย) */}
                 {index === 1 && (
                   <div className="w-full mt-2 aspect-video rounded-xl overflow-hidden relative bg-gray-100 shadow-inner">
                     <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
