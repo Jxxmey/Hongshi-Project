@@ -1,91 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
 import ImageSkeleton from '../components/ImageSkeleton'; 
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
-
-// --- Custom Hook: Drag + Infinite Auto Scroll ---
-function useDragScroll(speed = 0.5) {
-  const ref = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const animationRef = useRef(null);
-  const isDownRef = useRef(false);
-
-  useEffect(() => {
-    const slider = ref.current;
-    if (!slider) return;
-
-    let startX;
-    let scrollLeft;
-
-    // 1. ฟังก์ชันเลื่อนอัตโนมัติ
-    const autoScroll = () => {
-      // ถ้ากำลังเอามือจับลากอยู่ ให้หยุดเลื่อนอัตโนมัติ
-      if (!isDownRef.current && slider) {
-        slider.scrollLeft += speed;
-
-        // วนลูป (Infinite Loop): ถ้าระยะ Scroll ไปถึงครึ่งทาง (เพราะเราโคลนการ์ดมาเบิ้ล 2 เท่า)
-        // ให้เด้งกลับไปจุดเริ่มต้นแบบเนียนๆ (ผู้ใช้จะมองไม่ทัน)
-        if (slider.scrollLeft >= slider.scrollWidth / 2) {
-          slider.scrollLeft = 0;
-        } else if (slider.scrollLeft <= 0) {
-           slider.scrollLeft = slider.scrollWidth / 2;
-        }
-      }
-      animationRef.current = requestAnimationFrame(autoScroll);
-    };
-
-    // เริ่มรัน Auto Scroll ทันที
-    animationRef.current = requestAnimationFrame(autoScroll);
-
-    // 2. ฟังก์ชันจับการลากเมาส์ / นิ้ว
-    const startDrag = (e) => {
-      isDownRef.current = true;
-      setIsDragging(true);
-      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-      startX = pageX - slider.offsetLeft;
-      scrollLeft = slider.scrollLeft;
-      if (e.type.includes('mouse')) e.preventDefault(); 
-    };
-
-    const stopDrag = () => {
-      isDownRef.current = false;
-      setIsDragging(false);
-    };
-
-    const doDrag = (e) => {
-      if (!isDownRef.current) return;
-      e.preventDefault(); 
-      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-      const x = pageX - slider.offsetLeft;
-      const walk = (x - startX) * 2; 
-      slider.scrollLeft = scrollLeft - walk;
-    };
-
-    slider.addEventListener('mousedown', startDrag);
-    slider.addEventListener('touchstart', startDrag, { passive: true });
-
-    window.addEventListener('mouseup', stopDrag);
-    window.addEventListener('touchend', stopDrag);
-    
-    slider.addEventListener('mousemove', doDrag);
-    slider.addEventListener('touchmove', doDrag, { passive: false });
-
-    // Cleanup เมื่อออกหน้านี้
-    return () => {
-      cancelAnimationFrame(animationRef.current);
-      slider.removeEventListener('mousedown', startDrag);
-      slider.removeEventListener('touchstart', startDrag);
-      window.removeEventListener('mouseup', stopDrag);
-      window.removeEventListener('touchend', stopDrag);
-      slider.removeEventListener('mousemove', doDrag);
-      slider.removeEventListener('touchmove', doDrag);
-    };
-  }, [speed]);
-
-  return { ref, isDragging };
-}
-// ----------------------------------------------
-
 
 // ไอคอน SVG สำหรับ Social Media
 const IconIG = () => (
@@ -113,12 +28,6 @@ const SPONSORS = [
 
 export default function ArtistProfile() {
   const { t, language } = useLanguage();
-  
-  // นำ Custom Hook มาใช้งาน (กำหนดความเร็ว Auto Scroll เป็น 0.8)
-  const { ref: scrollRef, isDragging } = useDragScroll(0.8);
-
-  // นำ SPONSORS มาต่อกัน 2 รอบ เพื่อสร้างลูปหลอกตา (Infinite Effect)
-  const loopedSponsors = [...SPONSORS, ...SPONSORS];
 
   return (
     <div className="py-12 px-4 max-w-5xl mx-auto space-y-20 selection:bg-azalea selection:text-white pb-20">
@@ -320,9 +229,9 @@ export default function ArtistProfile() {
         </section>
       </ScrollReveal>
 
-      {/* 5. Sponsor & Brands Section */}
+      {/* +++ 5. Sponsor & Brands Section +++ */}
       <ScrollReveal delay={200}>
-        <section className="space-y-6">
+        <section className="space-y-6 overflow-hidden">
           <div className="text-center">
             <h2 className="text-3xl font-heading font-bold text-navy">
               {language === 'th' ? 'แบรนด์ที่ไว้วางใจฮงชิ' : 'Trusted by Brands'}
@@ -333,59 +242,84 @@ export default function ArtistProfile() {
           </div>
 
           <div className="w-full relative">
-            <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
+            {/* เงาซ้าย-ขวา */}
+            <div className="absolute left-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-r from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-12 md:w-20 bg-gradient-to-l from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
             
-            <div 
-              ref={scrollRef}
-              className={`flex gap-4 overflow-x-auto py-6 px-4 md:px-8 scrollbar-hide select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-              // ปิด scroll-behavior ให้ลื่นไหลที่สุดตอนโดน requestAnimationFrame ควบคุม
-              style={{ scrollBehavior: 'auto' }}
-            >
-              {/* ใช้ loopedSponsors ที่โคลน 2 ชุดแล้ว */}
-              {loopedSponsors.map((sponsor, index) => (
-                <div 
-                  key={index}
-                  className="flex-none w-[200px] md:w-[260px] group"
-                >
-                  <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-palepink hover:border-azalea hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full pointer-events-none">
-                    
-                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-beige/30 mb-4 relative pointer-events-none">
-                      <ImageSkeleton 
-                        src={`/assets/sponsor/${sponsor.file}`} 
-                        alt={sponsor.name}
-                        containerClassName="absolute inset-0 w-full h-full"
-                        imageClassName="w-full h-full object-contain p-2"
-                        onContextMenu={(e) => e.preventDefault()}
-                        onDragStart={(e) => e.preventDefault()}
-                      />
-                    </div>
-                    
-                    <div className="text-center mt-auto pointer-events-none">
-                      <h4 className="font-heading font-bold text-navy text-sm md:text-base">
-                        {sponsor.name}
-                      </h4>
+            {/* 
+              กล่องครอบ Slider สำหรับ CSS Animation
+              สามารถเปลี่ยนความเร็วในการเลื่อนได้ที่ class: duration-[30s]
+            */}
+            <div className="flex w-[200%] gap-4 py-6 px-4 md:px-8 hover:[&>div]:pause-animation">
+              
+              {/* ชุดที่ 1 */}
+              <div className="flex gap-4 animate-infinite-scroll w-1/2">
+                {SPONSORS.map((sponsor, index) => (
+                  <div key={`set1-${index}`} className="flex-none w-[200px] md:w-[260px] group cursor-pointer">
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-palepink hover:border-azalea hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full pointer-events-none">
+                      <div className="w-full aspect-square rounded-xl overflow-hidden bg-beige/30 mb-4 relative pointer-events-none">
+                        <ImageSkeleton 
+                          src={`/assets/sponsor/${sponsor.file}`} 
+                          alt={sponsor.name}
+                          containerClassName="absolute inset-0 w-full h-full"
+                          imageClassName="w-full h-full object-contain p-2"
+                        />
+                      </div>
+                      <div className="text-center mt-auto pointer-events-none">
+                        <h4 className="font-heading font-bold text-navy text-sm md:text-base">
+                          {sponsor.name}
+                        </h4>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-azalea/50 text-sm font-bold font-body transition-opacity duration-300 pointer-events-none ${isDragging ? 'opacity-0' : 'opacity-100 animate-pulse'}`}>
-              <span>←</span>
-              <span>{language === 'th' ? 'เลื่อนเพื่อดูเพิ่มเติม' : 'Swipe to see more'}</span>
-              <span>→</span>
+                ))}
+              </div>
+
+              {/* ชุดที่ 2 (โคลนจากชุด 1 เพื่อความเนียน) */}
+              <div className="flex gap-4 animate-infinite-scroll w-1/2">
+                {SPONSORS.map((sponsor, index) => (
+                  <div key={`set2-${index}`} className="flex-none w-[200px] md:w-[260px] group cursor-pointer">
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-palepink hover:border-azalea hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full pointer-events-none">
+                      <div className="w-full aspect-square rounded-xl overflow-hidden bg-beige/30 mb-4 relative pointer-events-none">
+                        <ImageSkeleton 
+                          src={`/assets/sponsor/${sponsor.file}`} 
+                          alt={sponsor.name}
+                          containerClassName="absolute inset-0 w-full h-full"
+                          imageClassName="w-full h-full object-contain p-2"
+                        />
+                      </div>
+                      <div className="text-center mt-auto pointer-events-none">
+                        <h4 className="font-heading font-bold text-navy text-sm md:text-base">
+                          {sponsor.name}
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
             </div>
 
           </div>
 
+          {/* สไตล์สำหรับ CSS Animation การเลื่อนอัตโนมัติ */}
           <style dangerouslySetInnerHTML={{__html: `
-            .scrollbar-hide::-webkit-scrollbar {
-                display: none;
+            @keyframes infinite-scroll {
+              from { transform: translateX(0); }
+              /* ลบระยะห่าง gap-4 (1rem) ครึ่งนึงเพื่อให้วนลูปเนียนกริบ */
+              to { transform: translateX(calc(-100% - 0.5rem)); }
             }
-            .scrollbar-hide {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
+            .animate-infinite-scroll {
+              animation: infinite-scroll 40s linear infinite;
+            }
+            /* หยุดชั่วคราวเมื่อเอาเมาส์ชี้หรือใช้นิ้วแตะค้าง */
+            .pause-animation {
+              animation-play-state: paused !important;
+            }
+            @media (max-width: 768px) {
+              .animate-infinite-scroll {
+                animation: infinite-scroll 30s linear infinite;
+              }
             }
           `}} />
         </section>
