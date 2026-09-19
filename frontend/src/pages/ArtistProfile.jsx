@@ -3,21 +3,43 @@ import ImageSkeleton from '../components/ImageSkeleton';
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
 
-// --- Custom Hook สำหรับระบบ Drag-to-Scroll ---
-function useDragScroll() {
+// --- Custom Hook: Drag + Infinite Auto Scroll ---
+function useDragScroll(speed = 0.5) {
   const ref = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
-  
+  const animationRef = useRef(null);
+  const isDownRef = useRef(false);
+
   useEffect(() => {
     const slider = ref.current;
     if (!slider) return;
 
-    let isDown = false;
     let startX;
     let scrollLeft;
 
+    // 1. ฟังก์ชันเลื่อนอัตโนมัติ
+    const autoScroll = () => {
+      // ถ้ากำลังเอามือจับลากอยู่ ให้หยุดเลื่อนอัตโนมัติ
+      if (!isDownRef.current && slider) {
+        slider.scrollLeft += speed;
+
+        // วนลูป (Infinite Loop): ถ้าระยะ Scroll ไปถึงครึ่งทาง (เพราะเราโคลนการ์ดมาเบิ้ล 2 เท่า)
+        // ให้เด้งกลับไปจุดเริ่มต้นแบบเนียนๆ (ผู้ใช้จะมองไม่ทัน)
+        if (slider.scrollLeft >= slider.scrollWidth / 2) {
+          slider.scrollLeft = 0;
+        } else if (slider.scrollLeft <= 0) {
+           slider.scrollLeft = slider.scrollWidth / 2;
+        }
+      }
+      animationRef.current = requestAnimationFrame(autoScroll);
+    };
+
+    // เริ่มรัน Auto Scroll ทันที
+    animationRef.current = requestAnimationFrame(autoScroll);
+
+    // 2. ฟังก์ชันจับการลากเมาส์ / นิ้ว
     const startDrag = (e) => {
-      isDown = true;
+      isDownRef.current = true;
       setIsDragging(true);
       const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
       startX = pageX - slider.offsetLeft;
@@ -26,12 +48,12 @@ function useDragScroll() {
     };
 
     const stopDrag = () => {
-      isDown = false;
+      isDownRef.current = false;
       setIsDragging(false);
     };
 
     const doDrag = (e) => {
-      if (!isDown) return;
+      if (!isDownRef.current) return;
       e.preventDefault(); 
       const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
       const x = pageX - slider.offsetLeft;
@@ -48,7 +70,9 @@ function useDragScroll() {
     slider.addEventListener('mousemove', doDrag);
     slider.addEventListener('touchmove', doDrag, { passive: false });
 
+    // Cleanup เมื่อออกหน้านี้
     return () => {
+      cancelAnimationFrame(animationRef.current);
       slider.removeEventListener('mousedown', startDrag);
       slider.removeEventListener('touchstart', startDrag);
       window.removeEventListener('mouseup', stopDrag);
@@ -56,7 +80,7 @@ function useDragScroll() {
       slider.removeEventListener('mousemove', doDrag);
       slider.removeEventListener('touchmove', doDrag);
     };
-  }, []);
+  }, [speed]);
 
   return { ref, isDragging };
 }
@@ -90,8 +114,11 @@ const SPONSORS = [
 export default function ArtistProfile() {
   const { t, language } = useLanguage();
   
-  // นำ Custom Hook มาใช้งาน
-  const { ref: scrollRef, isDragging } = useDragScroll();
+  // นำ Custom Hook มาใช้งาน (กำหนดความเร็ว Auto Scroll เป็น 0.8)
+  const { ref: scrollRef, isDragging } = useDragScroll(0.8);
+
+  // นำ SPONSORS มาต่อกัน 2 รอบ เพื่อสร้างลูปหลอกตา (Infinite Effect)
+  const loopedSponsors = [...SPONSORS, ...SPONSORS];
 
   return (
     <div className="py-12 px-4 max-w-5xl mx-auto space-y-20 selection:bg-azalea selection:text-white pb-20">
@@ -220,7 +247,6 @@ export default function ArtistProfile() {
                     {item.desc}
                   </p>
                   
-                  {/* แสดงวิดีโอ 2.mp4 สำหรับข้อที่ 2 (index === 1) */}
                   {i === 1 && (
                     <video 
                       src="/assets/profile/2.mp4" 
@@ -232,7 +258,6 @@ export default function ArtistProfile() {
                     />
                   )}
 
-                  {/* แสดงภาพ 3.jpg สำหรับข้อที่ 3 (index === 2) */}
                   {i === 2 && (
                     <img 
                       src="/assets/profile/3.jpg" 
@@ -241,7 +266,6 @@ export default function ArtistProfile() {
                     />
                   )}
 
-                  {/* แสดงภาพ 4.jpg สำหรับข้อที่ 4 (index === 3) */}
                   {i === 3 && (
                     <img 
                       src="/assets/profile/4.jpg" 
@@ -296,7 +320,7 @@ export default function ArtistProfile() {
         </section>
       </ScrollReveal>
 
-      {/* +++ 5. Sponsor & Brands Section +++ */}
+      {/* 5. Sponsor & Brands Section */}
       <ScrollReveal delay={200}>
         <section className="space-y-6">
           <div className="text-center">
@@ -312,16 +336,16 @@ export default function ArtistProfile() {
             <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
             <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
             
-            {/* +++ ถอด snap-x และ snap-mandatory ออกจากคอนเทนเนอร์เพื่อให้เลื่อนได้ลื่นไหล +++ */}
             <div 
               ref={scrollRef}
               className={`flex gap-4 overflow-x-auto py-6 px-4 md:px-8 scrollbar-hide select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-              style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
+              // ปิด scroll-behavior ให้ลื่นไหลที่สุดตอนโดน requestAnimationFrame ควบคุม
+              style={{ scrollBehavior: 'auto' }}
             >
-              {SPONSORS.map((sponsor, index) => (
+              {/* ใช้ loopedSponsors ที่โคลน 2 ชุดแล้ว */}
+              {loopedSponsors.map((sponsor, index) => (
                 <div 
                   key={index}
-                  // +++ ถอด snap-center ออกจากการ์ดแต่ละใบ +++
                   className="flex-none w-[200px] md:w-[260px] group"
                 >
                   <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-palepink hover:border-azalea hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full pointer-events-none">
@@ -386,7 +410,6 @@ export default function ArtistProfile() {
                   </div>
                 </div>
 
-                {/* วิดีโอช่องแรก: ThamePo Trailer */}
                 {index === 0 && (
                   <div className="w-full mt-2 aspect-video rounded-xl overflow-hidden relative bg-gray-100 shadow-inner">
                     <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
@@ -406,7 +429,6 @@ export default function ArtistProfile() {
                   </div>
                 )}
 
-                {/* วิดีโอช่องที่สอง: I Love 'A Lot Of' You (รก(รัก)นะน้องชาย) */}
                 {index === 1 && (
                   <div className="w-full mt-2 aspect-video rounded-xl overflow-hidden relative bg-gray-100 shadow-inner">
                     <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
