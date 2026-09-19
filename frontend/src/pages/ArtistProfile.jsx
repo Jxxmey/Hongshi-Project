@@ -1,6 +1,69 @@
+import { useState, useRef, useEffect } from 'react';
 import ImageSkeleton from '../components/ImageSkeleton'; 
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
+
+// --- Custom Hook สำหรับระบบ Drag-to-Scroll ---
+function useDragScroll() {
+  const ref = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  useEffect(() => {
+    const slider = ref.current;
+    if (!slider) return;
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    const startDrag = (e) => {
+      isDown = true;
+      setIsDragging(true);
+      // รองรับทั้งเมาส์และทัชสกรีน
+      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+      startX = pageX - slider.offsetLeft;
+      scrollLeft = slider.scrollLeft;
+      // ป้องกันพฤติกรรมดึงหน้าจอของเบราว์เซอร์บางตัว
+      if (e.type.includes('mouse')) e.preventDefault(); 
+    };
+
+    const stopDrag = () => {
+      isDown = false;
+      setIsDragging(false);
+    };
+
+    const doDrag = (e) => {
+      if (!isDown) return;
+      e.preventDefault(); // กันลากภาพติดมือ
+      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+      const x = pageX - slider.offsetLeft;
+      const walk = (x - startX) * 2; // ตัวคูณความเร็วในการลาก
+      slider.scrollLeft = scrollLeft - walk;
+    };
+
+    slider.addEventListener('mousedown', startDrag);
+    slider.addEventListener('touchstart', startDrag, { passive: true });
+
+    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener('touchend', stopDrag);
+    
+    slider.addEventListener('mousemove', doDrag);
+    slider.addEventListener('touchmove', doDrag, { passive: false });
+
+    return () => {
+      slider.removeEventListener('mousedown', startDrag);
+      slider.removeEventListener('touchstart', startDrag);
+      window.removeEventListener('mouseup', stopDrag);
+      window.removeEventListener('touchend', stopDrag);
+      slider.removeEventListener('mousemove', doDrag);
+      slider.removeEventListener('touchmove', doDrag);
+    };
+  }, []);
+
+  return { ref, isDragging };
+}
+// ----------------------------------------------
+
 
 // ไอคอน SVG สำหรับ Social Media
 const IconIG = () => (
@@ -13,8 +76,24 @@ const IconTikTok = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"></path></svg>
 );
 
+// รายชื่อรูปสปอนเซอร์ทั้งหมด
+const SPONSORS = [
+  { name: 'Beng Beng', file: 'bengbeng.jpg' },
+  { name: 'Honda Scoopy', file: 'scoopy.jpg' },
+  { name: 'Dutch Mill', file: 'dutchmill.jpg' },
+  { name: 'Catcha', file: 'catcha.jpg' },
+  { name: 'Toro', file: 'toro.jpg' },
+  { name: 'Eversense', file: 'eversense.jpg' },
+  { name: 'Smooto', file: 'smooto.jpg' },
+  { name: 'Makro', file: 'makro.jpg' },
+  { name: 'Friendly Me', file: 'friendlyme.jpg' },
+];
+
 export default function ArtistProfile() {
   const { t, language } = useLanguage();
+  
+  // นำ Custom Hook มาใช้งาน
+  const { ref: scrollRef, isDragging } = useDragScroll();
 
   return (
     <div className="py-12 px-4 max-w-5xl mx-auto space-y-20 selection:bg-azalea selection:text-white pb-20">
@@ -125,7 +204,7 @@ export default function ArtistProfile() {
       </ScrollReveal>
 
       {/* 3. The Journey to Stardom */}
-<ScrollReveal delay={200}>
+      <ScrollReveal delay={200}>
         <section className="space-y-8">
           <div className="text-center">
             <h2 className="text-3xl font-heading font-bold text-navy">{t.profile.journeyTitle}</h2>
@@ -137,7 +216,6 @@ export default function ArtistProfile() {
                 <p className="text-sm font-bold text-azalea mb-1">{item.date}</p>
                 <h4 className="text-xl font-bold text-navy">{item.title}</h4>
                 
-                {/* +++ ปรับโครงสร้างเพื่อรองรับรูปภาพ/วิดีโอ +++ */}
                 <div className={`mt-3 flex flex-col gap-4 ${i % 2 === 0 ? 'md:items-end' : 'md:items-start'}`}>
                   
                   <p className="text-navy bg-white p-4 rounded-xl shadow-sm inline-block text-left max-w-md">
@@ -220,7 +298,78 @@ export default function ArtistProfile() {
         </section>
       </ScrollReveal>
 
-      {/* 5. On Screen Universe */}
+      {/* 5. Sponsor & Brands Section */}
+      <ScrollReveal delay={200}>
+        <section className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-heading font-bold text-navy">
+              {language === 'th' ? 'แบรนด์ที่ไว้วางใจฮงชิ' : 'Trusted by Brands'}
+            </h2>
+            <p className="font-body text-navy/80 mt-2">
+              {language === 'th' ? 'การร่วมงานกับแบรนด์ชั้นนำในฐานะพรีเซนเตอร์และผู้สนับสนุน' : 'Collaborations with leading brands as presenter and partner.'}
+            </p>
+          </div>
+
+          <div className="w-full relative">
+            <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
+            
+            {/* นำ Hook scrollRef มาครอบตรงนี้ + ปรับ cursor เวลาลาก */}
+            <div 
+              ref={scrollRef}
+              className={`flex gap-4 overflow-x-auto py-6 px-4 md:px-8 snap-x snap-mandatory scrollbar-hide select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
+            >
+              {SPONSORS.map((sponsor, index) => (
+                <div 
+                  key={index}
+                  className="flex-none w-[200px] md:w-[260px] snap-center group"
+                >
+                  <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-palepink hover:border-azalea hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full pointer-events-none">
+                    
+                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-beige/30 mb-4 relative pointer-events-none">
+                      <ImageSkeleton 
+                        src={`/assets/sponsor/${sponsor.file}`} 
+                        alt={sponsor.name}
+                        containerClassName="absolute inset-0 w-full h-full"
+                        imageClassName="w-full h-full object-contain p-2"
+                        onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
+                      />
+                    </div>
+                    
+                    <div className="text-center mt-auto pointer-events-none">
+                      <h4 className="font-heading font-bold text-navy text-sm md:text-base">
+                        {sponsor.name}
+                      </h4>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* ไอคอนสอนให้ผู้ใช้รู้ว่าลากได้ (แสดงเฉพาะตอนไม่ได้ลาก) */}
+            <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-azalea/50 text-sm font-bold font-body transition-opacity duration-300 pointer-events-none ${isDragging ? 'opacity-0' : 'opacity-100 animate-pulse'}`}>
+              <span>←</span>
+              <span>{language === 'th' ? 'เลื่อนเพื่อดูเพิ่มเติม' : 'Swipe to see more'}</span>
+              <span>→</span>
+            </div>
+
+          </div>
+
+          <style dangerouslySetInnerHTML={{__html: `
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+          `}} />
+        </section>
+      </ScrollReveal>
+
+      {/* 6. On Screen Universe */}
       <ScrollReveal delay={200}>
         <section className="space-y-8 bg-palepink/20 p-6 md:p-10 rounded-3xl border-2 border-palepink">
           <div className="text-center">
@@ -284,7 +433,7 @@ export default function ArtistProfile() {
         </section>
       </ScrollReveal>
 
-      {/* 6. Series Spotlight Twenty One */}
+      {/* 7. Series Spotlight Twenty One */}
       <ScrollReveal delay={200}>
         <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm space-y-8 border-t-8 border-azalea">
           <div className="text-center space-y-3">
@@ -351,7 +500,7 @@ export default function ArtistProfile() {
         </section>
       </ScrollReveal>
 
-      {/* 7. 2026 Mega Projects */}
+      {/* 8. 2026 Mega Projects */}
       <ScrollReveal delay={200}>
         <section className="bg-palepink p-8 md:p-12 rounded-3xl shadow-sm text-center space-y-8 border-4 border-white">
           <div className="space-y-2">
@@ -359,10 +508,8 @@ export default function ArtistProfile() {
             <p className="font-body text-navy/80">{t.profile.megaSubtitle}</p>
           </div>
 
-          {/* +++ โปรเจกต์ไฮไลต์หลัก: LYKN Reflxion Concert (ขยายเต็ม 2 คอลัมน์ + วิดีโอ) +++ */}
           <div className="bg-white p-6 md:p-8 rounded-[24px] shadow-lg border-4 border-azalea text-left mb-10 flex flex-col md:flex-row gap-6 md:gap-8 items-center relative overflow-hidden">
             
-            {/* ฝั่งข้อความ */}
             <div className="w-full md:w-1/2 space-y-4 relative z-10 order-2 md:order-1">
               <span className="bg-azalea text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider inline-block mb-2 shadow-sm">
                 Highlight Project
@@ -377,7 +524,6 @@ export default function ArtistProfile() {
               </p>
             </div>
 
-            {/* ฝั่งวิดีโอ YouTube (นำ iframe ที่คุณให้มาใส่ตรงนี้) */}
             <div className="w-full md:w-1/2 aspect-video rounded-2xl overflow-hidden relative shadow-inner border-4 border-white order-1 md:order-2 bg-gray-100">
               <div className="absolute inset-0 flex items-center justify-center z-0 animate-pulse bg-gray-200">
                 <span className="text-navy/40 font-bold text-sm">Loading Video...</span>
@@ -393,11 +539,9 @@ export default function ArtistProfile() {
               ></iframe>
             </div>
             
-            {/* ลายเส้นตกแต่งด้านหลังพื้นหลังกล่อง */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-azalea/5 rounded-full blur-3xl z-0 pointer-events-none -mr-20 -mt-20"></div>
           </div>
 
-          {/* โปรเจกต์ที่เหลือ */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 font-body text-left">
             {t.profile.megaItems.map((item, index) => (
               <div key={index} className="bg-white p-6 rounded-2xl shadow-sm hover:-translate-y-1 transition duration-300 border-2 border-white hover:border-skyblue">
