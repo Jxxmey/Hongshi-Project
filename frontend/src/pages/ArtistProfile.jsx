@@ -4,7 +4,8 @@ import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // --- Custom Hook: ลื่นไหล + วนลูปไม่รู้จบ + เอามือลากได้ ---
-function useInfiniteScroll(speed = 1) {
+// ปรับ speed เริ่มต้นให้น้อยลง (0.5) เพื่อไม่ให้เลื่อนเร็วเกินไป
+function useInfiniteScroll(speed = 0.5) {
   const ref = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const isDownRef = useRef(false);
@@ -117,8 +118,8 @@ const SPONSORS = [
 export default function ArtistProfile() {
   const { t, language } = useLanguage();
   
-  // นำ Custom Hook มาใช้งาน (ปรับตัวเลข speed ได้ตามชอบ เช่น 0.8, 1, 1.5)
-  const { ref: scrollRef, isDragging } = useInfiniteScroll(1);
+  // นำ Custom Hook มาใช้งาน และส่ง speed เข้าไป
+  const { ref: scrollRef, isDragging } = useInfiniteScroll(0.5);
 
   // นำ SPONSORS มาต่อกัน 2 รอบ เพื่อสร้างลูปหลอกตา (Infinite Effect)
   const loopedSponsors = [...SPONSORS, ...SPONSORS];
