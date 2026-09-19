@@ -3,9 +3,8 @@ import ImageSkeleton from '../components/ImageSkeleton';
 import ScrollReveal from '../components/ScrollReveal';
 import { useLanguage } from '../contexts/LanguageContext';
 
-// --- Custom Hook: ลื่นไหล + วนลูปไม่รู้จบ + เอามือลากได้ ---
-// ปรับ speed เริ่มต้นให้น้อยลง (0.5) เพื่อไม่ให้เลื่อนเร็วเกินไป
-function useInfiniteScroll(speed = 0.5) {
+// --- Custom Hook: ลื่นไหล + วนลูปไม่รู้จบ + เอามือลากได้ (รองรับมือถือเต็มรูปแบบ) ---
+function useInfiniteScroll(speed = 1) {
   const ref = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const isDownRef = useRef(false);
@@ -23,7 +22,7 @@ function useInfiniteScroll(speed = 0.5) {
       if (!isDownRef.current && slider) {
         slider.scrollLeft += speed;
 
-        // วนลูป: ถ้าเลื่อนไปเกินครึ่งนึง (ซึ่งเป็นจุดจบของชุดแรก) ให้เด้งกลับไปที่ 0
+        // วนลูป: ถ้าเลื่อนไปเกินครึ่งนึง ให้เด้งกลับไปจุดเริ่มต้น
         if (slider.scrollLeft >= slider.scrollWidth / 2) {
           slider.scrollLeft -= slider.scrollWidth / 2;
         } else if (slider.scrollLeft <= 0) {
@@ -33,14 +32,15 @@ function useInfiniteScroll(speed = 0.5) {
       animationRef.current = requestAnimationFrame(autoScroll);
     };
 
-    // เริ่มแอนิเมชัน
+    // เริ่มแอนิเมชันทันที
     animationRef.current = requestAnimationFrame(autoScroll);
 
-    // --- ระบบ Drag & Scroll ---
+    // --- ระบบ Drag & Scroll สำหรับเมาส์และทัชสกรีน ---
     const startDrag = (e) => {
       isDownRef.current = true;
       setIsDragging(true);
-      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+      // แยกการดึงค่าพิกัด X ระหว่างเมาส์กับนิ้วสัมผัส
+      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
       startX = pageX - slider.offsetLeft;
       scrollLeft = slider.scrollLeft;
     };
@@ -52,36 +52,43 @@ function useInfiniteScroll(speed = 0.5) {
 
     const doDrag = (e) => {
       if (!isDownRef.current) return;
-      e.preventDefault(); 
-      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+      
+      // ป้องกันการลากภาพติดนิ้ว (เฉพาะเมาส์) หรือบล็อกอีเวนต์ทัชเพื่อไม่ให้หน้าจอกระตุก
+      if (e.cancelable) e.preventDefault(); 
+      
+      const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
       const x = pageX - slider.offsetLeft;
-      const walk = (x - startX) * 2; 
+      const walk = (x - startX) * 1.5; // ตัวคูณความเร็วตอนใช้นิ้วลาก
       slider.scrollLeft = scrollLeft - walk;
 
       // วนลูปตอนลากด้วยนิ้ว
       if (slider.scrollLeft >= slider.scrollWidth / 2) {
         slider.scrollLeft -= slider.scrollWidth / 2;
+        scrollLeft -= slider.scrollWidth / 2; // ขยับจุดอ้างอิงให้ลื่นไหล
       } else if (slider.scrollLeft <= 0) {
         slider.scrollLeft += slider.scrollWidth / 2;
+        scrollLeft += slider.scrollWidth / 2; 
       }
     };
 
+    // Events สำหรับเมาส์ (Desktop)
     slider.addEventListener('mousedown', startDrag);
-    slider.addEventListener('touchstart', startDrag, { passive: true });
-
     window.addEventListener('mouseup', stopDrag);
-    window.addEventListener('touchend', stopDrag);
-    
     slider.addEventListener('mousemove', doDrag);
+
+    // Events สำหรับทัชสกรีน (Mobile)
+    slider.addEventListener('touchstart', startDrag, { passive: true });
+    window.addEventListener('touchend', stopDrag);
+    // ใส่ passive: false เพื่อให้ใช้ e.preventDefault() ควบคุมการลากแนวซ้าย-ขวาได้
     slider.addEventListener('touchmove', doDrag, { passive: false });
 
     return () => {
       cancelAnimationFrame(animationRef.current);
       slider.removeEventListener('mousedown', startDrag);
-      slider.removeEventListener('touchstart', startDrag);
       window.removeEventListener('mouseup', stopDrag);
-      window.removeEventListener('touchend', stopDrag);
       slider.removeEventListener('mousemove', doDrag);
+      slider.removeEventListener('touchstart', startDrag);
+      window.removeEventListener('touchend', stopDrag);
       slider.removeEventListener('touchmove', doDrag);
     };
   }, [speed]);
@@ -118,8 +125,8 @@ const SPONSORS = [
 export default function ArtistProfile() {
   const { t, language } = useLanguage();
   
-  // นำ Custom Hook มาใช้งาน และส่ง speed เข้าไป
-  const { ref: scrollRef, isDragging } = useInfiniteScroll(0.5);
+  // นำ Custom Hook มาใช้งาน
+  const { ref: scrollRef, isDragging } = useInfiniteScroll(1);
 
   // นำ SPONSORS มาต่อกัน 2 รอบ เพื่อสร้างลูปหลอกตา (Infinite Effect)
   const loopedSponsors = [...SPONSORS, ...SPONSORS];
@@ -343,11 +350,18 @@ export default function ArtistProfile() {
             <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
             <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-[#fdf2f6] to-transparent z-10 pointer-events-none"></div>
             
-            {/* โครงสร้าง Slider แบบแถวเดียว (ไม่ซ้อน) ซ่อน Scrollbar */}
+            {/* 
+              กล่องสไลเดอร์: 
+              - เพิ่ม touch-action: pan-y เพื่อบอกมือถือว่าเราจะจัดการเลื่อนแนวนอนเอง 
+              - ซ่อน Scrollbar ให้สวยงาม 
+            */}
             <div 
               ref={scrollRef}
-              className={`flex gap-4 overflow-x-hidden py-6 px-4 md:px-8 select-none whitespace-nowrap ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-              style={{ scrollBehavior: 'auto' }}
+              className={`flex gap-4 overflow-x-auto py-6 px-4 md:px-8 scrollbar-hide select-none whitespace-nowrap ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+              style={{ 
+                scrollBehavior: 'auto',
+                touchAction: 'pan-y' // <--- จุดสำคัญสำหรับมือถือ
+              }}
             >
               {loopedSponsors.map((sponsor, index) => (
                 <div 
@@ -384,6 +398,16 @@ export default function ArtistProfile() {
             </div>
 
           </div>
+
+          <style dangerouslySetInnerHTML={{__html: `
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+          `}} />
         </section>
       </ScrollReveal>
 
