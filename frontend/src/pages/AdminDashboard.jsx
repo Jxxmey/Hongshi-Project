@@ -27,11 +27,16 @@ export default function AdminDashboard() {
         const statsData = statsRes.ok ? await statsRes.json() : { views: 0 };
         const photos = photosRes.ok ? await photosRes.json() : [];
 
+        // ป้องกันแครชกรณี API ส่งกลับมาเป็น Object {items: []} แทนที่จะเป็น Array โดยตรง
+        const wishesCount = Array.isArray(wishes) ? wishes.length : (wishes?.items?.length || 0);
+        const reportsCount = Array.isArray(reports) ? reports.length : (reports?.items?.length || 0);
+        const photosCount = Array.isArray(photos) ? photos.length : (photos?.items?.length || 0);
+
         setStats({
-          visits: statsData.views, 
-          totalWishes: wishes.length,
-          pendingReports: reports.length,
-          pendingPhotos: photos.length 
+          visits: statsData?.views || 0, 
+          totalWishes: wishesCount,
+          pendingReports: reportsCount,
+          pendingPhotos: photosCount 
         });
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
@@ -57,22 +62,23 @@ export default function AdminDashboard() {
         <ScrollReveal delay={100}>
           <div className="bg-white p-6 rounded-3xl shadow-sm border-t-8 border-skyblue text-center h-full flex flex-col justify-center hover:-translate-y-1 transition-transform duration-300">
             <p className="text-navy/70 text-xs md:text-sm font-bold mb-2">👁️ ผู้เข้าชม</p>
-            <h3 className="text-3xl md:text-4xl font-heading font-bold text-navy">{stats.visits.toLocaleString()}</h3>
+            {/* ป้องกันแครชด้วย ( ... || 0) */}
+            <h3 className="text-3xl md:text-4xl font-heading font-bold text-navy">{(stats?.visits || 0).toLocaleString()}</h3>
           </div>
         </ScrollReveal>
         
         <ScrollReveal delay={250}>
           <div className="bg-white p-6 rounded-3xl shadow-sm border-t-8 border-palepink text-center h-full flex flex-col justify-center hover:-translate-y-1 transition-transform duration-300">
             <p className="text-navy/70 text-xs md:text-sm font-bold mb-2">💌 ข้อความทั้งหมด</p>
-            <h3 className="text-3xl md:text-4xl font-heading font-bold text-navy">{stats.totalWishes.toLocaleString()}</h3>
+            <h3 className="text-3xl md:text-4xl font-heading font-bold text-navy">{(stats?.totalWishes || 0).toLocaleString()}</h3>
           </div>
         </ScrollReveal>
         
         <ScrollReveal delay={400}>
           <div className="bg-white p-6 rounded-3xl shadow-sm border-t-8 border-azalea text-center relative h-full flex flex-col justify-center hover:-translate-y-1 transition-transform duration-300">
             <p className="text-navy/70 text-xs md:text-sm font-bold mb-2">🚨 รีพอร์ตข้อความ</p>
-            <h3 className="text-3xl md:text-4xl font-heading font-bold text-red-500">{stats.pendingReports.toLocaleString()}</h3>
-            {stats.pendingReports > 0 && (
+            <h3 className="text-3xl md:text-4xl font-heading font-bold text-red-500">{(stats?.pendingReports || 0).toLocaleString()}</h3>
+            {(stats?.pendingReports > 0) && (
               <span className="absolute top-4 right-4 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
@@ -84,8 +90,8 @@ export default function AdminDashboard() {
         <ScrollReveal delay={550}>
           <div className="bg-white p-6 rounded-3xl shadow-sm border-t-8 border-yellow-400 text-center relative h-full flex flex-col justify-center hover:-translate-y-1 transition-transform duration-300">
             <p className="text-navy/70 text-xs md:text-sm font-bold mb-2">📸 รออนุมัติรูป</p>
-            <h3 className="text-3xl md:text-4xl font-heading font-bold text-yellow-500">{stats.pendingPhotos.toLocaleString()}</h3>
-            {stats.pendingPhotos > 0 && (
+            <h3 className="text-3xl md:text-4xl font-heading font-bold text-yellow-500">{(stats?.pendingPhotos || 0).toLocaleString()}</h3>
+            {(stats?.pendingPhotos > 0) && (
               <span className="absolute top-4 right-4 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
@@ -103,7 +109,6 @@ export default function AdminDashboard() {
           </h3>
         </ScrollReveal>
         
-        {/* +++ ปรับเป็น 4 คอลัมน์ เพื่อเพิ่มปุ่ม Export +++ */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
           
           <ScrollReveal delay={600}>
@@ -136,7 +141,6 @@ export default function AdminDashboard() {
             </Link>
           </ScrollReveal>
 
-          {/* +++ เมนูใหม่: Export ข้อมูลคาเฟ่ +++ */}
           <ScrollReveal delay={900}>
             <Link to="/admin/export" className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition border-2 border-transparent hover:border-green-400 group flex flex-col items-center gap-3 text-center h-full">
               <span className="text-4xl group-hover:scale-110 transition-transform">📥</span>
