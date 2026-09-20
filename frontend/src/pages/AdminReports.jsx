@@ -12,7 +12,7 @@ export default function AdminReports() {
       const response = await fetch(`${API_URL}/admin/wishes/pending`);
       if (response.ok) {
         const data = await response.json();
-        // +++ ป้องกันระบบพัง +++
+        // ป้องกันระบบพัง
         const items = data.items || (Array.isArray(data) ? data : []);
         setPendingWishes(items);
       }
