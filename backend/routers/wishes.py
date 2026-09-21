@@ -5,6 +5,10 @@ from utils.profanity import contains_profanity
 import os
 import requests
 
+# +++ นำเข้าสำหรับการจัดการ ID ของ MongoDB +++
+from bson import ObjectId
+from bson.errors import InvalidId
+
 # --- นำเข้าส่วนที่เกี่ยวข้องกับ Rate Limit ---
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -110,3 +114,30 @@ async def create_wish(request: Request, wish: WishModel):
         return {"message": "คำอวยพรของคุณถูกส่งแล้ว แต่อยู่ระหว่างรอผู้ดูแลตรวจสอบเนื่องจากอาจมีคำที่ไม่เหมาะสม 🩵", "data": new_wish}
     
     return {"message": "ส่งคำอวยพรสำเร็จ!", "data": new_wish}
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# +++ เพิ่ม API รับการแจ้งรีพอร์ต (Report) จากผู้ใช้ทั่วไป +++
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@router.post("/wishes/{wish_id}/report")
+@limiter.limit("10/minute") # จำกัดเพื่อป้องกันคนกดสแปมปุ่ม Report เล่น
+async def report_wish(request: Request, wish_id: str):
+    try:
+        obj_id = ObjectId(wish_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="รูปแบบ ID ไม่ถูกต้อง (Invalid Wish ID format)")
+        
+    # ค้นหาข้อความแล้วอัปเดตค่า 'reported' ให้เป็น True และตั้ง 'status' เป็น pending 
+    # (เพื่อซ่อนออกจากหน้าเว็บทันที และส่งเข้าหน้า AdminReports)
+    result = await wishes_collection.update_one(
+        {"_id": obj_id}, 
+        {"$set": {
+            "reported": True,
+            "status": "pending" 
+        }}
+    )
+    
+    if result.modified_count == 0:
+        # กรณีหาเอกสารไม่เจอ หรืออาจจะถูกรายงาน/ลบไปแล้ว
+        raise HTTPException(status_code=404, detail="ไม่พบข้อความนี้ หรืออาจถูกแจ้งรายงานไปแล้ว")
+        
+    return {"message": "รายงานข้อความสำเร็จ ผู้ดูแลจะตรวจสอบโดยเร็วที่สุด"}
