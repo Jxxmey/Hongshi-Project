@@ -1,0 +1,21 @@
+{
+  "name": "ONE MORE STEP with HONGSHI",
+  "short_name": "ONE MORE STEP with HONGSHI",
+  "description": "ร่วมฉลองวันเกิดฮงชิ (Hong LYKN) และส่งคำอวยพรผ่าน Guestbook",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FFE1E6",
+  "icons": [
+    {
+      "src": "/assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

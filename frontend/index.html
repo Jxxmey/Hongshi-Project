@@ -2,14 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
-    <link rel="icon" type="image/png" href="/assets/logo.png?v=2" />
-    <link rel="apple-touch-icon" href="/assets/logo.png" />
-    <meta name="theme-color" content="#FFE1E6" />
     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- ผูกไฟล์ Manifest สำหรับ Android / Desktop PWA -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- ไอคอนมาตรฐาน -->
+    <link rel="icon" type="image/png" href="/assets/logo.png?v=2" />
+    
+    <!-- ไอคอนสำหรับ Apple (iPhone, iPad, Mac) -->
+    <link rel="apple-touch-icon" href="/assets/logo.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/assets/logo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/logo.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/assets/logo.png" />
+
+    <!-- การตั้งค่าการแสดงผลบนมือถือ (ให้เหมือนแอป) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HONGSHI" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- สีธีม (แถบด้านบนของเบราว์เซอร์) -->
+    <meta name="theme-color" content="#FFE1E6" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
     <title>ONE MORE STEP with HONGSHI</title>
     <meta name="description" content="ร่วมฉลองวันเกิดฮงชิ (Hong LYKN) และส่งคำอวยพรผ่าน Guestbook พร้อมติดตามรายละเอียดโปรเจกต์คาเฟ่ได้ที่นี่! 🩵" />
+    
+    <!-- Social Share (OG Tags) -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="ONE MORE STEP with HONGSHI🎂" />
     <meta property="og:description" content="ร่วมฉลองวันเกิดฮงชิ (Hong LYKN) และส่งคำอวยพรผ่าน Guestbook พร้อมติดตามรายละเอียดโปรเจกต์คาเฟ่ได้ที่นี่! 🩵" />
