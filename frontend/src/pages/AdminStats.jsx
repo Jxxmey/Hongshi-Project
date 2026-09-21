@@ -14,16 +14,20 @@ export default function AdminStats() {
     const fetchStats = async () => {
       try {
         const [wishesRes, statsRes] = await Promise.all([
-          fetch(`${API_URL}/wishes`),
+          // เติม ?limit=1 เพื่อประหยัดการโหลดข้อมูล
+          fetch(`${API_URL}/wishes?limit=1`),
           fetch(`${API_URL}/admin/stats`)
         ]);
 
-        const wishes = wishesRes.ok ? await wishesRes.json() : [];
+        const wishesData = wishesRes.ok ? await wishesRes.json() : {};
         const statsData = statsRes.ok ? await statsRes.json() : { views: 0 };
 
+        // ดึงยอดรวมจากคีย์ total (เหมือนที่แก้ในหน้า Dashboard)
+        const wishesCount = wishesData.total || (Array.isArray(wishesData.items) ? wishesData.items.length : 0);
+
         setStats({
-          visits: statsData.views,
-          totalWishes: wishes.length,
+          visits: statsData.views || 0,
+          totalWishes: wishesCount,
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -64,7 +68,7 @@ export default function AdminStats() {
               <div>
                 <div className="flex justify-between mb-2 text-sm font-bold text-navy">
                   <span>ยอดเข้าชมทั้งหมด</span>
-                  <span>{stats.visits.toLocaleString()} ครั้ง</span>
+                  <span>{(stats.visits || 0).toLocaleString()} ครั้ง</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-4 shadow-inner">
                   <div className="bg-skyblue h-4 rounded-full" style={{ width: '100%' }}></div>
@@ -75,11 +79,12 @@ export default function AdminStats() {
               <div>
                 <div className="flex justify-between mb-2 text-sm font-bold text-navy">
                   <span>ผู้ร่วมส่งคำอวยพร</span>
-                  <span>{stats.totalWishes.toLocaleString()} คน</span>
+                  <span>{(stats.totalWishes || 0).toLocaleString()} คน</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-4 shadow-inner">
                   <div 
                     className="bg-azalea h-4 rounded-full transition-all duration-1000" 
+                    // ใช้ Math.min เพื่อป้องกันกราฟทะลุหลอดถ้าข้อความมากกว่าคนเข้าชม (เช่นเทสด้วย Postman)
                     style={{ width: `${Math.min(conversionRate, 100)}%` }}
                   ></div>
                 </div>

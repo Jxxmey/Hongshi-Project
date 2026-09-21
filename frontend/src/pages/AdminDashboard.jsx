@@ -16,21 +16,22 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       try {
         const [wishesRes, reportsRes, statsRes, photosRes] = await Promise.all([
-          fetch(`${API_URL}/wishes`),
+          // +++ เปลี่ยนเป็น limit=1 พอ เพราะเราจะดึงแค่ตัวเลข total ไม่ได้เอารายละเอียดข้อความ +++
+          fetch(`${API_URL}/wishes?limit=1`),
           fetch(`${API_URL}/admin/reports`),
           fetch(`${API_URL}/admin/stats`),
           fetch(`${API_URL}/admin/gallery/pending`) 
         ]);
 
-        const wishes = wishesRes.ok ? await wishesRes.json() : [];
-        const reports = reportsRes.ok ? await reportsRes.json() : [];
+        const wishesData = wishesRes.ok ? await wishesRes.json() : {};
+        const reportsData = reportsRes.ok ? await reportsRes.json() : [];
         const statsData = statsRes.ok ? await statsRes.json() : { views: 0 };
-        const photos = photosRes.ok ? await photosRes.json() : [];
+        const photosData = photosRes.ok ? await photosRes.json() : [];
 
-        // ป้องกันแครชกรณี API ส่งกลับมาเป็น Object {items: []} แทนที่จะเป็น Array โดยตรง
-        const wishesCount = Array.isArray(wishes) ? wishes.length : (wishes?.items?.length || 0);
-        const reportsCount = Array.isArray(reports) ? reports.length : (reports?.items?.length || 0);
-        const photosCount = Array.isArray(photos) ? photos.length : (photos?.items?.length || 0);
+        // +++ ดึงยอดรวมจากคีย์ total โดยตรงเลย (Backend คุณทำสรุปมาให้แล้ว) +++
+        const wishesCount = wishesData.total || (Array.isArray(wishesData.items) ? wishesData.items.length : 0);
+        const reportsCount = Array.isArray(reportsData) ? reportsData.length : (reportsData?.items?.length || 0);
+        const photosCount = Array.isArray(photosData) ? photosData.length : (photosData?.items?.length || 0);
 
         setStats({
           visits: statsData?.views || 0, 
@@ -62,7 +63,6 @@ export default function AdminDashboard() {
         <ScrollReveal delay={100}>
           <div className="bg-white p-6 rounded-3xl shadow-sm border-t-8 border-skyblue text-center h-full flex flex-col justify-center hover:-translate-y-1 transition-transform duration-300">
             <p className="text-navy/70 text-xs md:text-sm font-bold mb-2">👁️ ผู้เข้าชม</p>
-            {/* ป้องกันแครชด้วย ( ... || 0) */}
             <h3 className="text-3xl md:text-4xl font-heading font-bold text-navy">{(stats?.visits || 0).toLocaleString()}</h3>
           </div>
         </ScrollReveal>

@@ -19,6 +19,9 @@ export default function Guestbook() {
   const [wishes, setWishes] = useState([]);
   const [activeBubbles, setActiveBubbles] = useState([]);
   
+  // +++ State สำหรับเก็บข้อความที่ผู้ใช้คลิกดูแบบเต็มจอ +++
+  const [focusedWish, setFocusedWish] = useState(null);
+  
   const wishesRef = useRef(wishes);
   const activeBubblesRef = useRef(activeBubbles); 
   
@@ -88,16 +91,19 @@ export default function Guestbook() {
 
       setActiveBubbles(prev => {
         const next = [...prev, newBubble];
-        if (next.length > 6) return next.slice(1);
+        // +++ เพิ่มจำนวนข้อความบนจอได้มากขึ้น เพราะลอยช้าลง (จาก 6 เป็น 12) +++
+        if (next.length > 12) return next.slice(1);
         return next;
       });
 
+      // +++ เปลี่ยนเวลาให้ตรงกับแอนิเมชันที่ช้าลง (จาก 9000 เป็น 25000) +++
       setTimeout(() => {
         setActiveBubbles(prev => prev.filter(b => b.bubbleId !== bubbleId));
-      }, 9000);
+      }, 25000);
     };
 
-    const interval = setInterval(spawnBubble, 2000);
+    // +++ ค่อยๆ ปล่อยทีละ 2.5 วินาที +++
+    const interval = setInterval(spawnBubble, 2500);
     return () => clearInterval(interval);
   }, []);
 
@@ -164,13 +170,20 @@ export default function Guestbook() {
     }
   };
 
-  const handleReport = async (wishId, bubbleId) => {
+  const handleReport = async (wishId, bubbleId = null) => {
+    // ป้องกันกรณี ID เป็น undefined
+    const safeId = wishId;
+    if(!safeId) return;
+
     if(!window.confirm("คุณต้องการรายงานว่าข้อความนี้ไม่เหมาะสมใช่หรือไม่? (Do you want to report this message?)")) return;
     
     try {
-      await fetch(`${API_URL}/wishes/${wishId}/report`, { method: 'POST' });
-      setWishes(prev => prev.filter(w => w.id !== wishId));
-      setActiveBubbles(prev => prev.filter(b => b.bubbleId !== bubbleId));
+      await fetch(`${API_URL}/wishes/${safeId}/report`, { method: 'POST' });
+      setWishes(prev => prev.filter(w => (w._id || w.id) !== safeId));
+      if (bubbleId) {
+        setActiveBubbles(prev => prev.filter(b => b.bubbleId !== bubbleId));
+      }
+      setFocusedWish(null); // ปิดหน้าต่างเต็มจอถ้ารีพอร์ตจากหน้านั้น
       alert("รายงานสำเร็จ แอดมินจะทำการตรวจสอบให้เร็วที่สุดครับ (Report submitted.)");
     } catch (error) {
       console.error("Report error:", error);
@@ -201,15 +214,17 @@ export default function Guestbook() {
         {activeBubbles.map((wish) => (
           <div
             key={wish.bubbleId}
-            className="absolute float-in-out pointer-events-auto hover:z-50"
+            // +++ ใส่ paused-float ทำให้แอนิเมชันหยุดเมื่อชี้เมาส์ และ cursor-pointer ให้รู้ว่ากดได้ +++
+            className="absolute float-in-out pointer-events-auto hover:z-50 paused-float cursor-pointer"
             style={{ top: wish.top, left: wish.left }}
+            onClick={() => setFocusedWish(wish)} // +++ กดเพื่อเปิด Modal เต็มจอ +++
           >
-            <div className={`relative p-[3px] rounded-[30px] bg-gradient-to-br ${wish.theme} shadow-[0_8px_30px_rgb(0,0,0,0.08)] max-w-[280px] md:max-w-[320px] group transition-transform duration-300`}>
+            <div className={`relative p-[3px] rounded-[30px] bg-gradient-to-br ${wish.theme} shadow-[0_8px_30px_rgb(0,0,0,0.08)] max-w-[280px] md:max-w-[320px] group transition-transform duration-300 hover:scale-105`}>
               
               <button 
                 onClick={(e) => {
                   e.stopPropagation(); 
-                  handleReport(wish.id, wish.bubbleId);
+                  handleReport(wish.id || wish._id, wish.bubbleId);
                 }}
                 className="absolute -top-3 -right-3 bg-white text-gray-300 hover:text-red-500 hover:bg-red-50 w-9 h-9 md:w-8 md:h-8 rounded-full shadow-md flex items-center justify-center text-sm md:text-xs transition-all opacity-80 md:opacity-0 group-hover:opacity-100 border border-gray-100 z-[60] cursor-pointer"
                 title="Report"
@@ -222,13 +237,21 @@ export default function Guestbook() {
                 <span className={`absolute top-2 left-4 text-5xl opacity-10 bg-clip-text text-transparent bg-gradient-to-br ${wish.theme} font-serif leading-none`}>
                   "
                 </span>
-                <p className="text-navy font-body text-sm md:text-base leading-relaxed break-words relative z-10 text-center font-medium px-2">
+                
+                {/* +++ ใส่ line-clamp-3 ให้ตัดข้อความยาวย่อลงมา เพื่อให้อยู่ในกรอบ +++ */}
+                <p className="text-navy font-body text-sm md:text-base leading-relaxed break-words relative z-10 text-center font-medium px-2 line-clamp-3">
                   {wish.message}
                 </p>
+
                 <div className="flex justify-center items-center mt-2 border-t border-gray-100/60 pt-3">
-                  <span className={`font-heading font-bold text-xs px-4 py-1.5 rounded-full bg-gradient-to-r ${wish.theme} text-white shadow-sm`}>
+                  <span className={`font-heading font-bold text-xs px-4 py-1.5 rounded-full bg-gradient-to-r ${wish.theme} text-white shadow-sm truncate max-w-[180px]`}>
                     From: {wish.name}
                   </span>
+                </div>
+
+                {/* +++ ป้ายบอกให้ผู้ใช้รู้ว่ากดอ่านได้ +++ */}
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-navy text-white text-[10px] px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none">
+                  คลิกเพื่ออ่านเต็มๆ 🔍
                 </div>
               </div>
 
@@ -240,19 +263,72 @@ export default function Guestbook() {
       </div>
 
 
-        {/* +++ ปรับ bottom-24 บนมือถือ เพื่อไม่ให้ชน Bottom Navbar (Desktop ใช้ md:bottom-10 เหมือนเดิม) +++ */}
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="fixed bottom-24 right-4 md:bottom-10 md:right-10 z-[80] group flex items-center gap-2 md:gap-3 bg-gradient-to-r from-skyblue to-palepink text-navy px-5 py-3 md:px-7 md:py-4 rounded-full shadow-[0_10px_30px_rgba(110,199,235,0.4)] border-[3px] border-white hover:from-azalea hover:to-palepink hover:text-white hover:shadow-[0_15px_35px_rgba(255,143,171,0.5)] hover:-translate-y-1 transition-all duration-300 pointer-events-auto"
-          title="Send Wish"
+      {/* =========================================
+          +++ Popup อ่านข้อความเต็มจอ (Focused Wish) +++
+      ========================================= */}
+      {focusedWish && (
+        <div 
+          className="fixed inset-0 z-[120] bg-navy/40 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setFocusedWish(null)}
         >
-          <span className="text-2xl md:text-3xl group-hover:animate-bounce">💌</span>
-          <span className="font-heading font-bold text-sm md:text-lg tracking-wide">{t.guestbook.sendBtn}</span>
-        </button>
+          <div 
+            className={`p-[4px] rounded-[40px] max-w-lg w-full shadow-2xl relative bg-gradient-to-br ${focusedWish.theme}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-white/95 backdrop-blur-md p-8 md:p-10 rounded-[36px] relative flex flex-col items-center">
+                
+                <button 
+                  onClick={() => setFocusedWish(null)}
+                  className="absolute top-5 right-5 text-gray-400 hover:text-azalea bg-gray-100 hover:bg-palepink w-8 h-8 rounded-full flex items-center justify-center text-lg transition-colors z-20"
+                >
+                  ✕
+                </button>
+
+                <div className="relative z-10 flex flex-col items-center justify-center text-center mt-4 w-full">
+                  <span className={`text-6xl mb-4 opacity-80 bg-clip-text text-transparent bg-gradient-to-br ${focusedWish.theme} font-serif leading-none`}>
+                      "
+                  </span>
+                  
+                  {/* แสดงข้อความแบบเต็มๆ เลื่อนอ่านได้ถ้ายาวเกินไป */}
+                  <p className="font-body text-navy text-lg md:text-xl leading-relaxed whitespace-pre-line font-medium max-h-[50vh] overflow-y-auto px-2 w-full">
+                      {focusedWish.message}
+                  </p>
+                  
+                  <div className="w-16 h-px bg-gray-200 my-6"></div>
+                  
+                  <p className={`font-heading text-sm uppercase tracking-widest font-bold bg-clip-text text-transparent bg-gradient-to-r ${focusedWish.theme}`}>
+                      From: {focusedWish.name}
+                  </p>
+                </div>
+
+                <div className="mt-8 flex justify-center">
+                  <button 
+                      onClick={() => handleReport(focusedWish._id || focusedWish.id, focusedWish.bubbleId)}
+                      className="text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-xs flex items-center gap-1 group/btn px-4 py-2 rounded-full border border-gray-100 shadow-sm"
+                  >
+                      <span>🚨 รายงานข้อความนี้</span>
+                  </button>
+                </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* ปุ่มกดเปิด Modal เขียนคำอวยพร */}
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="fixed bottom-24 right-4 md:bottom-10 md:right-10 z-[80] group flex items-center gap-2 md:gap-3 bg-gradient-to-r from-skyblue to-palepink text-navy px-5 py-3 md:px-7 md:py-4 rounded-full shadow-[0_10px_30px_rgba(110,199,235,0.4)] border-[3px] border-white hover:from-azalea hover:to-palepink hover:text-white hover:shadow-[0_15px_35px_rgba(255,143,171,0.5)] hover:-translate-y-1 transition-all duration-300 pointer-events-auto"
+        title="Send Wish"
+      >
+        <span className="text-2xl md:text-3xl group-hover:animate-bounce">💌</span>
+        <span className="font-heading font-bold text-sm md:text-lg tracking-wide">{t.guestbook.sendBtn}</span>
+      </button>
 
 
       {/* =========================================
-          ส่วนของ Modal
+          ส่วนของ Modal ฟอร์มเขียนอวยพร
       ========================================= */}
       {isModalOpen && (
         <>
@@ -331,17 +407,26 @@ export default function Guestbook() {
         </>
       )}
 
+      {/* --- คีย์เฟรม CSS การควบคุม Float --- */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeInOutFloat {
-          0% { opacity: 0; transform: translateY(40px) translateX(0px) scale(0.9); }
+          0% { opacity: 0; transform: translateY(50px) translateX(0px) scale(0.9); }
           15% { opacity: 1; transform: translateY(10px) translateX(-15px) scale(1); }
-          50% { opacity: 1; transform: translateY(-20px) translateX(15px) scale(1.02); }
-          85% { opacity: 1; transform: translateY(-60px) translateX(-10px) scale(1); }
-          100% { opacity: 0; transform: translateY(-90px) translateX(0px) scale(0.9); }
+          50% { opacity: 1; transform: translateY(-30px) translateX(15px) scale(1.02); }
+          85% { opacity: 1; transform: translateY(-80px) translateX(-10px) scale(1); }
+          100% { opacity: 0; transform: translateY(-120px) translateX(0px) scale(0.9); }
         }
+        
         .float-in-out {
-          animation: fadeInOutFloat 9s ease-in-out forwards;
+          /* +++ เพิ่มเวลาเป็น 25 วินาที ทำให้ลอยช้ามากๆ ละมุนสุดๆ +++ */
+          animation: fadeInOutFloat 25s linear forwards; 
         }
+        
+        /* +++ ทำให้แอนิเมชันหยุดลอยเมื่อเอาเมาส์ชี้ +++ */
+        .paused-float:hover {
+          animation-play-state: paused;
+        }
+
         .animate-fade-in {
           animation: fadeIn 0.3s ease-out forwards;
         }
