@@ -114,12 +114,11 @@ export default function ProjectDetail() {
           
           <div className="mt-8 text-center w-full flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="https://maps.app.goo.gl/vN6xmL9Qi9JJ7RqAA" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-sm border-2 border-skyblue hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-lg w-full sm:w-auto justify-center">
+              className="inline-flex items-center justify-center gap-2 bg-white text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-sm border-2 border-skyblue hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-base md:text-lg w-full sm:w-auto">
               {t.project.mapBtn}
             </a>
 
-            {/* +++ เพิ่มปุ่มสำหรับอ่าน FAQ เพราะมักจะเกี่ยวข้องกัน +++ */}
-            <Link to="/faq" className="inline-flex items-center gap-2 bg-white text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-sm border-2 border-skyblue hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-lg w-full sm:w-auto justify-center">
+            <Link to="/faq" className="inline-flex items-center justify-center gap-2 bg-white text-navy font-heading font-bold px-8 py-3.5 rounded-full shadow-sm border-2 border-skyblue hover:bg-azalea hover:text-white transition-all hover:-translate-y-1 duration-300 text-base md:text-lg w-full sm:w-auto">
               อ่านกฎและข้อควรระวัง (FAQ)
             </Link>
           </div>
@@ -136,7 +135,6 @@ export default function ProjectDetail() {
             {language === 'th' ? 'เมนูพิเศษเฉพาะช่วงจัดกิจกรรม' : 'Special menu for the event'}
           </p>
           
-          {/* +++ ขยายขนาดรูปเมนู +++ */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 w-full justify-items-center">
             {menus.map((item, i) => (
               <div 
@@ -158,8 +156,6 @@ export default function ProjectDetail() {
         </section>
       </ScrollReveal>
 
-
-
       {/* บล็อกที่ 3: Giveaway */}
       <ScrollReveal delay={400}>
         <section className="w-full bg-white p-8 md:p-10 rounded-3xl shadow-sm border-t-8 border-azalea text-center flex flex-col items-center">
@@ -167,7 +163,7 @@ export default function ProjectDetail() {
             🎁 {t.project.giveawayTitle || 'Giveaway Set'}
           </h3>
           
-          {/* +++ ข้อความแจ้งเตือนขอสงวนสิทธิ์ +++ */}
+          {/* ข้อความแจ้งเตือนขอสงวนสิทธิ์ */}
           <div className="mb-10 bg-red-50 text-red-500 px-6 py-2 rounded-full font-body font-bold text-sm md:text-base border border-red-200 inline-block shadow-sm">
             {language === 'th' ? '⚠️ ขอสงวนสิทธิ์ 1 คนต่อ 1 เซ็ตเท่านั้น' : '⚠️ Limited to 1 set per person'}
           </div>
@@ -177,7 +173,6 @@ export default function ProjectDetail() {
             <h4 className="text-lg md:text-xl font-heading font-bold text-azalea mb-8 bg-azalea/10 px-8 py-2.5 rounded-full border-2 border-azalea inline-block">
               Set 1 Special Drink 119 บาท
             </h4>
-            {/* +++ ขยายขนาดรูป Giveaway Set 1 +++ */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 w-full justify-items-center">
               {giveawayPart1.map((item, i) => (
                 <div 
@@ -203,7 +198,6 @@ export default function ProjectDetail() {
             <h4 className="text-lg md:text-xl font-heading font-bold text-azalea mb-8 bg-azalea/10 px-8 py-2.5 rounded-full border-2 border-azalea inline-block">
               Set 2 Special Set 239 บาท
             </h4>
-            {/* +++ ขยายขนาดรูป Giveaway Set 2 +++ */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 w-full justify-items-center mb-10">
               {giveawayPart2.map((item, i) => (
                 <div 
@@ -222,18 +216,18 @@ export default function ProjectDetail() {
                 </div>
               ))}
               
-              {/* ตั๋ว Lucky Draw ย้ายมาไว้ท้ายของ Set 2 */}
-              <div className="flex flex-col items-center group cursor-pointer w-full justify-center">
-                <div className="relative w-48 h-28 md:w-56 md:h-32 bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 rounded-xl shadow-[0_15px_30px_rgba(0,0,0,0.15)] flex flex-col items-center justify-center p-2 border-[2px] border-yellow-200 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3 group-hover:-translate-y-2">
+              {/* ตั๋ว Lucky Draw ที่ปรับขนาดให้เล็กลงแล้ว */}
+              <div className="flex flex-col items-center group cursor-pointer w-full justify-center mt-2 md:mt-0">
+                <div className="relative w-40 h-24 md:w-48 md:h-28 bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 rounded-xl shadow-[0_15px_30px_rgba(0,0,0,0.15)] flex flex-col items-center justify-center p-2 border-[2px] border-yellow-200 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3 group-hover:-translate-y-2">
                   <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-50 rounded-full shadow-inner border-[2px] border-yellow-200"></div>
                   <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-50 rounded-full shadow-inner border-[2px] border-yellow-200"></div>
-                  <div className="absolute left-8 md:left-12 top-2 bottom-2 w-px border-l-[3px] border-dashed border-white/50"></div>
+                  <div className="absolute left-8 md:left-10 top-2 bottom-2 w-px border-l-[3px] border-dashed border-white/50"></div>
                   
-                  <div className="pl-6 md:pl-8 w-full text-center relative z-10 flex flex-col items-center">
+                  <div className="pl-6 w-full text-center relative z-10 flex flex-col items-center">
                     <h4 className="text-sm md:text-base font-heading font-black text-navy uppercase tracking-[0.2em] drop-shadow-sm opacity-90 leading-tight">
                       Special
                     </h4>
-                    <h3 className="text-2xl md:text-3xl font-heading font-black text-white uppercase tracking-widest drop-shadow-lg leading-none group-hover:text-navy transition-colors duration-500">
+                    <h3 className="text-xl md:text-2xl font-heading font-black text-white uppercase tracking-widest drop-shadow-lg leading-none group-hover:text-navy transition-colors duration-500">
                       TICKET
                     </h3>
                   </div>
