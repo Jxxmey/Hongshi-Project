@@ -171,7 +171,7 @@ export default function ProjectDetail() {
           {/* ส่วนที่ 1 */}
           <div className="mb-14 bg-gray-50/50 p-6 md:p-8 rounded-3xl border border-gray-100 w-full flex flex-col items-center relative">
             <h4 className="text-lg md:text-xl font-heading font-bold text-azalea mb-8 bg-azalea/10 px-8 py-2.5 rounded-full border-2 border-azalea inline-block">
-              Set 1 Special Drink 119 บาท
+              Set 1 : 1 Special Drink (119 บาท)
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 w-full justify-items-center">
               {giveawayPart1.map((item, i) => (
@@ -196,7 +196,7 @@ export default function ProjectDetail() {
           {/* ส่วนที่ 2 (รวม Lucky Draw ไว้ข้างใน) */}
           <div className="bg-gray-50/50 p-6 md:p-8 rounded-3xl border border-gray-100 w-full flex flex-col items-center">
             <h4 className="text-lg md:text-xl font-heading font-bold text-azalea mb-8 bg-azalea/10 px-8 py-2.5 rounded-full border-2 border-azalea inline-block">
-              Set 2 Special Set 239 บาท
+              Set 2 : Special Drink + Cake (239 บาท)
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 w-full justify-items-center mb-10">
               {giveawayPart2.map((item, i) => (

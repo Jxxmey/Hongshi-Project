@@ -21,7 +21,7 @@ import CustomCursor from './components/CustomCursor';
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // +++ ตั้งค่าเป็น true เพื่อเปิดหน้าปิดปรับปรุงระบบ, ตั้งเป็น false เพื่อใช้งานเว็บตามปกติ +++
-const IS_MAINTENANCE = true; 
+const IS_MAINTENANCE = false; 
 
 function ScrollToTop() {
   const { pathname } = useLocation();
