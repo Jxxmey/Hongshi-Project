@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'; // +++ Import useLocation เพิ่ม
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'; 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -20,7 +20,9 @@ import CustomCursor from './components/CustomCursor';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-// +++ 1. สร้าง Component ScrollToTop เพื่อให้เลื่อนขึ้นบนสุดเมื่อเปลี่ยนหน้า +++
+// +++ ตั้งค่าเป็น true เพื่อเปิดหน้าปิดปรับปรุงระบบ, ตั้งเป็น false เพื่อใช้งานเว็บตามปกติ +++
+const IS_MAINTENANCE = true; 
+
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -30,7 +32,6 @@ function ScrollToTop() {
 
   return null;
 }
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function App() {
   const [isLoading, setIsLoading] = useState(() => {
@@ -39,6 +40,9 @@ function App() {
   });
 
   useEffect(() => {
+    // ข้ามการนับ View หากอยู่ในโหมดซ่อมบำรุง
+    if (IS_MAINTENANCE) return;
+
     const hasVisited = sessionStorage.getItem('hasVisited');
     
     if (!hasVisited) {
@@ -55,6 +59,80 @@ function App() {
     setIsLoading(false);
   };
 
+  // +++ หน้าจอสำหรับโหมดปิดปรับปรุง +++
+  if (IS_MAINTENANCE) {
+    return (
+      <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-gradient-to-b from-[#fffafa] to-[#fdf2f6] text-navy font-body">
+        <CustomCursor />
+        {/* วงกลมเบลอ */}
+        <div className="absolute w-[60vw] h-[60vw] max-w-[640px] max-h-[640px] bg-[rgba(255,172,203,0.25)] rounded-full blur-[80px] md:blur-[120px] -top-[10%] -left-[10%]"></div>
+        <div className="absolute w-[50vw] h-[50vw] max-w-[540px] max-h-[540px] bg-[rgba(143,207,244,0.25)] rounded-full blur-[80px] md:blur-[120px] -bottom-[10%] -right-[5%]"></div>
+
+        {/* สไตล์ของพื้นหลังของเดิม */}
+        <style>{`
+          .bg-balloon {
+            position: absolute;
+            width: 72px; height: 88px;
+            border-radius: 50% 50% 48% 48%;
+            opacity: 0.55; 
+            animation: driftFloat 5s ease-in-out infinite;
+          }
+          .bg-balloon::before {
+            content: ""; position: absolute; bottom: -7px; left: 29px;
+            border-left: 7px solid transparent; border-right: 7px solid transparent;
+            border-top: 10px solid currentColor;
+          }
+          .bg-balloon::after {
+            content: ""; position: absolute; width: 1px; height: 88px; background: currentColor;
+            opacity: 0.5; left: 36px; top: 90px; transform: rotate(8deg); transform-origin: top;
+          }
+          .bg-balloon-pink { top: 12%; left: 8%; background: #ff9abd; color: #e47a9e; }
+          .bg-balloon-blue { right: 8%; top: 22%; background: #a5d9f6; color: #75b7dd; animation-delay: -2s; }
+          .bg-balloon-small { left: 15%; bottom: 15%; background: #b7ddf5; color: #80b9dc; animation-delay: -1s; scale: 0.63; }
+          .bg-confetti {
+            position: absolute; width: 9px; height: 18px; border-radius: 99px; background: #ff8eb5;
+            opacity: 0.5; animation: confetti-dance 3.5s ease-in-out infinite;
+          }
+          .c1 { left: 15%; top: 20%; rotate: 28deg; }
+          .c2 { right: 15%; bottom: 25%; background: #8bc9ed; rotate: -32deg; animation-delay: -.8s; }
+          .c3 { right: 12%; top: 40%; background: #ffcb71; rotate: 44deg; animation-delay: -1.7s; }
+          .c4 { left: 10%; bottom: 35%; background: #a9d7f2; rotate: -35deg; animation-delay: -2.4s; }
+          .c5 { left: 25%; top: 15%; background: #ffca76; rotate: 55deg; animation-delay: -1.2s; }
+          @keyframes driftFloat { 
+            0%, 100% { translate: 0px 0px; rotate: 0deg; }
+            50% { translate: 0px -17px; rotate: 3deg; } 
+          }
+          @keyframes confetti-dance { 
+            0%, 100% { translate: 0px 0px; }
+            50% { translate: 4px -11px; rotate: 18deg; } 
+          }
+          @media (max-width: 600px) {
+            .bg-balloon-pink { scale: 0.65; left: 2%; top: 8%; }
+            .bg-balloon-blue { scale: 0.65; right: 2%; top: 15%; }
+            .bg-balloon-small { display: none; }
+          }
+        `}</style>
+        
+        <div className="bg-balloon bg-balloon-pink"></div>
+        <div className="bg-balloon bg-balloon-blue"></div>
+        <div className="bg-balloon bg-balloon-small"></div>
+        <span className="bg-confetti c1"></span>
+        <span className="bg-confetti c2"></span>
+        <span className="bg-confetti c3"></span>
+        <span className="bg-confetti c4"></span>
+        <span className="bg-confetti c5"></span>
+
+        {/* Content ปิดปรับปรุง */}
+        <div className="z-10 p-8 md:p-12 text-center bg-white/70 backdrop-blur-md rounded-3xl shadow-sm border border-white/60 mx-4 max-w-lg">
+          <h1 className="text-3xl md:text-4xl font-bold text-[#e47a9e] mb-2">Under Maintenance</h1>
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-6">ขออภัย กำลังปิดปรับปรุงระบบ</h2>
+          <p className="text-gray-600 mb-2">เรากำลังอัปเดตเว็บไซต์เพื่อให้การใช้งานดียิ่งขึ้น</p>
+          <p className="text-gray-600">กรุณากลับมาเยี่ยมชมใหม่ในภายหลังนะคะ 💖</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return <LoadingScreen onComplete={handleLoadingComplete} />;
   }
@@ -62,7 +140,6 @@ function App() {
   return (
     <LanguageProvider>
       <BrowserRouter>
-        {/* +++ 2. เรียกใช้ ScrollToTop ทันทีที่อยู่ใต้ BrowserRouter +++ */}
         <ScrollToTop />
         <CustomCursor />
         {/* 🎨 พื้นหลังหลัก (Global Background) + ลูกโป่งลอย */}
