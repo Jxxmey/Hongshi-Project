@@ -37,7 +37,7 @@ export default function Navbar() {
     if (clickCount + 1 === 3) {
       e.preventDefault(); 
       
-      const randomNum = Math.floor(Math.random() * 10) + 1;
+      const randomNum = Math.floor(Math.random() * 15) + 1;
       const formattedNum = randomNum.toString().padStart(2, '0');
       setRandomImage(`/assets/secret/${formattedNum}.png`);
 
@@ -58,7 +58,7 @@ export default function Navbar() {
   }, [clickCount]);
   // ===================================
 
-  // 1. เพิ่ม Icon (SVG) ให้กับแต่ละเมนูเพื่อใช้สำหรับ Bottom Navigation
+  // 1. เพิ่ม Icon (SVG) ให้กับแต่ละเมนู รวมถึงหน้า Quiz (Hongshi Native)
   const navLinks = [
     { 
       name: t.nav.home, 
@@ -85,10 +85,17 @@ export default function Navbar() {
       path: '/guestbook',
       icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
     },
+    // +++ เพิ่มเมนู Hongshi Native +++
+    { 
+      name: language === 'en' ? "Quiz" : "ควิซ", // ใช้คำสั้นๆ เพื่อไม่ให้ล้นในมือถือ
+      path: '/hongshi-native',
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    },
     { 
       name: t.nav.faq, 
       path: '/faq',
-      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      // เปลี่ยนไอคอน FAQ นิดหน่อยเพื่อไม่ให้ซ้ำกับ Quiz (ใช้รูปแชท/ข้อมูลแทน)
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
     },
   ];
 
@@ -96,7 +103,7 @@ export default function Navbar() {
     <>
       {/* 2. Top Navbar (แสดงผลบนทุกหน้าจอ แต่บนมือถือจะเหลือแค่ Logo กับ สลับภาษา) */}
       <nav className="bg-palepink text-navy sticky top-0 z-50 shadow-sm font-heading">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="max-w-[85rem] mx-auto px-4 md:px-8">
           <div className="flex justify-between items-center h-16">
             
             <Link 
@@ -113,12 +120,12 @@ export default function Navbar() {
             </Link>
 
             {/* เมนูสำหรับ Desktop */}
-            <div className="hidden md:flex space-x-6 items-center">
+            <div className="hidden md:flex space-x-6 lg:space-x-8 items-center">
               {navLinks.map((link) => (
                 <Link 
                   key={link.path} 
                   to={link.path} 
-                  className={`font-bold hover:text-azalea transition-colors ${location.pathname === link.path ? 'text-azalea' : ''}`}
+                  className={`font-bold hover:text-azalea transition-colors whitespace-nowrap ${location.pathname === link.path ? 'text-azalea' : ''}`}
                 >
                   {link.name}
                 </Link>
@@ -126,13 +133,13 @@ export default function Navbar() {
 
               <button 
                 onClick={toggleLanguage}
-                className="ml-4 px-3 py-1 bg-white/60 border-2 border-white rounded-full text-sm font-bold text-navy hover:bg-azalea hover:text-white hover:border-azalea transition-all duration-300 shadow-sm flex items-center gap-1 uppercase tracking-wider"
+                className="ml-2 px-3 py-1 bg-white/60 border-2 border-white rounded-full text-sm font-bold text-navy hover:bg-azalea hover:text-white hover:border-azalea transition-all duration-300 shadow-sm flex items-center gap-1 uppercase tracking-wider"
               >
                 🌐 {language}
               </button>
             </div>
 
-            {/* ปุ่มสลับภาษาบนมือถือ (ย้ายมาไว้ขวาสุดแทน Hamburger) */}
+            {/* ปุ่มสลับภาษาบนมือถือ (ย้ายมาไว้ขวาสุด) */}
             <div className="md:hidden flex items-center">
               <button 
                 onClick={toggleLanguage}
@@ -161,7 +168,7 @@ export default function Navbar() {
                 <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100'}`}>
                   {link.icon}
                 </div>
-                <span className={`text-[10px] font-bold font-body leading-none ${isActive ? 'opacity-100' : 'opacity-80'}`}>
+                <span className={`text-[9px] font-bold font-body leading-none ${isActive ? 'opacity-100' : 'opacity-80'} text-center`}>
                   {link.name}
                 </span>
               </Link>
