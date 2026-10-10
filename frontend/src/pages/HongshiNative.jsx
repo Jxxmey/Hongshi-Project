@@ -347,8 +347,8 @@ export default function HongshiNative() {
             <div className="space-y-4">
               <button 
                 onClick={() => {
-                  const shareTextTH = encodeURIComponent(`ฉันได้คะแนน ${score}/30 ในแบบทดสอบ "Hongshi Native" 🎂 มาร่วมวัดระดับความเป๊ะและอวยพรวันเกิดฮงชิได้ที่เว็บเลย 🩵 #Hongshihoshi #OnemorestepWithHongshi`);
-                  const shareTextEN = encodeURIComponent(`I scored ${score}/30 on the "Hongshi Native" Quiz! 🎂 Come test your knowledge and send birthday wishes to Hong here! 🩵 #Hongshihoshi #OnemorestepWithHongshi`);
+                  const shareTextTH = encodeURIComponent(`ฉันได้คะแนน ${score}/30 ในแบบทดสอบ "Hongshi Native" 🎂 มาร่วมวัดระดับความเป๊ะและอวยพรวันเกิดฮงชิได้ที่เว็บเลย 🩵 hongshi-project.lykn.online #Hongshihoshi #OnemorestepWithHongshi`);
+                  const shareTextEN = encodeURIComponent(`I scored ${score}/30 on the "Hongshi Native" Quiz! 🎂 Come test your knowledge and send birthday wishes to Hong here! 🩵 hongshi-project.lykn.online #Hongshihoshi #OnemorestepWithHongshi`);
                   const shareText = language === 'en' ? shareTextEN : shareTextTH;
                   window.open(`https://twitter.com/intent/tweet?text=${shareText}`, '_blank');
                 }}
