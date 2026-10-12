@@ -19,6 +19,8 @@ import LoadingScreen from './components/LoadingScreen';
 import CustomCursor from './components/CustomCursor';
 import HongshiNative from './pages/HongshiNative';
 import AdminExport from './pages/AdminExport';
+import CafeSouvenir from './pages/CafeSouvenir';
+import AdminGenerateQR from './pages/AdminGenerateQR';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -249,6 +251,8 @@ function App() {
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/hongshi-native" element={<HongshiNative />} />
               <Route path="/wishes/export" element={<AdminExport />} />
+              <Route path="/souvenir" element={<CafeSouvenir />} />
+              <Route path="/admin/qr-export" element={<AdminGenerateQR />} />
             </Routes>
           </main>
 
