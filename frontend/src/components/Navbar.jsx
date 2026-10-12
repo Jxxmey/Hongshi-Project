@@ -37,7 +37,7 @@ export default function Navbar() {
     if (clickCount + 1 === 3) {
       e.preventDefault(); 
       
-      const randomNum = Math.floor(Math.random() * 15) + 1;
+      const randomNum = Math.floor(Math.random() * 26) + 1;
       const formattedNum = randomNum.toString().padStart(2, '0');
       setRandomImage(`/assets/secret/${formattedNum}.png`);
 

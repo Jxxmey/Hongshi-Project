@@ -4,36 +4,39 @@ import { QRCodeSVG } from 'qrcode.react';
 import ScrollReveal from '../components/ScrollReveal';
 import { toPng } from 'html-to-image'; 
 
-// ลิสต์ข้อความสุ่มขอบคุณแฟนคลับ
 const thankYouMessages = [
   "ขอบคุณที่มาร่วมก้าวเดินไปกับฮงชินะครับ 🩵",
   "ขอให้วันนี้เป็นวันที่ใจฟูเหมือนที่ฮงชิทำให้เรายิ้มได้นะ ✨",
   "ดีใจที่ได้เจอกันในโปรเจกต์นี้นะครับ แวะมาอีกบ่อยๆ นะ! 🍰",
   "One More Step with Hongshi... ก้าวไปด้วยกันเรื่อยๆ นะ 🦊",
   "ความรักของทุกคนทำให้ฮงชิเปล่งประกาย ขอบคุณที่ซัพพอร์ตนะครับ 🌟",
-  "ฮงชิส่งรอยยิ้มตาหยีมาให้! ขอให้มีความสุขมากๆ ครับ 🥰"
+  "ฮงชิส่งรอยยิ้มตาหยีมาให้! ขอให้มีความสุขมากๆ ครับ 🥰",
+  "ความน่ารักของทุกคนคือของขวัญที่ดีที่สุดของฮงชิเลยครับ 🎁✨",
+  "ขอบคุณที่คอยซัพพอร์ตและโอบกอดฮงชิเสมอนะครับ จะตั้งใจเติบโตให้ดีเลย 🦊🌱",
+  "ขอให้ทุกวันของทุกคนมีแต่รอยยิ้มและเรื่องใจฟูเหมือนกันนะ! 🪄🩵",
+  "กี่ก้าวก็ไม่เหนื่อยเลย เพราะมีทุกคนคอยเดินไปพร้อมๆ กันแบบนี้ 👟💖",
+  "ทุกๆ เสียงเชียร์และกำลังใจจากทุกคนมีค่ากับฮงชิมากๆ เลยครับ 🫶🌟",
+  "ฮงชิจะคอยเป็นพลังบวกและรอยยิ้มให้ทุกคนอยู่เสมอนะครับ 🔋✨",
+  "ดีใจที่สุดที่มีทุกคนในชีวิต ขอบคุณที่มาเป็นความสุขของกันและกันนะ 🦊💞",
+  "One Step at a time... ค่อยๆ ก้าวไปด้วยกันแบบนี้ยาวๆ เลยนะครับ 🐾",
+  "ขอบคุณที่ทำให้โปรเจกต์นี้อบอุ่นและพิเศษมากๆ รักทุกคนนะครับ 🍰💌",
+  "เพราะมีทุกคน ฮงชิถึงมีแรงใจดื้อ เอ้ย! แรงใจทำงานในทุกวันเลยครับ 💪🧁",
+  "ดีใจที่ได้เจอกันนะครับ หวังว่าของที่ระลึกชิ้นนี้จะทำให้ใจฟูนะ 📸💕",
+  "ขอบคุณที่แวะมาหาฮงชินะครับ เดินทางปลอดภัยและมีวันที่ดีนะ 🩵🦊"
 ];
 
-// ลิสต์รูปภาพ
 const hongshiImages = [
-  "/assets/secret/01.png", 
-  "/assets/secret/02.png",
-  "/assets/secret/03.png",
-  "/assets/secret/04.png",
-  "/assets/secret/05.png",
-  "/assets/secret/06.png",
-  "/assets/secret/07.png",
-  "/assets/secret/08.png",
-  "/assets/secret/09.png",
-  "/assets/secret/10.png",
-  "/assets/secret/11.png",
-  "/assets/secret/12.png",
-  "/assets/secret/13.png",
-  "/assets/secret/14.png",
-  "/assets/secret/15.png"
+  "/assets/secret/01.png", "/assets/secret/02.png", "/assets/secret/03.png",
+  "/assets/secret/04.png", "/assets/secret/05.png", "/assets/secret/06.png",
+  "/assets/secret/07.png", "/assets/secret/08.png", "/assets/secret/09.png",
+  "/assets/secret/10.png", "/assets/secret/11.png", "/assets/secret/12.png",
+  "/assets/secret/13.png", "/assets/secret/14.png", "/assets/secret/15.png",
+  "/assets/secret/16.png", "/assets/secret/17.png", "/assets/secret/18.png",
+  "/assets/secret/19.png", "/assets/secret/20.png", "/assets/secret/21.png",
+  "/assets/secret/22.png", "/assets/secret/23.png", "/assets/secret/24.png",
+  "/assets/secret/25.png", "/assets/secret/26.png"
 ];
 
-// ฟังก์ชันแปลงข้อความ (ID) ให้เป็นตัวเลข
 const hashCode = (str) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -44,70 +47,91 @@ const hashCode = (str) => {
   return Math.abs(hash);
 };
 
+// +++ 1. ปรับการ Fetch ให้ดัก Error ป้องกันการแปลงหน้า 404 เป็น Base64
+const getBase64Image = async (url) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Image not found");
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error converting image:", error);
+    return url; 
+  }
+};
+
 export default function CafeSouvenir() {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
-  
   const [isDownloading, setIsDownloading] = useState(false);
   const cardRef = useRef(null); 
   
   const [cardData, setCardData] = useState({
     id: '',
     message: '',
-    image: ''
+    image: '',
+    bgImage: '' 
   });
 
   useEffect(() => {
-    const urlId = searchParams.get('id');
-    const finalId = urlId || `HONG-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 9999)}`;
-    
-    const hashNum = hashCode(finalId);
-    
-    const lockedMsg = thankYouMessages[hashNum % thankYouMessages.length];
-    const lockedImage = hongshiImages[hashNum % hongshiImages.length];
+    const loadData = async () => {
+      const urlId = searchParams.get('id');
+      const finalId = urlId || `HONG-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 9999)}`;
+      const hashNum = hashCode(finalId);
+      
+      const lockedMsg = thankYouMessages[hashNum % thankYouMessages.length];
+      const lockedImage = hongshiImages[hashNum % hongshiImages.length];
 
-    setCardData({
-      id: finalId,
-      message: lockedMsg,
-      image: lockedImage
-    });
+      try {
+        const base64MainImage = await getBase64Image(lockedImage);
+        const base64BgImage = await getBase64Image('/assets/bg.png');
 
-    const imgObj = new Image();
-    imgObj.src = lockedImage;
-    
-    imgObj.onload = () => {
-      setTimeout(() => setIsLoading(false), 1200); 
+        setCardData({
+          id: finalId,
+          message: lockedMsg,
+          image: base64MainImage,
+          bgImage: base64BgImage
+        });
+      } catch (error) {
+        const fallbackBase64 = await getBase64Image('/assets/secret/01.png'); 
+        setCardData(prev => ({
+          ...prev, 
+          id: finalId,
+          message: lockedMsg,
+          image: fallbackBase64
+        }));
+      } finally {
+        setTimeout(() => setIsLoading(false), 800);
+      }
     };
-    
-    imgObj.onerror = () => {
-      setCardData(prev => ({
-        ...prev, 
-        image: "https://images.unsplash.com/photo-1514516345957-556ca7d90a29?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-      }));
-      setTimeout(() => setIsLoading(false), 1200); 
-    };
 
+    loadData();
   }, [searchParams]);
 
-  // CSS จำลองสำหรับแก้ปัญหาฟอนต์เพี้ยนตอนเซฟรูป 
+  const baseUrl = window.location.origin;
   const localFontsCSS = `
     @font-face {
       font-family: 'K2D';
       font-style: normal;
       font-weight: 700;
-      src: url('/assets/fonts/K2D/K2D-Bold.ttf') format('truetype');
+      src: url('${baseUrl}/assets/fonts/K2D/K2D-Bold.ttf') format('truetype');
     }
     @font-face {
       font-family: 'IBM Plex Sans Thai';
       font-style: normal;
       font-weight: 400;
-      src: url('/assets/fonts/IBM_Plex_Sans_Thai/IBMPlexSansThai-Regular.ttf') format('truetype');
+      src: url('${baseUrl}/assets/fonts/IBM_Plex_Sans_Thai/IBMPlexSansThai-Regular.ttf') format('truetype');
     }
     @font-face {
       font-family: 'IBM Plex Sans Thai';
       font-style: normal;
       font-weight: 700;
-      src: url('/assets/fonts/IBM_Plex_Sans_Thai/IBMPlexSansThai-Bold.ttf') format('truetype');
+      src: url('${baseUrl}/assets/fonts/IBM_Plex_Sans_Thai/IBMPlexSansThai-Bold.ttf') format('truetype');
     }
   `;
 
@@ -116,13 +140,23 @@ export default function CafeSouvenir() {
     setIsDownloading(true);
 
     try {
-      // +++ เปลี่ยนให้แคปรูปโดยบังคับพื้นหลังใส เพื่อโชว์ภาพ Bg ที่เราซ่อนไว้ +++
-      const dataUrl = await toPng(cardRef.current, {
+      const options = {
         pixelRatio: 3, 
-        cacheBust: true,
+        // ❌ เอา cacheBust: true ออก เพราะมันทำให้ URL ของภาพแบบ Base64 เสียหาย
         backgroundColor: 'transparent', 
-        fontEmbedCSS: localFontsCSS 
-      });
+        fontEmbedCSS: localFontsCSS,
+        width: cardRef.current.offsetWidth,
+        height: cardRef.current.offsetHeight,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        }
+      };
+
+      // +++ 2. Safari Hack: สั่งให้ไลบรารีเตรียมวาดภาพรอบนึงก่อน เพื่อป้องกันภาพดำ/ภาพไม่ขึ้นใน iOS
+      await toPng(cardRef.current, options);
+      // จากนั้นค่อยดึงภาพจริงในรอบที่ 2
+      const dataUrl = await toPng(cardRef.current, options);
 
       const link = document.createElement("a");
       link.href = dataUrl;
@@ -159,41 +193,38 @@ export default function CafeSouvenir() {
               <span>←</span> กลับหน้าหลัก
             </Link>
 
-            {/* =========================================================
-                ตัวการ์ดหลัก
-            ========================================================= */}
             <div 
               ref={cardRef} 
-              // +++ เอาคลาสสีพื้นหลังออก เพื่อให้ตอนแคปติดรูป bg.png แทน +++
               className="p-6 rounded-[35px] shadow-lg border-4 border-white w-full relative flex flex-col items-center group overflow-hidden"
               style={{ fontFamily: "'IBM Plex Sans Thai', sans-serif" }} 
             >
-              {/* +++ รูปภาพพื้นหลังที่ใช้เฉพาะตอนแคปเซฟรูป (ปกติตาคนมองมันจะซ้อนกันเนียนๆ) +++ */}
-              <div 
-                className="absolute inset-0 z-0 bg-cover bg-center"
-                style={{ backgroundImage: "url('/assets/bg.png')" }} 
-              />
-              {/* Overlay บางๆ ทำให้ตัวอักษรอ่านง่ายขึ้น (เสมือนการทำ backdrop-blur แบบไม่แคร์การเรนเดอร์) */}
+              {cardData.bgImage && (
+                <img 
+                  src={cardData.bgImage}
+                  alt="Card Background"
+                  crossOrigin="anonymous" 
+                  className="absolute inset-0 w-full h-full object-cover z-0"
+                />
+              )}
+              
               <div className="absolute inset-0 z-0 bg-white/70" />
 
-              {/* รูปภาพฮงชิ */}
-              <div className="w-full aspect-[4/5] bg-gray-100 rounded-[25px] overflow-hidden relative shadow-sm mb-6 border-2 border-white z-10">
+              <div className="w-full aspect-[4/5] bg-gray-100 rounded-[25px] overflow-hidden relative mb-6 border-2 border-white z-10">
                 <img 
                   src={cardData.image} 
                   alt="Hongshi Souvenir" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                   crossOrigin="anonymous" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                 />
               </div>
 
-              {/* ข้อความขอบคุณ */}
               <div className="text-center w-full flex-grow flex flex-col justify-between z-10">
                 <div>
                   <span 
                     className="font-bold text-sm text-navy/60 uppercase tracking-widest block mb-2"
                     style={{ fontFamily: "'K2D', sans-serif" }}
                   >
-                    Thank You !
+                    Thank You 🎉
                   </span>
                   
                   <p className="text-navy font-bold text-lg leading-relaxed mb-6 min-h-[60px] flex items-center justify-center px-2">
@@ -201,8 +232,7 @@ export default function CafeSouvenir() {
                   </p>
                 </div>
                 
-                {/* ส่วนด้านล่าง: ID และ QR */}
-                <div className="flex items-center justify-between w-full bg-white/60 border-2 border-white p-3 rounded-[20px] shadow-sm mt-auto">
+                <div className="flex items-center justify-between w-full bg-white/60 border-2 border-white p-3 rounded-[20px] mt-auto">
                   <div className="text-left pl-2">
                     <p className="text-navy/50 text-[10px] uppercase font-bold tracking-wider mb-1">
                       Ticket
@@ -212,12 +242,12 @@ export default function CafeSouvenir() {
                     </p>
                   </div>
 
-                  <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-100 transition-transform duration-300 hover:scale-105">
+                  <div className="bg-white p-1 rounded-xl border border-gray-100 transition-transform duration-300 hover:scale-105">
                     <QRCodeSVG 
-                      value={`https://hongshi-project.onrender.com/souvenir?id=${cardData.id}`} 
+                      value={`${window.location.origin}/souvenir?id=${cardData.id}`} 
                       size={40} 
                       bgColor={"#ffffff"}
-                      fgColor={"#2F4156"} 
+                      fgColor={"#000000"} 
                       level={"L"}
                     />
                   </div>
@@ -226,13 +256,10 @@ export default function CafeSouvenir() {
               </div>
             </div>
 
-            {/* =========================================================
-                ปุ่มดาวน์โหลด
-            ========================================================= */}
             <button 
               onClick={handleDownloadImage}
               disabled={isDownloading}
-              className="mt-8 bg-palepink text-navy font-bold text-base py-3.5 px-8 rounded-full shadow-sm border-2 border-white hover:bg-azalea hover:text-white transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-8 bg-palepink text-navy font-bold text-base py-3.5 px-8 rounded-full border-2 border-white hover:bg-azalea hover:text-white transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isDownloading ? (
                 <>⏳ กำลังบันทึกภาพ...</>
