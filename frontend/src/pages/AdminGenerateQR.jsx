@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import ScrollReveal from '../components/ScrollReveal';
+import { toPng } from 'html-to-image';
 
 // ลิสต์ข้อความขอบคุณ
 const thankYouMessages = [
@@ -15,29 +16,22 @@ const thankYouMessages = [
   "ยินดีต้อนรับสู่โลกของฮงชินะครับ! 🎨"
 ];
 
-// ธีมสี (ไล่สี Gradient)
-const cardThemes = [
-  "from-skyblue to-palepink", 
-  "from-palepink to-azalea", 
-  "from-skyblue to-beige", 
-  "from-skyblue to-azalea",
-  "from-blue-200 to-indigo-200",
-  "from-rose-100 to-teal-100"
-];
-
 export default function AdminGenerateQR() {
   const [qrAmount, setQrAmount] = useState(50); 
   const [generatedCards, setGeneratedCards] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  // +++ ฟังก์ชันช่วยแปลงข้อความ (ID) ให้เป็นตัวเลข (Hash) +++
-  // ไว้ใช้ล็อคภาพ ล็อคข้อความ ล็อคสี ให้ได้ค่าเดิมเสมอสำหรับ ID นั้นๆ
+  // อ้างอิงโซนที่จะแคปภาพเซฟ
+  const printAreaRef = useRef(null);
+
+  // ฟังก์ชันช่วยแปลงข้อความ (ID) ให้เป็นตัวเลข (Hash)
   const hashCode = (str) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // แปลงเป็น 32bit integer
+      hash = hash & hash;
     }
     return Math.abs(hash);
   };
@@ -52,29 +46,19 @@ export default function AdminGenerateQR() {
       const amount = parseInt(qrAmount, 10) || 0;
 
       for (let i = 0; i < amount; i++) {
-        // สร้าง ID มั่วๆ สำหรับลิงก์ไปหน้าเว็บ (หรือถ้าคุณมี ID มาจากฐานข้อมูลก็ใช้ ID นั้นได้เลย)
         const uniqueId = `HONG-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 9999)}`;
-        
-        // +++ ใช้ ID ในการล็อกรูปภาพ ข้อความ และ สี (1 ID = 1 สไตล์เสมอ) +++
         const hashNum = hashCode(uniqueId);
         
-        // ล็อกข้อความ
         const lockedMsg = thankYouMessages[hashNum % thankYouMessages.length];
-        
-        // ล็อกธีมสี
-        const lockedTheme = cardThemes[hashNum % cardThemes.length];
-        
-        // ล็อกรูปภาพ โดยใช้ระบบ Seed ของ Picsum Photos (ส่ง seed= uniqueId เข้าไป จะได้ภาพเดิมเสมอ)
-        const lockedBgImage = `https://picsum.photos/seed/${uniqueId}/400/400?blur=2`; // ใส่ blur นิดๆ ให้เป็นแบคกราวน์ละมุนๆ
+        const lockedImage = `/assets/flower-bouquet.png`; 
 
-        const qrUrl = `https://hongshi-project.onrender.com/souvenir?id=${uniqueId}`;
+        const qrUrl = `https://hongshi-project.lykn.online/souvenir?id=${uniqueId}`;
 
         newCards.push({
           id: uniqueId,
           message: lockedMsg,
-          bgImage: lockedBgImage,
-          qrUrl: qrUrl,
-          theme: lockedTheme
+          centerImage: lockedImage, 
+          qrUrl: qrUrl
         });
       }
       
@@ -83,8 +67,64 @@ export default function AdminGenerateQR() {
     }, 100);
   };
 
+  // สั่งปริ้นท์ผ่านเบราว์เซอร์
   const handlePrint = () => {
     window.print();
+  };
+
+  // CSS จำลองสำหรับแก้ปัญหาฟอนต์เพี้ยนตอนเซฟรูป
+  const localFontsCSS = `
+    @font-face {
+      font-family: 'K2D';
+      font-style: normal;
+      font-weight: 700;
+      src: url('/assets/fonts/K2D/K2D-Bold.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'IBM Plex Sans Thai';
+      font-style: normal;
+      font-weight: 400;
+      src: url('/assets/fonts/IBM_Plex_Sans_Thai/IBMPlexSansThai-Regular.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'IBM Plex Sans Thai';
+      font-style: normal;
+      font-weight: 700;
+      src: url('/assets/fonts/IBM_Plex_Sans_Thai/IBMPlexSansThai-Bold.ttf') format('truetype');
+    }
+  `;
+
+  // ฟังก์ชันดาวน์โหลดภาพการ์ด
+  const handleDownloadAllPages = async () => {
+    if (!printAreaRef.current || isDownloading) return;
+    setIsDownloading(true);
+
+    try {
+      const pagesToDownload = printAreaRef.current.querySelectorAll('.print-page');
+
+      for (let i = 0; i < pagesToDownload.length; i++) {
+        const dataUrl = await toPng(pagesToDownload[i], {
+          pixelRatio: 3, 
+          cacheBust: true,
+          backgroundColor: '#ffffff', 
+          fontEmbedCSS: localFontsCSS 
+        });
+
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = `Hongshi_QR_Cards_Page_${i + 1}.png`; 
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    } catch (error) {
+      console.error("Download error:", error);
+      alert("เกิดข้อผิดพลาดในการบันทึกภาพ");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const pages = [];
@@ -93,7 +133,7 @@ export default function AdminGenerateQR() {
   }
 
   return (
-    <div className="py-12 px-4 max-w-6xl mx-auto min-h-[80vh] font-body bg-[#fafafa]">
+    <div className="py-12 px-4 max-w-6xl mx-auto min-h-[80vh] font-body selection:text-white">
       
       {/* ==============================================================
           ส่วนของ หน้าต่างตั้งค่า (ไม่แสดงตอนปริ้นท์)
@@ -106,10 +146,10 @@ export default function AdminGenerateQR() {
           
           <div className="text-center mb-10">
             <h2 className="text-4xl font-heading font-bold text-navy">🖨️ สร้างการ์ด QR ของที่ระลึก</h2>
-            <p className="text-lg text-navy/80 mt-2">การ์ดสแกนรับของที่ระลึกดิจิทัล (ล็อกรูปภาพและข้อความให้ผูกติดกับ ID เสมอ)</p>
+            <p className="text-lg text-navy/80 mt-2">ดีไซน์ช่อดอกไม้ + Liquid Glass วางทับด้านบนพื้นหลังพาสเทล</p>
           </div>
           
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 max-w-md mx-auto mb-10 text-center">
+          <div className="bg-white/70 backdrop-blur-md p-8 rounded-[35px] shadow-sm border-4 border-white max-w-md mx-auto mb-10 text-center">
             <form onSubmit={handleGenerate}>
               <label className="block text-navy font-bold mb-3 text-lg">
                 จำนวนการ์ดที่ต้องการสร้าง:
@@ -121,7 +161,7 @@ export default function AdminGenerateQR() {
                   max="1000"
                   value={qrAmount}
                   onChange={(e) => setQrAmount(e.target.value)}
-                  className="w-32 bg-gray-50 border-2 border-skyblue/30 rounded-xl px-4 py-3 text-xl font-bold text-center text-navy focus:border-azalea outline-none transition-colors"
+                  className="w-32 bg-white border-2 border-white rounded-xl px-4 py-3 text-xl font-bold text-center text-navy focus:border-azalea outline-none transition-colors shadow-sm"
                   required
                 />
                 <span className="flex items-center font-bold text-navy/50">ใบ</span>
@@ -129,29 +169,37 @@ export default function AdminGenerateQR() {
               <button 
                 type="submit"
                 disabled={isGenerating}
-                className="w-full bg-gradient-to-r from-skyblue to-palepink text-navy px-6 py-3.5 rounded-xl font-heading font-bold text-lg hover:from-azalea hover:to-palepink hover:text-white transition-all shadow-md disabled:opacity-50"
+                className="w-full bg-palepink text-navy px-6 py-3.5 rounded-full font-heading font-bold text-lg hover:bg-azalea hover:text-white transition-all shadow-sm border-2 border-white disabled:opacity-50"
               >
                 {isGenerating ? "⏳ กำลังเนรมิตการ์ด..." : "✨ สร้างการ์ด (Generate)"}
               </button>
-              <p className="text-xs text-navy/50 mt-4">
-                *ระบบจะโหลดภาพจากออนไลน์ (ใช้เวลาสักครู่ตอนพิมพ์)
-              </p>
             </form>
           </div>
 
           {generatedCards.length > 0 && (
-            <div className="text-center bg-white p-8 rounded-3xl border border-gray-100 shadow-[0_15px_40px_rgba(0,0,0,0.06)] max-w-2xl mx-auto">
+            <div className="text-center bg-white/70 backdrop-blur-md p-8 rounded-[35px] border-4 border-white shadow-sm max-w-2xl mx-auto">
               <span className="text-5xl block mb-4 animate-bounce">💌</span>
               <h3 className="text-2xl font-bold text-navy mb-2">สร้างการ์ดเสร็จแล้วจำนวน {generatedCards.length} ใบ!</h3>
-              <p className="text-navy/70 mb-6">ระบบล็อกภาพและข้อความให้แต่ละ ID แล้ว กดปุ่มด้านล่างเพื่อสั่งพิมพ์ได้เลยครับ</p>
+              <p className="text-navy/70 mb-6">ระบบล็อกภาพและข้อความให้แต่ละ ID แล้ว กดปุ่มด้านล่างเพื่อสั่งพิมพ์หรือบันทึกได้เลยครับ</p>
               
-              <button 
-                onClick={handlePrint}
-                className="bg-navy text-white px-10 py-4 rounded-full font-heading font-bold text-lg hover:bg-azalea hover:-translate-y-1 transition-all shadow-xl flex items-center justify-center gap-3 mx-auto"
-              >
-                <span className="text-2xl">🖨️</span> 
-                สั่งพิมพ์ / บันทึกเป็น PDF
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button 
+                  onClick={handlePrint}
+                  className="bg-navy text-white px-8 py-4 rounded-full font-heading font-bold text-lg hover:bg-azalea hover:-translate-y-1 transition-all shadow-sm flex items-center justify-center gap-3 w-full sm:w-auto"
+                >
+                  <span className="text-2xl">🖨️</span> 
+                  สั่งพิมพ์ (Print A4)
+                </button>
+                
+                <button 
+                  onClick={handleDownloadAllPages}
+                  disabled={isDownloading}
+                  className="bg-white text-navy border-2 border-white px-8 py-4 rounded-full font-heading font-bold text-lg hover:bg-palepink transition-all shadow-sm flex items-center justify-center gap-3 w-full sm:w-auto disabled:opacity-50"
+                >
+                  <span className="text-2xl">📥</span> 
+                  {isDownloading ? "กำลังเซฟรูป..." : "บันทึกเป็นรูปภาพ (PNG)"}
+                </button>
+              </div>
             </div>
           )}
 
@@ -159,9 +207,13 @@ export default function AdminGenerateQR() {
       </div>
 
       {/* ==============================================================
-          ส่วนของ โซนปริ้นท์ (จะถูกซ่อนในโหมดปกติ และแสดงเฉพาะตอนกดพิมพ์)
+          ส่วนของ โซนปริ้นท์ / โซนแคปภาพ
       ============================================================== */}
-      <div id="print-area" className="hidden font-body text-navy">
+      <div 
+        id="print-area" 
+        ref={printAreaRef}
+        className="hidden font-body text-navy"
+      >
         {pages.map((pageCards, pageIndex) => (
           
           <div 
@@ -170,68 +222,79 @@ export default function AdminGenerateQR() {
             style={{ width: '210mm', height: '297mm', overflow: 'hidden' }}
           >
             
-            <div className="flex flex-wrap content-start" style={{ width: '210mm', height: '297mm' }}>
+            {/* Grid การ์ด (5 คอลัมน์ x 10 แถว = 50 ใบต่อหน้า) */}
+            <div className="flex flex-wrap content-start relative z-10" style={{ width: '210mm', height: '297mm' }}>
               
               {pageCards.map((card, idx) => (
                 <div 
                   key={`card-${idx}`} 
-                  // ขอบนอกของการ์ดแต่ละใบ (เส้นตัด)
                   className="relative box-border border-r-[0.5px] border-b-[0.5px] border-gray-200/50 p-[1.5mm]" 
-                  style={{ width: '42mm', height: '29.7mm' }}
+                  style={{ width: '42mm', height: '29.7mm' }} 
                 >
-                  {/* กรอบการ์ดไล่สี หวานๆ */}
-                  <div className={`w-full h-full rounded-[4px] bg-gradient-to-br ${card.theme} p-[1px] box-border shadow-sm`}>
+                  
+                  {/* +++ พื้นหลัง (Background) สีชมพูพาสเทลด้านล่าง +++ */}
+                  <div className="absolute inset-[1.5mm] bg-palepink rounded-[3px] overflow-hidden">
+                    <div className="absolute -top-1 -left-1 w-6 h-6 bg-white/70 rounded-full blur-[3px]"></div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-azalea/60 rounded-full blur-[4px]"></div>
+                  </div>
+
+                  {/* +++ เลเยอร์ Liquid Glass วางทับอยู่ด้านบน Background อีกชั้น +++ */}
+                  <div 
+                    className="absolute inset-[1.5mm] bg-white/35 backdrop-blur-[2px] border-[0.5px] border-white/90 rounded-[3px] shadow-[inset_0_1px_4px_rgba(255,255,255,0.9),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col items-center justify-between"
+                  >
                     
-                    {/* พื้นหลังด้านใน (ที่รวมรูปลงไป) */}
-                    <div className="bg-white/90 w-full h-full rounded-[3px] relative flex items-center justify-between p-1 overflow-hidden">
+                    {/* แสงสะท้อนกระจกแนวทแยง */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent opacity-70 pointer-events-none z-0"></div>
+
+                    {/* เนื้อหาการ์ด (Content) */}
+                    <div className="relative z-10 w-full h-full flex flex-col items-center justify-between py-[1.5px] px-[1px]">
                       
-                      {/* รูปภาพพื้นหลัง (ล็อคตาม ID) */}
-                      <img 
-                        src={card.bgImage} 
-                        className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-multiply" 
-                        alt="" 
-                        crossOrigin="anonymous" 
-                      />
-                      
-                      {/* ของตกแต่ง (ดาววิ้งๆ ทับบนรูป) */}
-                      <span className="absolute top-1 left-1 text-[4px] text-skyblue opacity-90 z-0">✦</span>
-                      <span className="absolute bottom-1 right-1 text-[4px] text-palepink opacity-90 z-0">✧</span>
-                      <span className="absolute top-1 right-2 text-[5px] text-[#8b5a2b] opacity-60 z-0">★</span>
-                      
-                      {/* ฝั่งซ้าย: ข้อความ */}
-                      <div className="w-[58%] h-full flex flex-col justify-center z-10 pr-[2px]">
-                        
-                        <div className="flex flex-col justify-center flex-grow bg-white/70 backdrop-blur-[2px] rounded-sm px-1 py-0.5 border-[0.5px] border-white/50 shadow-sm">
-                          <span className={`font-heading font-bold text-[4.5px] bg-clip-text text-transparent bg-gradient-to-r ${card.theme} uppercase tracking-wider mb-[0.5px]`}>
-                            Thank You
-                          </span>
-                          <p className="font-body font-bold text-[3.5px] leading-tight text-navy/90 line-clamp-3">
-                            {card.message}
+                      {/* ส่วนที่ 1: รูปช่อดอกไม้ */}
+                      <div className="w-full h-[11mm] flex items-center justify-center mt-[1px]">
+                        <img 
+                          src={card.centerImage} 
+                          onError={(e) => { e.target.onerror = null; e.target.src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/bouquet.png" }}
+                          className="h-full object-contain mix-blend-multiply opacity-85" 
+                          alt="Bouquet" 
+                          crossOrigin="anonymous" 
+                        />
+                      </div>
+
+                      {/* ส่วนที่ 2: ข้อความ Thank You และคำอวยพร (แก้ Line-height ป้องกันตัวหนังสือซ้อนกัน) */}
+                      <div className="text-center w-full px-[1px] flex flex-col items-center">
+                        <span className="font-heading font-bold text-[5px] text-[#556B5A] uppercase tracking-wider mb-[0.2px] drop-shadow-sm leading-none">
+                          Thank You
+                        </span>
+                        {/* เพิ่ม leading-[1.3] และลดขนาดฟอนต์เล็กน้อย เพื่อให้บรรทัดไม่ซ้อนทับกัน */}
+                        <p className="font-body text-[3.2px] leading-[1.3] text-navy/80 line-clamp-2 w-[94%]">
+                          {card.message}
+                        </p>
+                        <p className="font-body text-[2.8px] text-navy/50 mt-[0.5px] tracking-tight font-medium leading-none">
+                          #OnemorestepWithHongshi
+                        </p>
+                      </div>
+
+                      {/* ส่วนที่ 3: QR Code และ ID ด้านล่างสุด */}
+                      <div className="w-full flex items-end justify-center mb-[1px]">
+                        <div className="flex flex-col items-center">
+                          <div className="bg-white/90 p-[0.5px] rounded-[1px] shadow-sm border border-white/60">
+                            <QRCodeSVG 
+                              value={card.qrUrl} 
+                              size={15} 
+                              bgColor={"transparent"}
+                              fgColor={"#2F4156"} 
+                              level={"L"} 
+                            />
+                          </div>
+                          <p className="text-[2.3px] text-navy/60 font-mono mt-[0.5px] font-bold leading-none">
+                            ID: {card.id.split('-')[1]}
                           </p>
                         </div>
                       </div>
 
-                      {/* ฝั่งขวา: QR Code */}
-                      <div className="w-[42%] flex flex-col items-center justify-center bg-white/80 backdrop-blur-[2px] h-full rounded-sm border border-gray-100/80 p-[1px] z-10 shadow-sm">
-                        <div className="bg-white p-[1px] rounded-[1px] shadow-sm">
-                          <QRCodeSVG 
-                            value={card.qrUrl} 
-                            size={20} 
-                            bgColor={"#ffffff"}
-                            fgColor={"#1e293b"} 
-                            level={"L"} 
-                          />
-                        </div>
-                        <p className="text-[2.5px] text-navy/60 font-mono mt-[1px] uppercase tracking-tighter font-bold">
-                          Scan Me!
-                        </p>
-                        <p className="text-[2.5px] text-navy/40 font-mono leading-none">
-                          {card.id.split('-')[1]}
-                        </p>
-                      </div>
-
                     </div>
                   </div>
+
                 </div>
               ))}
 
@@ -267,7 +330,12 @@ export default function AdminGenerateQR() {
           }
         }
         @media screen {
-          #print-area { display: none !important; }
+          #print-area { 
+            position: absolute; 
+            left: -9999px; 
+            top: -9999px; 
+            display: block !important; 
+          }
         }
       `}} />
     </div>
