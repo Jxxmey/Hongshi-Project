@@ -17,7 +17,7 @@ const thankYouMessages = [
 ];
 
 export default function AdminGenerateQR() {
-  const [qrAmount, setQrAmount] = useState(50); 
+  const [qrAmount, setQrAmount] = useState(21); // ค่าเริ่มต้น 21 ใบ (พอดี 1 หน้า A4 สำหรับ 3x7)
   const [generatedCards, setGeneratedCards] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -36,7 +36,7 @@ export default function AdminGenerateQR() {
     return Math.abs(hash);
   };
 
-  // ฟังก์ชันสร้างการ์ด
+  // ฟังก์ชันสร้างการ์ด (แก้ไขการสร้าง ID ให้ไม่ซ้ำกันในแต่ละใบ)
   const handleGenerate = (e) => {
     e.preventDefault();
     setIsGenerating(true);
@@ -44,15 +44,17 @@ export default function AdminGenerateQR() {
     setTimeout(() => {
       const newCards = [];
       const amount = parseInt(qrAmount, 10) || 0;
+      const timestamp = Date.now().toString().slice(-4);
 
       for (let i = 0; i < amount; i++) {
-        const uniqueId = `HONG-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 9999)}`;
+        // +++ เพิ่ม Index (i) และสุ่มเลขท้าย เพื่อให้แต่ละใบได้ ID ไม่ซ้ำกัน +++
+        const uniqueId = `HONG-${timestamp}-${i + 1}-${Math.floor(Math.random() * 900 + 100)}`;
         const hashNum = hashCode(uniqueId);
         
         const lockedMsg = thankYouMessages[hashNum % thankYouMessages.length];
         const lockedImage = `/assets/flower-bouquet.png`; 
 
-        const qrUrl = `https://hongshi-project.lykn.online/souvenir?id=${uniqueId}`;
+        const qrUrl = `https://hongshi-project.onrender.com/souvenir?id=${uniqueId}`;
 
         newCards.push({
           id: uniqueId,
@@ -128,12 +130,12 @@ export default function AdminGenerateQR() {
   };
 
   const pages = [];
-  for (let i = 0; i < generatedCards.length; i += 50) {
-    pages.push(generatedCards.slice(i, i + 50));
+  for (let i = 0; i < generatedCards.length; i += 21) {
+    pages.push(generatedCards.slice(i, i + 21));
   }
 
   return (
-    <div className="py-12 px-4 max-w-6xl mx-auto min-h-[80vh] font-body selection:text-white">
+    <div className="py-12 px-4 max-w-6xl mx-auto min-h-[80vh] font-body bg-beige selection:bg-azalea selection:text-white">
       
       {/* ==============================================================
           ส่วนของ หน้าต่างตั้งค่า (ไม่แสดงตอนปริ้นท์)
@@ -146,7 +148,7 @@ export default function AdminGenerateQR() {
           
           <div className="text-center mb-10">
             <h2 className="text-4xl font-heading font-bold text-navy">🖨️ สร้างการ์ด QR ของที่ระลึก</h2>
-            <p className="text-lg text-navy/80 mt-2">ดีไซน์ช่อดอกไม้ + Liquid Glass วางทับด้านบนพื้นหลังพาสเทล</p>
+            <p className="text-lg text-navy/80 mt-2">ดีไซน์ 3 ชิ้นต่อแถว การ์ดใหญ่เต็มตา (ID ไม่ซ้ำกันแล้วครับ)</p>
           </div>
           
           <div className="bg-white/70 backdrop-blur-md p-8 rounded-[35px] shadow-sm border-4 border-white max-w-md mx-auto mb-10 text-center">
@@ -173,6 +175,9 @@ export default function AdminGenerateQR() {
               >
                 {isGenerating ? "⏳ กำลังเนรมิตการ์ด..." : "✨ สร้างการ์ด (Generate)"}
               </button>
+              <p className="text-xs text-navy/50 mt-3">
+                *1 แผ่น A4 จัดได้ 21 ใบ (3x7) / ID ไม่ซ้ำกันแน่นอน
+              </p>
             </form>
           </div>
 
@@ -207,7 +212,7 @@ export default function AdminGenerateQR() {
       </div>
 
       {/* ==============================================================
-          ส่วนของ โซนปริ้นท์ / โซนแคปภาพ
+          ส่วนของ โซนปริ้นท์ / โซนแคปภาพ (3 คอลัมน์ x 7 แถว)
       ============================================================== */}
       <div 
         id="print-area" 
@@ -222,73 +227,72 @@ export default function AdminGenerateQR() {
             style={{ width: '210mm', height: '297mm', overflow: 'hidden' }}
           >
             
-            {/* Grid การ์ด (5 คอลัมน์ x 10 แถว = 50 ใบต่อหน้า) */}
+            {/* Grid การ์ด (3 คอลัมน์ x 7 แถว = 21 ใบต่อหน้า) */}
             <div className="flex flex-wrap content-start relative z-10" style={{ width: '210mm', height: '297mm' }}>
               
               {pageCards.map((card, idx) => (
                 <div 
                   key={`card-${idx}`} 
-                  className="relative box-border border-r-[0.5px] border-b-[0.5px] border-gray-200/50 p-[1.5mm]" 
-                  style={{ width: '42mm', height: '29.7mm' }} 
+                  className="relative box-border border-r-[0.5px] border-b-[0.5px] border-gray-200/50 p-[2.5mm]" 
+                  style={{ width: '70mm', height: '42.4mm' }} 
                 >
                   
-                  {/* +++ พื้นหลัง (Background) สีชมพูพาสเทลด้านล่าง +++ */}
-                  <div className="absolute inset-[1.5mm] bg-palepink rounded-[3px] overflow-hidden">
-                    <div className="absolute -top-1 -left-1 w-6 h-6 bg-white/70 rounded-full blur-[3px]"></div>
-                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-azalea/60 rounded-full blur-[4px]"></div>
+                  {/* พื้นหลังสีพาสเทล */}
+                  <div className="absolute inset-[2.5mm] bg-palepink rounded-[6px] overflow-hidden">
+                    <div className="absolute -top-2 -left-2 w-10 h-10 bg-white/70 rounded-full blur-[5px]"></div>
+                    <div className="absolute -bottom-3 -right-3 w-12 h-12 bg-azalea/60 rounded-full blur-[6px]"></div>
                   </div>
 
-                  {/* +++ เลเยอร์ Liquid Glass วางทับอยู่ด้านบน Background อีกชั้น +++ */}
+                  {/* เลเยอร์ Liquid Glass วางทับด้านบน */}
                   <div 
-                    className="absolute inset-[1.5mm] bg-white/35 backdrop-blur-[2px] border-[0.5px] border-white/90 rounded-[3px] shadow-[inset_0_1px_4px_rgba(255,255,255,0.9),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col items-center justify-between"
+                    className="absolute inset-[2.5mm] bg-white/35 backdrop-blur-[2px] border-[0.5px] border-white/95 rounded-[6px] shadow-[inset_0_1px_5px_rgba(255,255,255,0.95),0_3px_6px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col items-center justify-between"
                   >
                     
                     {/* แสงสะท้อนกระจกแนวทแยง */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent opacity-70 pointer-events-none z-0"></div>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent opacity-75 pointer-events-none z-0"></div>
 
-                    {/* เนื้อหาการ์ด (Content) */}
-                    <div className="relative z-10 w-full h-full flex flex-col items-center justify-between py-[1.5px] px-[1px]">
+                    {/* เนื้อหาการ์ด */}
+                    <div className="relative z-10 w-full h-full flex flex-col items-center justify-between py-2.5 px-2.5">
                       
                       {/* ส่วนที่ 1: รูปช่อดอกไม้ */}
-                      <div className="w-full h-[11mm] flex items-center justify-center mt-[1px]">
+                      <div className="w-full h-[16mm] flex items-center justify-center">
                         <img 
                           src={card.centerImage} 
                           onError={(e) => { e.target.onerror = null; e.target.src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/bouquet.png" }}
-                          className="h-full object-contain mix-blend-multiply opacity-85" 
+                          className="h-full object-contain mix-blend-multiply opacity-90" 
                           alt="Bouquet" 
                           crossOrigin="anonymous" 
                         />
                       </div>
 
-                      {/* ส่วนที่ 2: ข้อความ Thank You และคำอวยพร (แก้ Line-height ป้องกันตัวหนังสือซ้อนกัน) */}
-                      <div className="text-center w-full px-[1px] flex flex-col items-center">
-                        <span className="font-heading font-bold text-[5px] text-[#556B5A] uppercase tracking-wider mb-[0.2px] drop-shadow-sm leading-none">
+                      {/* ส่วนที่ 2: ข้อความ Thank You และคำอวยพร */}
+                      <div className="text-center w-full px-1 flex flex-col items-center">
+                        <span className="font-heading font-bold text-[8.5px] text-[#556B5A] uppercase tracking-wider mb-0.5 drop-shadow-sm leading-none">
                           Thank You
                         </span>
-                        {/* เพิ่ม leading-[1.3] และลดขนาดฟอนต์เล็กน้อย เพื่อให้บรรทัดไม่ซ้อนทับกัน */}
-                        <p className="font-body text-[3.2px] leading-[1.3] text-navy/80 line-clamp-2 w-[94%]">
+                        <p className="font-body text-[5.5px] leading-[1.3] text-navy/85 line-clamp-2 w-[96%]">
                           {card.message}
                         </p>
-                        <p className="font-body text-[2.8px] text-navy/50 mt-[0.5px] tracking-tight font-medium leading-none">
+                        <p className="font-body text-[4.5px] text-navy/50 mt-1 tracking-tight font-medium leading-none">
                           #OnemorestepWithHongshi
                         </p>
                       </div>
 
                       {/* ส่วนที่ 3: QR Code และ ID ด้านล่างสุด */}
-                      <div className="w-full flex items-end justify-center mb-[1px]">
-                        <div className="flex flex-col items-center">
-                          <div className="bg-white/90 p-[0.5px] rounded-[1px] shadow-sm border border-white/60">
-                            <QRCodeSVG 
-                              value={card.qrUrl} 
-                              size={15} 
-                              bgColor={"transparent"}
-                              fgColor={"#2F4156"} 
-                              level={"L"} 
-                            />
-                          </div>
-                          <p className="text-[2.3px] text-navy/60 font-mono mt-[0.5px] font-bold leading-none">
-                            ID: {card.id.split('-')[1]}
+                      <div className="w-full flex items-end justify-between px-1">
+                        <div className="text-left">
+                          <p className="text-[3.5px] text-navy/50 font-mono font-bold leading-none">
+                            ID: {card.id}
                           </p>
+                        </div>
+                        <div className="bg-white/90 p-1 rounded-[3px] shadow-sm border border-white/70">
+                          <QRCodeSVG 
+                            value={card.qrUrl} 
+                            size={24} 
+                            bgColor={"transparent"}
+                            fgColor={"#2F4156"} 
+                            level={"L"} 
+                          />
                         </div>
                       </div>
 
