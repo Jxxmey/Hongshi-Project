@@ -252,7 +252,7 @@ function App() {
               <Route path="/hongshi-native" element={<HongshiNative />} />
               <Route path="/wishes/export" element={<AdminExport />} />
               <Route path="/souvenir" element={<CafeSouvenir />} />
-              <Route path="/admin/qr-export" element={<AdminGenerateQR />} />
+              <Route path="/admin/generate-qr" element={<AdminGenerateQR />} />
             </Routes>
           </main>
 
